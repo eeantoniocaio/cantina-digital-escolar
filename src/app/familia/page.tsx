@@ -23,6 +23,10 @@ export default function FamiliaDashboard() {
   const [manualTransacao, setManualTransacao] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
+  // States do Perfil do Aluno
+  const [selectedAlunoProfile, setSelectedAlunoProfile] = useState<Aluno | null>(null);
+  const [alunoConsumo, setAlunoConsumo] = useState<any[]>([]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -38,6 +42,25 @@ export default function FamiliaDashboard() {
   const loadData = (userId: string) => {
     setAlunos(DBService.getAlunosByResponsavel(userId));
     setComprovantes(DBService.getComprovantes().filter(c => c.responsavel_id === userId));
+  };
+
+  const handleOpenProfile = (aluno: Aluno) => {
+    setSelectedAlunoProfile(aluno);
+    const movimentacoes = DBService.getMovimentacoes();
+    const compras = movimentacoes.filter(m => m.aluno_id === aluno.id && m.tipo === 'debito').reverse();
+    setAlunoConsumo(compras);
+  };
+
+  const handleCloseProfile = () => {
+    setSelectedAlunoProfile(null);
+    setAlunoConsumo([]);
+  };
+
+  const handleRecarregarFromProfile = (alunoId: string) => {
+    setSelectedAlunoId(alunoId);
+    setSelectedAlunoProfile(null);
+    setAlunoConsumo([]);
+    setIsUploadOpen(true);
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -170,9 +193,10 @@ export default function FamiliaDashboard() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {alunos.map(aluno => (
-              <div 
+              <button 
                 key={aluno.id}
-                className="bg-white border border-slate-200 rounded-2xl p-6 relative overflow-hidden shadow-xs"
+                onClick={() => handleOpenProfile(aluno)}
+                className="group text-left bg-white border border-slate-200 hover:border-red-500/50 hover:shadow-md rounded-2xl p-6 relative overflow-hidden shadow-xs transition-all duration-300 cursor-pointer active:scale-[0.98] w-full"
               >
                 <div className="absolute top-0 right-0 p-6">
                   <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2.5 py-1 rounded-full border border-red-100 uppercase">
@@ -181,7 +205,7 @@ export default function FamiliaDashboard() {
                 </div>
 
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="h-10 w-10 rounded-full bg-red-100 text-red-700 font-black flex items-center justify-center text-lg">
+                  <div className="h-10 w-10 rounded-full bg-red-100 text-red-700 font-black flex items-center justify-center text-lg group-hover:scale-105 transition-transform">
                     {aluno.nome.charAt(0)}
                   </div>
                   <div>
@@ -196,7 +220,7 @@ export default function FamiliaDashboard() {
                     R$ {aluno.saldo.toFixed(2)}
                   </span>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </section>
@@ -479,6 +503,113 @@ export default function FamiliaDashboard() {
                     </button>
                   </div>
                 </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedAlunoProfile && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-30 overflow-y-auto">
+          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-3xl overflow-hidden shadow-xl my-8">
+            <div className="p-6 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+              <h3 className="text-base font-extrabold text-slate-800 flex items-center gap-2">
+                <span>🎓</span> Perfil do Aluno
+              </h3>
+              <button
+                onClick={handleCloseProfile}
+                className="text-slate-400 hover:text-slate-650 text-lg cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-200">
+              {/* Coluna 1: Informações e QR Code */}
+              <div className="p-6 flex flex-col justify-between items-center text-center space-y-4">
+                <div className="w-full flex flex-col items-center">
+                  <div className="h-16 w-16 rounded-full bg-red-100 text-red-700 font-black flex items-center justify-center text-2xl mb-3">
+                    {selectedAlunoProfile.nome.charAt(0)}
+                  </div>
+                  <h4 className="font-extrabold text-lg text-slate-800 leading-tight">
+                    {selectedAlunoProfile.nome}
+                  </h4>
+                  <span className="mt-1.5 text-xxs font-bold text-red-650 bg-red-50 px-2.5 py-0.5 rounded-full border border-red-150 uppercase">
+                    {selectedAlunoProfile.turma}
+                  </span>
+                  <p className="text-[10px] text-slate-450 mt-2">RA (Registro): {selectedAlunoProfile.ra}</p>
+                </div>
+
+                {/* Saldo Disponível */}
+                <div className="w-full bg-slate-50 border border-slate-200/60 rounded-2xl p-4 flex flex-col items-center">
+                  <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-0.5">Saldo Disponível</span>
+                  <span className="text-2xl font-black text-emerald-600">R$ {selectedAlunoProfile.saldo.toFixed(2)}</span>
+                </div>
+
+                {/* QR Code de Consumo */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="bg-slate-50 border border-slate-200 p-3.5 rounded-2xl flex items-center justify-center shadow-inner">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${selectedAlunoProfile.id}`}
+                      alt="QR Code do Aluno"
+                      className="w-32 h-32 object-contain rounded-md"
+                    />
+                  </div>
+                  <span className="text-[9px] text-slate-400 max-w-[200px] leading-normal">
+                    Mostre este QR Code no caixa da cantina para pagar.
+                  </span>
+                </div>
+
+                {/* Botões de Ação */}
+                <div className="w-full flex gap-3 text-xs font-bold pt-2">
+                  <button
+                    onClick={handleCloseProfile}
+                    className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-xl border border-slate-200 transition-colors cursor-pointer"
+                  >
+                    Voltar
+                  </button>
+                  <button
+                    onClick={() => handleRecarregarFromProfile(selectedAlunoProfile.id)}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl transition-all flex items-center justify-center gap-1 cursor-pointer"
+                  >
+                    <span>💳</span> Recarregar Pix
+                  </button>
+                </div>
+              </div>
+
+              {/* Coluna 2: Histórico de Consumo */}
+              <div className="p-6 flex flex-col justify-between">
+                <div>
+                  <h4 className="text-xxs font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-1.5">
+                    <span>🍔</span> Histórico de Consumo
+                  </h4>
+
+                  <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1 divide-y divide-slate-100">
+                    {alunoConsumo.length === 0 ? (
+                      <div className="text-center py-16 text-slate-400 text-xs italic">
+                        Nenhum consumo registrado recentemente.
+                      </div>
+                    ) : (
+                      alunoConsumo.map(comp => (
+                        <div
+                          key={comp.id}
+                          className="pt-3 first:pt-0 flex justify-between items-center text-xs"
+                        >
+                          <div className="space-y-0.5">
+                            <strong className="text-slate-800 block font-semibold">{comp.descricao}</strong>
+                            <span className="text-[10px] text-slate-400 block">
+                              {new Date(comp.criado_em).toLocaleDateString('pt-BR')} às {new Date(comp.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          <span className="font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-150">
+                            - R$ {comp.valor.toFixed(2)}
+                          </span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
