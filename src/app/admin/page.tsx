@@ -114,7 +114,7 @@ export default function AdminDashboard() {
       {/* Navbar */}
       <nav className="border-b border-slate-200 bg-white sticky top-0 z-20 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <a href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <div className="h-9 w-9 bg-red-600 rounded-full flex items-center justify-center text-white font-black text-xxs border border-red-700 shadow-xs">
               EEAC
             </div>
@@ -124,7 +124,7 @@ export default function AdminDashboard() {
               </span>
               <span className="text-[9px] text-slate-500 font-bold uppercase block leading-none">Secretaria</span>
             </div>
-          </div>
+          </a>
           <div className="flex items-center gap-4">
             <span className="text-xs text-slate-500 hidden sm:inline">Painel: <strong>{currentUser?.nome}</strong></span>
             <a href="/" className="text-xs font-bold text-slate-500 hover:text-slate-700 bg-slate-100 px-3.5 py-1.5 rounded-full border border-slate-200 transition-colors">
