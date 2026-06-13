@@ -45,12 +45,21 @@ export default function AdminDashboard() {
     loadAllData();
   }, []);
 
-  const loadAllData = () => {
-    setComprovantes(DBService.getComprovantes());
-    setAlunos(DBService.getAlunos());
-    setMovimentacoes(DBService.getMovimentacoes());
-    setProfiles(DBService.getProfiles().filter(p => p.role === 'familia'));
-    setProdutos(DBService.getProdutos());
+  const loadAllData = async () => {
+    try {
+      const allComps = await DBService.getComprovantes();
+      setComprovantes(allComps);
+      const allAlunos = await DBService.getAlunos();
+      setAlunos(allAlunos);
+      const allMovs = await DBService.getMovimentacoes();
+      setMovimentacoes(allMovs);
+      const allProfiles = await DBService.getProfiles();
+      setProfiles(allProfiles.filter(p => p.role === 'familia'));
+      const allProds = await DBService.getProdutos();
+      setProdutos(allProds);
+    } catch (err) {
+      console.error("Erro ao carregar dados do admin:", err);
+    }
   };
 
   const handleOpenAddProduto = () => {
@@ -73,7 +82,7 @@ export default function AdminDashboard() {
     setIsAddProdutoOpen(true);
   };
 
-  const handleSaveProduto = (e: React.FormEvent) => {
+  const handleSaveProduto = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!produtoNome.trim() || !produtoPreco.trim()) {
       setErrorMessage("Preencha todos os campos.");
@@ -88,50 +97,50 @@ export default function AdminDashboard() {
 
     try {
       if (selectedProduto) {
-        DBService.updateProduto(selectedProduto.id, {
+        await DBService.updateProduto(selectedProduto.id, {
           nome: produtoNome,
           preco: price,
           categoria: produtoCategoria,
           ativo: produtoAtivo
         });
       } else {
-        const newProd = DBService.addProduto(produtoNome, price, produtoCategoria);
+        const newProd = await DBService.addProduto(produtoNome, price, produtoCategoria);
         if (!produtoAtivo) {
-          DBService.updateProduto(newProd.id, { ativo: false });
+          await DBService.updateProduto(newProd.id, { ativo: false });
         }
       }
       setIsAddProdutoOpen(false);
       setProdutoNome("");
       setProdutoPreco("");
       setErrorMessage("");
-      loadAllData();
+      await loadAllData();
     } catch (err: any) {
       setErrorMessage(err.message || "Erro ao salvar produto.");
     }
   };
 
-  const handleDeleteProduto = (id: string) => {
+  const handleDeleteProduto = async (id: string) => {
     if (confirm("Tem certeza que deseja excluir este item?")) {
       try {
-        DBService.deleteProduto(id);
-        loadAllData();
+        await DBService.deleteProduto(id);
+        await loadAllData();
       } catch (err: any) {
         alert(err.message || "Erro ao excluir produto.");
       }
     }
   };
 
-  const handleApprove = (comp: Comprovante) => {
+  const handleApprove = async (comp: Comprovante) => {
     try {
-      DBService.approveComprovante(comp.id, currentUser.id);
+      await DBService.approveComprovante(comp.id, currentUser.id);
       setSelectedComp(null);
-      loadAllData();
+      await loadAllData();
     } catch (err: any) {
       setErrorMessage(err.message || "Erro ao aprovar comprovante.");
     }
   };
 
-  const handleRejectSubmit = (e: React.FormEvent) => {
+  const handleRejectSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedComp) return;
     if (!rejectionReason.trim()) {
@@ -140,18 +149,18 @@ export default function AdminDashboard() {
     }
 
     try {
-      DBService.rejectComprovante(selectedComp.id, rejectionReason);
+      await DBService.rejectComprovante(selectedComp.id, rejectionReason);
       setIsRejectModalOpen(false);
       setRejectionReason("");
       setSelectedComp(null);
       setErrorMessage("");
-      loadAllData();
+      await loadAllData();
     } catch (err: any) {
       setErrorMessage(err.message || "Erro ao rejeitar comprovante.");
     }
   };
 
-  const handleAddAlunoSubmit = (e: React.FormEvent) => {
+  const handleAddAlunoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!alunoNome.trim() || !alunoRa.trim() || !alunoTurma.trim()) {
       setErrorMessage("Preencha todos os campos obrigatórios.");
@@ -159,14 +168,14 @@ export default function AdminDashboard() {
     }
 
     try {
-      DBService.addAluno(alunoNome, alunoRa, alunoTurma, alunoResponsavelId || undefined);
+      await DBService.addAluno(alunoNome, alunoRa, alunoTurma, alunoResponsavelId || undefined);
       setIsAddAlunoOpen(false);
       setAlunoNome("");
       setAlunoRa("");
       setAlunoTurma("");
       setAlunoResponsavelId("");
       setErrorMessage("");
-      loadAllData();
+      await loadAllData();
     } catch (err: any) {
       setErrorMessage(err.message || "Erro ao cadastrar aluno.");
     }

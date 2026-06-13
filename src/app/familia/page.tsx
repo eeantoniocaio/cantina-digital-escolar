@@ -39,16 +39,26 @@ export default function FamiliaDashboard() {
     loadData(user.id);
   }, []);
 
-  const loadData = (userId: string) => {
-    setAlunos(DBService.getAlunosByResponsavel(userId));
-    setComprovantes(DBService.getComprovantes().filter(c => c.responsavel_id === userId));
+  const loadData = async (userId: string) => {
+    try {
+      const responsavelAlunos = await DBService.getAlunosByResponsavel(userId);
+      setAlunos(responsavelAlunos);
+      const allComps = await DBService.getComprovantes();
+      setComprovantes(allComps.filter(c => c.responsavel_id === userId));
+    } catch (err) {
+      console.error("Erro ao carregar dados da família:", err);
+    }
   };
 
-  const handleOpenProfile = (aluno: Aluno) => {
+  const handleOpenProfile = async (aluno: Aluno) => {
     setSelectedAlunoProfile(aluno);
-    const movimentacoes = DBService.getMovimentacoes();
-    const compras = movimentacoes.filter(m => m.aluno_id === aluno.id && m.tipo === 'debito').reverse();
-    setAlunoConsumo(compras);
+    try {
+      const movimentacoes = await DBService.getMovimentacoes();
+      const compras = movimentacoes.filter(m => m.aluno_id === aluno.id && m.tipo === 'debito').reverse();
+      setAlunoConsumo(compras);
+    } catch (err) {
+      console.error("Erro ao carregar movimentações do aluno:", err);
+    }
   };
 
   const handleCloseProfile = () => {
@@ -114,7 +124,7 @@ export default function FamiliaDashboard() {
         return;
       }
 
-      DBService.uploadComprovante({
+      await DBService.uploadComprovante({
         alunoId: selectedAlunoId,
         responsavelId: currentUser.id,
         valor,
@@ -134,7 +144,7 @@ export default function FamiliaDashboard() {
       setErrorMessage("");
       
       // Recarregar dados
-      loadData(currentUser.id);
+      await loadData(currentUser.id);
     } catch (err: any) {
       setErrorMessage(err.message || "Erro ao salvar o comprovante.");
     }

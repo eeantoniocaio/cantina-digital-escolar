@@ -107,11 +107,17 @@ export default function CantinaTerminal() {
     loadData();
   }, []);
 
-  const loadData = () => {
-    setAlunos(DBService.getAlunos());
-    setProdutos(DBService.getProdutos().filter(p => p.ativo));
-    const allMovs = DBService.getMovimentacoes();
-    setRecentSales(allMovs.filter(m => m.tipo === 'debito').reverse().slice(0, 10));
+  const loadData = async () => {
+    try {
+      const allAlunos = await DBService.getAlunos();
+      setAlunos(allAlunos);
+      const allProds = await DBService.getProdutos();
+      setProdutos(allProds.filter(p => p.ativo));
+      const allMovs = await DBService.getMovimentacoes();
+      setRecentSales(allMovs.filter(m => m.tipo === 'debito').reverse().slice(0, 10));
+    } catch (err) {
+      console.error("Erro ao carregar dados da cantina:", err);
+    }
   };
 
   const handleSelectAluno = (aluno: Aluno) => {
@@ -170,7 +176,7 @@ export default function CantinaTerminal() {
     setChargeDesc(desc);
   };
 
-  const handleChargeSubmit = (e: React.FormEvent) => {
+  const handleChargeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedAluno) return;
     
@@ -186,7 +192,7 @@ export default function CantinaTerminal() {
     }
 
     try {
-      DBService.registrarConsumo(
+      await DBService.registrarConsumo(
         selectedAluno.id,
         amount,
         chargeDesc,
@@ -199,9 +205,9 @@ export default function CantinaTerminal() {
       setCart([]);
       setErrorMsg("");
       
-      loadData();
+      await loadData();
       
-      const updatedAlunos = DBService.getAlunos();
+      const updatedAlunos = await DBService.getAlunos();
       const updatedAluno = updatedAlunos.find(a => a.id === selectedAluno.id);
       if (updatedAluno) {
         setSelectedAluno(updatedAluno);

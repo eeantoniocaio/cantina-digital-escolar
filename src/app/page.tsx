@@ -10,14 +10,14 @@ export default function Home() {
     setCurrentUser(DBService.getCurrentUser());
   }, []);
 
-  const handleSimularLogin = (role: 'familia' | 'admin' | 'cantina' | 'aluno') => {
+  const handleSimularLogin = async (role: 'familia' | 'admin' | 'cantina' | 'aluno') => {
     let email = "";
     if (role === 'admin') email = "admin@escola.com";
     else if (role === 'cantina') email = "cantina@escola.com";
     else if (role === 'aluno') email = "enzo@escola.com";
     else email = "pai@email.com";
 
-    DBService.login(email, role);
+    await DBService.login(email, role);
     window.location.href = `/${role}`;
   };
 

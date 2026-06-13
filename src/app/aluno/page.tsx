@@ -23,16 +23,20 @@ export default function AlunoDashboard() {
     loadData(user.aluno_id || 'aluno-1');
   }, []);
 
-  const loadData = (alunoId: string) => {
-    const alunos = DBService.getAlunos();
-    const info = alunos.find(a => a.id === alunoId);
-    if (info) {
-      setAlunoInfo(info);
+  const loadData = async (alunoId: string) => {
+    try {
+      const alunos = await DBService.getAlunos();
+      const info = alunos.find(a => a.id === alunoId);
+      if (info) {
+        setAlunoInfo(info);
+      }
+      
+      // Filtra compras deste aluno
+      const movimentacoes = await DBService.getMovimentacoes();
+      setCompras(movimentacoes.filter(m => m.aluno_id === alunoId && m.tipo === 'debito').reverse());
+    } catch (err) {
+      console.error("Erro ao carregar dados do aluno:", err);
     }
-    
-    // Filtra compras deste aluno
-    const movimentacoes = DBService.getMovimentacoes();
-    setCompras(movimentacoes.filter(m => m.aluno_id === alunoId && m.tipo === 'debito').reverse());
   };
 
   const handleShare = () => {
@@ -58,10 +62,10 @@ export default function AlunoDashboard() {
       const file = e.target.files[0];
       setUploadingPhoto(true);
       const reader = new FileReader();
-      reader.onloadend = () => {
+      reader.onloadend = async () => {
         const base64String = reader.result as string;
         try {
-          const updated = DBService.updateAluno(alunoInfo.id, { foto: base64String });
+          const updated = await DBService.updateAluno(alunoInfo.id, { foto: base64String });
           setAlunoInfo(updated);
         } catch (err) {
           console.error("Erro ao salvar foto:", err);
