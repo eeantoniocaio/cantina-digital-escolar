@@ -33,6 +33,7 @@ export default function AdminDashboard() {
   const [produtoNome, setProdutoNome] = useState("");
   const [produtoPreco, setProdutoPreco] = useState("");
   const [produtoCategoria, setProdutoCategoria] = useState<'salgado' | 'bebida' | 'doce' | 'outro'>('salgado');
+  const [produtoAtivo, setProdutoAtivo] = useState(true);
 
   useEffect(() => {
     const user = DBService.getCurrentUser();
@@ -57,6 +58,7 @@ export default function AdminDashboard() {
     setProdutoNome("");
     setProdutoPreco("");
     setProdutoCategoria("salgado");
+    setProdutoAtivo(true);
     setErrorMessage("");
     setIsAddProdutoOpen(true);
   };
@@ -66,6 +68,7 @@ export default function AdminDashboard() {
     setProdutoNome(prod.nome);
     setProdutoPreco(prod.preco.toString());
     setProdutoCategoria(prod.categoria);
+    setProdutoAtivo(prod.ativo);
     setErrorMessage("");
     setIsAddProdutoOpen(true);
   };
@@ -88,10 +91,14 @@ export default function AdminDashboard() {
         DBService.updateProduto(selectedProduto.id, {
           nome: produtoNome,
           preco: price,
-          categoria: produtoCategoria
+          categoria: produtoCategoria,
+          ativo: produtoAtivo
         });
       } else {
-        DBService.addProduto(produtoNome, price, produtoCategoria);
+        const newProd = DBService.addProduto(produtoNome, price, produtoCategoria);
+        if (!produtoAtivo) {
+          DBService.updateProduto(newProd.id, { ativo: false });
+        }
       }
       setIsAddProdutoOpen(false);
       setProdutoNome("");
@@ -778,6 +785,18 @@ export default function AdminDashboard() {
                     <option value="outro">📦 Outro</option>
                   </select>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1">Status do Item</label>
+                <select
+                  value={produtoAtivo ? "ativo" : "inativo"}
+                  onChange={e => setProdutoAtivo(e.target.value === "ativo")}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-red-500 font-medium"
+                >
+                  <option value="ativo">🟢 Ativo (visível na cantina)</option>
+                  <option value="inativo">🔴 Inativo (oculto na cantina)</option>
+                </select>
               </div>
 
               {errorMessage && (
