@@ -10,10 +10,11 @@ export default function Home() {
     setCurrentUser(DBService.getCurrentUser());
   }, []);
 
-  const handleSimularLogin = (role: 'familia' | 'admin' | 'cantina') => {
+  const handleSimularLogin = (role: 'familia' | 'admin' | 'cantina' | 'aluno') => {
     let email = "";
     if (role === 'admin') email = "admin@escola.com";
     else if (role === 'cantina') email = "cantina@escola.com";
+    else if (role === 'aluno') email = "enzo@escola.com";
     else email = "pai@email.com";
 
     DBService.login(email, role);
@@ -60,7 +61,7 @@ export default function Home() {
       </header>
 
       {/* Conteúdo Principal - Cartões de Portal de Entrada */}
-      <div className="flex-1 flex flex-col items-center justify-center max-w-4xl mx-auto px-4 py-12 w-full">
+      <div className="flex-1 flex flex-col items-center justify-center max-w-7xl mx-auto px-4 py-12 w-full">
         <div className="text-center mb-10">
           <h2 className="text-3xl font-extrabold tracking-tight text-slate-800">
             Painel de Acesso à Cantina
@@ -70,8 +71,28 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Grid de Cartões estilo o outro app (Clean, White com Borda Suave e Sombras leves) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mb-8">
+        {/* Grid de 4 Cartões de Perfis */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full mb-8">
+          
+          {/* Aluno */}
+          <button
+            onClick={() => handleSimularLogin('aluno')}
+            className="group p-6 rounded-2xl border border-slate-200 bg-white hover:border-red-500/50 hover:shadow-md transition-all duration-300 flex flex-col justify-between items-center text-center shadow-xs cursor-pointer h-60"
+          >
+            <div className="h-12 w-12 rounded-full flex items-center justify-center bg-red-50 text-red-600 mb-4 group-hover:scale-105 transition-transform duration-300">
+              <span className="text-2xl">🎓</span>
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-slate-800 mb-2">Aluno</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Consulte seu saldo atual, veja o histórico de compras e datas, e compartilhe seu QR Code.
+              </p>
+            </div>
+            <div className="mt-4 text-xs font-bold text-red-600 group-hover:translate-x-0.5 transition-transform">
+              Ver Meu Saldo →
+            </div>
+          </button>
+
           {/* Família */}
           <button
             onClick={() => handleSimularLogin('familia')}
@@ -83,7 +104,7 @@ export default function Home() {
             <div>
               <h3 className="text-base font-bold text-slate-800 mb-2">Família / Responsável</h3>
               <p className="text-xs text-slate-500 leading-relaxed">
-                Envie comprovantes PIX, consulte o saldo atual de seus filhos e veja o histórico de recargas.
+                Veja o saldo e QR Code dos filhos, confira o extrato de consumo e envie comprovantes de PIX.
               </p>
             </div>
             <div className="mt-4 text-xs font-bold text-red-600 group-hover:translate-x-0.5 transition-transform">
@@ -102,7 +123,7 @@ export default function Home() {
             <div>
               <h3 className="text-base font-bold text-slate-800 mb-2">Cantina / Operador</h3>
               <p className="text-xs text-slate-500 leading-relaxed">
-                Busca rápida de alunos e débito de consumo da cantina em tempo real (otimizado para toque).
+                Registre débitos escaneando o QR Code do aluno ou pesquisando pelo nome de forma rápida.
               </p>
             </div>
             <div className="mt-4 text-xs font-bold text-red-600 group-hover:translate-x-0.5 transition-transform">
@@ -110,7 +131,7 @@ export default function Home() {
             </div>
           </button>
 
-          {/* Admin */}
+          {/* Admin / Gestão */}
           <button
             onClick={() => handleSimularLogin('admin')}
             className="group p-6 rounded-2xl border border-slate-200 bg-white hover:border-red-500/50 hover:shadow-md transition-all duration-300 flex flex-col justify-between items-center text-center shadow-xs cursor-pointer h-60"
@@ -119,13 +140,13 @@ export default function Home() {
               <span className="text-2xl">🏫</span>
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-800 mb-2">Secretaria / Admin</h3>
+              <h3 className="text-base font-bold text-slate-800 mb-2">Gestão / Admin</h3>
               <p className="text-xs text-slate-500 leading-relaxed">
-                Fila de aprovação de recargas Pix, auditoria financeira de saldos e controle cadastral.
+                Acesso completo ao sistema, fila de aprovação de recargas Pix e relatórios de auditoria.
               </p>
             </div>
             <div className="mt-4 text-xs font-bold text-red-600 group-hover:translate-x-0.5 transition-transform">
-              Entrar na Secretaria →
+              Painel de Gestão →
             </div>
           </button>
         </div>

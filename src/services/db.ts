@@ -2,7 +2,8 @@ export interface Profile {
   id: string;
   email: string;
   nome: string;
-  role: 'admin' | 'familia' | 'cantina';
+  role: 'admin' | 'familia' | 'cantina' | 'aluno';
+  aluno_id?: string;
   criado_em: string;
 }
 
@@ -72,7 +73,8 @@ const setMockData = (key: string, data: any) => {
 const INITIAL_PROFILES: Profile[] = [
   { id: 'usr-admin', email: 'admin@escola.com', nome: 'Diretora Márcia', role: 'admin', criado_em: new Date().toISOString() },
   { id: 'usr-cantina', email: 'cantina@escola.com', nome: 'Atendente Seu Jorge', role: 'cantina', criado_em: new Date().toISOString() },
-  { id: 'usr-pai1', email: 'pai@email.com', nome: 'Carlos Silva', role: 'familia', criado_em: new Date().toISOString() }
+  { id: 'usr-pai1', email: 'pai@email.com', nome: 'Carlos Silva', role: 'familia', criado_em: new Date().toISOString() },
+  { id: 'usr-aluno1', email: 'enzo@escola.com', nome: 'Enzo Silva', role: 'aluno', aluno_id: 'aluno-1', criado_em: new Date().toISOString() }
 ];
 
 const INITIAL_ALUNOS: Aluno[] = [
@@ -157,7 +159,7 @@ export class DBService {
     return user ? JSON.parse(user) : null;
   }
 
-  static login(email: string, role: 'admin' | 'familia' | 'cantina'): Profile {
+  static login(email: string, role: 'admin' | 'familia' | 'cantina' | 'aluno'): Profile {
     const profiles = this.getProfiles();
     let profile = profiles.find(p => p.email.toLowerCase() === email.toLowerCase() && p.role === role);
     
@@ -168,6 +170,7 @@ export class DBService {
         email,
         nome: email.split('@')[0].toUpperCase(),
         role,
+        aluno_id: role === 'aluno' ? 'aluno-1' : undefined,
         criado_em: new Date().toISOString()
       };
       const newProfiles = [...profiles, profile];
