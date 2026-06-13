@@ -7,12 +7,15 @@ export interface Profile {
   role: 'admin' | 'familia' | 'cantina' | 'aluno';
   aluno_id?: string;
   criado_em: string;
+  rg?: string;
+  whatsapp?: string;
 }
 
 export interface Aluno {
   id: string;
   nome: string;
   ra: string;
+  digito?: string;
   turma: string;
   saldo: number;
   ativo: boolean;
@@ -147,6 +150,210 @@ export class DBService {
   static logout() {
     if (typeof window === 'undefined') return;
     localStorage.removeItem('cantina_current_user');
+    supabase.auth.signOut();
+  }
+
+  static async signUpAluno(params: {
+    email: string;
+    password: string;
+    nome: string;
+    ra: string;
+    digito: string;
+    turma: string;
+  }): Promise<Profile> {
+    if (!params.email.toLowerCase().endsWith('@al.educacao.sp.gov.br')) {
+      throw new Error("Estudantes só podem usar o domínio de e-mail @al.educacao.sp.gov.br");
+    }
+
+    // 1. Cadastra no Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: params.email,
+      password: params.password,
+      options: {
+        data: {
+          nome: params.nome,
+          role: 'aluno'
+        }
+      }
+    });
+
+    if (authError) throw authError;
+    if (!authData.user) throw new Error("Erro ao criar usuário no Supabase Auth.");
+
+    // 2. Cria o registro do aluno
+    const novoAluno = {
+      nome: params.nome,
+      ra: params.ra,
+      digito: params.digito,
+      turma: params.turma,
+      saldo: 0.00,
+      ativo: true,
+      criado_em: new Date().toISOString()
+    };
+    
+    const { data: alunoData, error: alunoError } = await supabase
+      .from('alunos')
+      .insert([novoAluno])
+      .select();
+
+    if (alunoError) throw alunoError;
+    const aluno = alunoData[0] as Aluno;
+
+    // 3. Cria o perfil do usuário
+    const perfil = {
+      id: authData.user.id,
+      email: params.email.toLowerCase(),
+      nome: params.nome,
+      role: 'aluno' as const,
+      aluno_id: aluno.id,
+      criado_em: new Date().toISOString()
+    };
+
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .insert([perfil]);
+
+    if (profileError) throw profileError;
+
+    return perfil;
+  }
+
+  static async signUpResponsavel(params: {
+    email: string;
+    password: string;
+    nome: string;
+    rg: string;
+    whatsapp: string;
+  }): Promise<Profile> {
+    // 1. Cadastra no Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: params.email,
+      password: params.password,
+      options: {
+        data: {
+          nome: params.nome,
+          role: 'familia'
+        }
+      }
+    });
+
+    if (authError) throw authError;
+    if (!authData.user) throw new Error("Erro ao criar usuário no Supabase Auth.");
+
+    // 2. Cria o perfil do usuário (com os campos rg e whatsapp)
+    const perfil = {
+      id: authData.user.id,
+      email: params.email.toLowerCase(),
+      nome: params.nome,
+      role: 'familia' as const,
+      rg: params.rg,
+      whatsapp: params.whatsapp,
+      criado_em: new Date().toISOString()
+    };
+
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .insert([perfil]);
+
+    if (profileError) throw profileError;
+
+    return perfil;
+  }
+
+  static async signIn(email: string, password: string): Promise<Profile> {
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (authError) throw authError;
+    if (!authData.user) throw new Error("Usuário não autenticado.");
+
+    // Busca o perfil da tabela profiles correspondente ao ID do auth
+    const { data: profiles, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', authData.user.id);
+
+    if (profileError) throw profileError;
+    if (!profiles || profiles.length === 0) {
+      throw new Error("Perfil não encontrado para este usuário no banco de dados.");
+    }
+
+    const profile = profiles[0] as Profile;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('cantina_current_user', JSON.stringify(profile));
+    }
+    return profile;
+  }
+
+  static async signInWithGoogle(): Promise<void> {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: typeof window !== 'undefined' ? window.location.origin : undefined
+      }
+    });
+    if (error) throw error;
+  }
+
+  static async handleOAuthCallback(): Promise<Profile | null> {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error || !session?.user) return null;
+
+    const user = session.user;
+    
+    // Verifica se já tem perfil
+    const { data: profiles, error: pError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id);
+    
+    if (pError) throw pError;
+
+    let profile: Profile;
+    if (!profiles || profiles.length === 0) {
+      const nome = user.user_metadata.full_name || user.email?.split('@')[0].toUpperCase() || "USUÁRIO GOOGLE";
+      const email = user.email || "";
+      const isStudentEmail = email.toLowerCase().endsWith('@al.educacao.sp.gov.br');
+      const role = isStudentEmail ? 'aluno' : 'familia';
+      
+      let aluno_id: string | undefined = undefined;
+      if (isStudentEmail) {
+        // Cria também o Aluno
+        const novoAluno = {
+          nome,
+          ra: "G-" + Math.random().toString(36).substr(2, 6).toUpperCase(),
+          digito: "0",
+          turma: "Não Definitiva",
+          saldo: 0.00,
+          ativo: true,
+          criado_em: new Date().toISOString()
+        };
+        const { data: aData, error: aError } = await supabase.from('alunos').insert([novoAluno]).select();
+        if (!aError && aData && aData.length > 0) {
+          aluno_id = aData[0].id;
+        }
+      }
+
+      profile = {
+        id: user.id,
+        email,
+        nome,
+        role,
+        aluno_id,
+        criado_em: new Date().toISOString()
+      };
+
+      await supabase.from('profiles').insert([profile]);
+    } else {
+      profile = profiles[0];
+    }
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('cantina_current_user', JSON.stringify(profile));
+    }
+    return profile;
   }
 
   static async addAluno(nome: string, ra: string, turma: string, responsavelId?: string): Promise<Aluno> {
