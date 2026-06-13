@@ -14,6 +14,7 @@ export interface Aluno {
   turma: string;
   saldo: number;
   ativo: boolean;
+  foto?: string;
   criado_em: string;
 }
 
@@ -329,5 +330,20 @@ export class DBService {
 
     setMockData('movimentacoes', [...movimentacoes, novaMov]);
     return novaMov;
+  }
+
+  static updateAluno(alunoId: string, updates: Partial<Aluno>): Aluno {
+    const alunos = this.getAlunos();
+    const alunoIdx = alunos.findIndex(a => a.id === alunoId);
+    if (alunoIdx === -1) throw new Error("Aluno não encontrado.");
+
+    const updatedAluno = {
+      ...alunos[alunoIdx],
+      ...updates
+    };
+
+    alunos[alunoIdx] = updatedAluno;
+    setMockData('alunos', alunos);
+    return updatedAluno;
   }
 }
