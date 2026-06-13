@@ -47,6 +47,15 @@ export interface Movimentacao {
   criado_em: string;
 }
 
+export interface Produto {
+  id: string;
+  nome: string;
+  preco: number;
+  categoria: 'salgado' | 'bebida' | 'doce' | 'outro';
+  ativo: boolean;
+  criado_em: string;
+}
+
 // Chave Pix da Escola (Fixa para exibição na UI)
 export const DADOS_PIX_ESCOLA = {
   chave: "12.345.678/0001-99",
@@ -81,6 +90,14 @@ const INITIAL_PROFILES: Profile[] = [
 const INITIAL_ALUNOS: Aluno[] = [
   { id: 'aluno-1', nome: 'Enzo Silva', ra: '123456-7', turma: '6º Ano A', saldo: 15.50, ativo: true, criado_em: new Date().toISOString() },
   { id: 'aluno-2', nome: 'Valentina Silva', ra: '765432-1', turma: '8º Ano B', saldo: 42.00, ativo: true, criado_em: new Date().toISOString() }
+];
+
+const INITIAL_PRODUTOS: Produto[] = [
+  { id: 'prod-1', nome: 'Salgado Assado', preco: 6.00, categoria: 'salgado', ativo: true, criado_em: new Date().toISOString() },
+  { id: 'prod-2', nome: 'Suco Natural 300ml', preco: 5.00, categoria: 'bebida', ativo: true, criado_em: new Date().toISOString() },
+  { id: 'prod-3', nome: 'Pão de Queijo Grande', preco: 4.50, categoria: 'salgado', ativo: true, criado_em: new Date().toISOString() },
+  { id: 'prod-4', nome: 'Brigadeiro Gourmet', preco: 3.50, categoria: 'doce', ativo: true, criado_em: new Date().toISOString() },
+  { id: 'prod-5', nome: 'Refrigerante Lata', preco: 6.00, categoria: 'bebida', ativo: true, criado_em: new Date().toISOString() }
 ];
 
 const INITIAL_RESPONSAVEIS: { familia_id: string; aluno_id: string }[] = [
@@ -345,5 +362,43 @@ export class DBService {
     alunos[alunoIdx] = updatedAluno;
     setMockData('alunos', alunos);
     return updatedAluno;
+  }
+
+  static getProdutos(): Produto[] {
+    return getMockData('produtos', INITIAL_PRODUTOS);
+  }
+
+  static addProduto(nome: string, preco: number, categoria: 'salgado' | 'bebida' | 'doce' | 'outro'): Produto {
+    const produtos = this.getProdutos();
+    const novoProduto: Produto = {
+      id: 'prod-' + Math.random().toString(36).substr(2, 9),
+      nome,
+      preco,
+      categoria,
+      ativo: true,
+      criado_em: new Date().toISOString()
+    };
+    setMockData('produtos', [...produtos, novoProduto]);
+    return novoProduto;
+  }
+
+  static updateProduto(id: string, updates: Partial<Produto>): Produto {
+    const produtos = this.getProdutos();
+    const idx = produtos.findIndex(p => p.id === id);
+    if (idx === -1) throw new Error("Produto não encontrado.");
+
+    const updated = {
+      ...produtos[idx],
+      ...updates
+    };
+    produtos[idx] = updated;
+    setMockData('produtos', produtos);
+    return updated;
+  }
+
+  static deleteProduto(id: string): void {
+    const produtos = this.getProdutos();
+    const filtered = produtos.filter(p => p.id !== id);
+    setMockData('produtos', filtered);
   }
 }

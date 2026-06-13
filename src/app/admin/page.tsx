@@ -1,17 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { DBService, Aluno, Comprovante, Movimentacao, Profile } from "@/services/db";
+import { DBService, Aluno, Comprovante, Movimentacao, Profile, Produto } from "@/services/db";
 
 export default function AdminDashboard() {
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'fila' | 'alunos' | 'movimentacoes'>('fila');
+  const [activeTab, setActiveTab] = useState<'fila' | 'alunos' | 'produtos' | 'movimentacoes'>('fila');
   
   // Data States
   const [comprovantes, setComprovantes] = useState<Comprovante[]>([]);
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [movimentacoes, setMovimentacoes] = useState<Movimentacao[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [produtos, setProdutos] = useState<Produto[]>([]);
 
   // Modal / Ações States
   const [selectedComp, setSelectedComp] = useState<Comprovante | null>(null);
@@ -25,6 +26,13 @@ export default function AdminDashboard() {
   const [alunoRa, setAlunoRa] = useState("");
   const [alunoTurma, setAlunoTurma] = useState("");
   const [alunoResponsavelId, setAlunoResponsavelId] = useState("");
+
+  // Gerenciamento de Produtos State
+  const [isAddProdutoOpen, setIsAddProdutoOpen] = useState(false);
+  const [selectedProduto, setSelectedProduto] = useState<Produto | null>(null);
+  const [produtoNome, setProdutoNome] = useState("");
+  const [produtoPreco, setProdutoPreco] = useState("");
+  const [produtoCategoria, setProdutoCategoria] = useState<'salgado' | 'bebida' | 'doce' | 'outro'>('salgado');
 
   useEffect(() => {
     const user = DBService.getCurrentUser();
@@ -41,6 +49,69 @@ export default function AdminDashboard() {
     setAlunos(DBService.getAlunos());
     setMovimentacoes(DBService.getMovimentacoes());
     setProfiles(DBService.getProfiles().filter(p => p.role === 'familia'));
+    setProdutos(DBService.getProdutos());
+  };
+
+  const handleOpenAddProduto = () => {
+    setSelectedProduto(null);
+    setProdutoNome("");
+    setProdutoPreco("");
+    setProdutoCategoria("salgado");
+    setErrorMessage("");
+    setIsAddProdutoOpen(true);
+  };
+
+  const handleOpenEditProduto = (prod: Produto) => {
+    setSelectedProduto(prod);
+    setProdutoNome(prod.nome);
+    setProdutoPreco(prod.preco.toString());
+    setProdutoCategoria(prod.categoria);
+    setErrorMessage("");
+    setIsAddProdutoOpen(true);
+  };
+
+  const handleSaveProduto = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!produtoNome.trim() || !produtoPreco.trim()) {
+      setErrorMessage("Preencha todos os campos.");
+      return;
+    }
+
+    const price = parseFloat(produtoPreco.replace(",", "."));
+    if (isNaN(price) || price <= 0) {
+      setErrorMessage("Informe um preço válido maior que zero.");
+      return;
+    }
+
+    try {
+      if (selectedProduto) {
+        DBService.updateProduto(selectedProduto.id, {
+          nome: produtoNome,
+          preco: price,
+          categoria: produtoCategoria
+        });
+      } else {
+        DBService.addProduto(produtoNome, price, produtoCategoria);
+      }
+      setIsAddProdutoOpen(false);
+      setProdutoNome("");
+      setProdutoPreco("");
+      setErrorMessage("");
+      loadAllData();
+    } catch (err: any) {
+      setErrorMessage(err.message || "Erro ao salvar produto.");
+    }
+  };
+
+  const handleDeleteProduto = (id: string) => {
+    if (confirm("Tem certeza que deseja excluir este item?")) {
+      try {
+        DBService.deleteProduto(id);
+        loadAllData();
+      } catch (err: any) {
+        alert(err.message || "Erro ao excluir produto.");
+      }
+    }
   };
 
   const handleApprove = (comp: Comprovante) => {
@@ -180,6 +251,14 @@ export default function AdminDashboard() {
           >
             👥 Cadastro de Alunos
             {activeTab === 'alunos' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600" />}
+          </button>
+
+          <button
+            onClick={() => setActiveTab('produtos')}
+            className={`pb-3 relative transition-colors cursor-pointer ${activeTab === 'produtos' ? 'text-red-600' : 'text-slate-400 hover:text-slate-600'}`}
+          >
+            🍔 Gerenciar Cardápio
+            {activeTab === 'produtos' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600" />}
           </button>
 
           <button
@@ -447,6 +526,81 @@ export default function AdminDashboard() {
             </div>
           </section>
         )}
+
+        {/* Tab: Produtos */}
+        {activeTab === 'produtos' && (
+          <section className="bg-white border border-slate-200 p-6 rounded-2xl shadow-xs">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-sm font-bold text-slate-500 uppercase">Itens do Cardápio</h3>
+              <button
+                onClick={handleOpenAddProduto}
+                className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl transition-colors cursor-pointer"
+              >
+                + Novo Item
+              </button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 text-xs text-slate-500 uppercase tracking-wider bg-slate-50">
+                    <th className="py-3 px-4">Nome do Produto</th>
+                    <th className="py-3 px-4">Categoria</th>
+                    <th className="py-3 px-4 text-right">Preço</th>
+                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4 text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-xs text-slate-600">
+                  {produtos.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center text-slate-400">
+                        Nenhum produto cadastrado.
+                      </td>
+                    </tr>
+                  ) : (
+                    produtos.map(prod => (
+                      <tr key={prod.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="py-3.5 px-4 font-bold text-slate-800">{prod.nome}</td>
+                        <td className="py-3.5 px-4 capitalize">
+                          {prod.categoria === 'salgado' ? '🍔 Salgado' :
+                           prod.categoria === 'bebida' ? '🥤 Bebida' :
+                           prod.categoria === 'doce' ? '🍬 Doce' : '📦 Outro'}
+                        </td>
+                        <td className="py-3.5 px-4 text-right font-bold text-slate-800">R$ {prod.preco.toFixed(2)}</td>
+                        <td className="py-3.5 px-4">
+                          {prod.ativo ? (
+                            <span className="px-2 py-0.5 rounded text-xxs font-bold bg-emerald-50 text-emerald-600 border border-emerald-100">
+                              Ativo
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded text-xxs font-bold bg-slate-200 text-slate-500 border border-slate-300">
+                              Inativo
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4 text-right space-x-2">
+                          <button
+                            onClick={() => handleOpenEditProduto(prod)}
+                            className="text-slate-600 hover:text-slate-800 font-bold bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg border border-slate-200 transition-colors cursor-pointer text-xxs"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => handleDeleteProduto(prod.id)}
+                            className="text-red-600 hover:text-red-750 font-bold bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg border border-red-200 transition-colors cursor-pointer text-xxs"
+                          >
+                            Excluir
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
       </main>
 
       {/* Modal: Rejeição de Comprovante */}
@@ -571,6 +725,80 @@ export default function AdminDashboard() {
                   className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl transition-colors cursor-pointer"
                 >
                   Cadastrar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Adicionar/Editar Produto */}
+      {isAddProdutoOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-30">
+          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-md overflow-hidden shadow-xl p-6">
+            <h3 className="text-base font-extrabold text-slate-800 mb-4">
+              {selectedProduto ? "Editar Item" : "Adicionar Novo Item"}
+            </h3>
+
+            <form onSubmit={handleSaveProduto} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1">Nome do Item</label>
+                <input
+                  type="text"
+                  value={produtoNome}
+                  onChange={e => setProdutoNome(e.target.value)}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-red-500"
+                  placeholder="Ex: Pastel de Forno"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">Preço (R$)</label>
+                  <input
+                    type="text"
+                    value={produtoPreco}
+                    onChange={e => setProdutoPreco(e.target.value)}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-red-500 font-bold"
+                    placeholder="Ex: 5,50"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">Categoria</label>
+                  <select
+                    value={produtoCategoria}
+                    onChange={e => setProdutoCategoria(e.target.value as any)}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-red-500"
+                  >
+                    <option value="salgado">🍔 Salgado</option>
+                    <option value="bebida">🥤 Bebida</option>
+                    <option value="doce">🍬 Doce</option>
+                    <option value="outro">📦 Outro</option>
+                  </select>
+                </div>
+              </div>
+
+              {errorMessage && (
+                <div className="text-xs text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
+                  ⚠️ {errorMessage}
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2 text-xs font-bold">
+                <button
+                  type="button"
+                  onClick={() => setIsAddProdutoOpen(false)}
+                  className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 py-2.5 rounded-xl border border-slate-200 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl transition-colors cursor-pointer"
+                >
+                  Salvar
                 </button>
               </div>
             </form>
