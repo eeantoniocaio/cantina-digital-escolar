@@ -20,6 +20,81 @@ export default function CantinaTerminal() {
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
+  // QR Code Scanner states
+  const [isScanning, setIsScanning] = useState(false);
+
+  const playSuccessBeep = () => {
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+      gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 0.12);
+    } catch (e) {
+      console.log("AudioContext not supported or blocked by browser", e);
+    }
+  };
+
+  const handleQrScanSuccess = (alunoId: string) => {
+    playSuccessBeep();
+    const student = alunos.find(a => a.id === alunoId);
+    if (student) {
+      handleSelectAluno(student);
+      setSuccessMsg(`Aluno ${student.nome} identificado via QR Code!`);
+      setIsScanning(false);
+    } else {
+      setErrorMsg("QR Code inválido ou aluno não cadastrado.");
+      setIsScanning(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isScanning) return;
+    
+    let html5QrCode: any;
+    
+    import("html5-qrcode").then((module) => {
+      const Html5Qrcode = module.Html5Qrcode;
+      html5QrCode = new Html5Qrcode("reader");
+      
+      html5QrCode.start(
+        { facingMode: "environment" },
+        {
+          fps: 10,
+          qrbox: { width: 220, height: 220 }
+        },
+        (decodedText: string) => {
+          handleQrScanSuccess(decodedText);
+          html5QrCode.stop().catch((err: any) => console.error(err));
+        },
+        () => {
+          // Silent scan error
+        }
+      ).catch((err: any) => {
+        console.error("Erro ao iniciar a câmera para QR Code:", err);
+      });
+    }).catch((err) => {
+      console.error("Erro ao carregar módulo html5-qrcode:", err);
+    });
+    
+    return () => {
+      if (html5QrCode) {
+        // html5QrCode.isScanning checks if camera is active
+        try {
+          html5QrCode.stop().catch(() => {});
+        } catch (e) {}
+      }
+    };
+  }, [isScanning, alunos]);
+
   useEffect(() => {
     const user = DBService.getCurrentUser();
     if (!user || user.role !== 'cantina') {
@@ -139,22 +214,31 @@ export default function CantinaTerminal() {
               <span>🔍</span> 1. Localizar Aluno
             </h3>
             
-            <div className="relative">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Digite o nome do aluno, turma ou RA..."
-                className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-red-500 text-slate-800 placeholder-slate-400"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-650"
-                >
-                  ✕
-                </button>
-              )}
+            <div className="flex gap-3 relative">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Digite o nome do aluno, turma ou RA..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-red-500 text-slate-800 placeholder-slate-400"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-650"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => { setIsScanning(true); setSuccessMsg(""); setErrorMsg(""); }}
+                className="bg-red-650 hover:bg-red-750 text-white font-bold px-5 sm:px-6 rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-95 shrink-0 text-xs sm:text-sm"
+              >
+                <span>📷</span> <span className="hidden sm:inline">Escanear QR</span>
+              </button>
             </div>
 
             {/* Resultados Dropdown */}
@@ -374,6 +458,65 @@ export default function CantinaTerminal() {
           </div>
         </div>
       </main>
+
+      {/* Modal Leitor QR Code */}
+      {isScanning && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-30">
+          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-md overflow-hidden shadow-xl p-6">
+            <div className="flex justify-between items-center pb-4 border-b border-slate-150 mb-4">
+              <h3 className="text-base font-extrabold text-slate-800 flex items-center gap-2">
+                <span>📷</span> Leitor de QR Code
+              </h3>
+              <button
+                onClick={() => setIsScanning(false)}
+                className="text-slate-400 hover:text-slate-650 text-lg cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Vídeo / Câmera */}
+            <div className="relative w-full h-64 bg-slate-900 rounded-2xl overflow-hidden mx-auto shadow-inner border border-slate-800 flex items-center justify-center mb-4">
+              <div id="reader" className="w-full h-full object-cover"></div>
+              
+              {/* Overlay HUD do Scanner */}
+              <div className="absolute inset-0 pointer-events-none border-2 border-dashed border-red-500/40 rounded-2xl m-4 flex items-center justify-center">
+                <div className="w-[80%] h-[80%] border border-red-500/20 rounded-xl relative overflow-hidden">
+                  {/* Laser bar animation */}
+                  <div className="absolute left-0 right-0 h-[2px] bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)] top-0 animate-bounce" style={{ animationDuration: '3.5s' }} />
+                </div>
+              </div>
+            </div>
+
+            {/* Simulação Rápida (Fallback e testes de QA) */}
+            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-center space-y-2.5">
+              <span className="text-[10px] text-slate-450 uppercase font-bold tracking-wider block">Simular Leitura de Carteirinha</span>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {alunos.map(aluno => (
+                  <button
+                    key={aluno.id}
+                    type="button"
+                    onClick={() => handleQrScanSuccess(aluno.id)}
+                    className="bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-lg text-[10px] font-bold shadow-xs transition-colors cursor-pointer"
+                  >
+                    👤 {aluno.nome.split(' ')[0]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Botão Fechar */}
+            <div className="pt-4 mt-2 border-t border-slate-150">
+              <button
+                onClick={() => setIsScanning(false)}
+                className="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs py-3 rounded-xl border border-slate-200 transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
