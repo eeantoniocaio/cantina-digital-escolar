@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { DBService, Profile } from "@/services/db";
 
@@ -27,111 +26,115 @@ export default function Home() {
   };
 
   return (
-    <main className="flex-1 flex flex-col justify-center items-center px-4 relative overflow-hidden bg-slate-950 text-slate-100 py-12">
-      {/* Decorative Gradients */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-violet-600/10 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-500/10 blur-[120px] pointer-events-none" />
+    <main className="flex-1 bg-slate-50 text-slate-800 flex flex-col justify-between min-h-screen">
+      {/* Header idêntico ao outro app */}
+      <header className="bg-white border-b border-slate-200/80 sticky top-0 z-20 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {/* Logo da Escola Simulado */}
+            <div className="h-10 w-10 bg-red-600 rounded-full flex items-center justify-center text-white font-black text-xs border border-red-700 shadow-sm">
+              EEAC
+            </div>
+            <div>
+              <h1 className="font-extrabold text-sm tracking-tight text-slate-800 leading-none">
+                Cantina Digital
+              </h1>
+              <span className="text-[10px] text-slate-500 font-semibold uppercase">E.E. Antônio Caio</span>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-4 text-xs font-semibold text-slate-600">
+            {currentUser && (
+              <div className="flex items-center gap-2 bg-slate-100 py-1.5 px-3 rounded-full border border-slate-200">
+                <span>Logado como: <strong className="text-slate-800">{currentUser.nome}</strong> ({currentUser.role})</span>
+                <button 
+                  onClick={handleLogout} 
+                  className="text-red-600 hover:text-red-700 transition-colors underline font-bold cursor-pointer"
+                >
+                  Sair
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
 
-      <div className="w-full max-w-4xl z-10">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <span className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-wider bg-violet-500/10 text-violet-400 border border-violet-500/20 uppercase">
-            ⚡ Inovação Escolar
-          </span>
-          <h1 className="mt-6 text-4xl sm:text-6xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-indigo-200 to-emerald-400">
-            Cantina Digital
-          </h1>
-          <p className="mt-4 text-base sm:text-lg text-slate-400 max-w-xl mx-auto">
-            O canal seguro e inteligente para gerar créditos e acompanhar o consumo dos alunos sem o uso de celulares em sala.
+      {/* Conteúdo Principal - Cartões de Portal de Entrada */}
+      <div className="flex-1 flex flex-col items-center justify-center max-w-4xl mx-auto px-4 py-12 w-full">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-extrabold tracking-tight text-slate-800">
+            Painel de Acesso à Cantina
+          </h2>
+          <p className="mt-2 text-sm text-slate-500 max-w-md mx-auto">
+            Selecione seu perfil abaixo para gerenciar saldos, enviar comprovantes de PIX ou registrar vendas.
           </p>
         </div>
 
-        {/* Portais de Acesso */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          {/* Card 1: Família */}
+        {/* Grid de Cartões estilo o outro app (Clean, White com Borda Suave e Sombras leves) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mb-8">
+          {/* Família */}
           <button
             onClick={() => handleSimularLogin('familia')}
-            className="group relative flex flex-col justify-between items-start text-left p-6 rounded-2xl border border-slate-800 bg-slate-900/50 hover:bg-slate-900 hover:border-violet-500/50 transition-all duration-300 transform hover:-translate-y-1 shadow-lg backdrop-blur-md"
+            className="group p-6 rounded-2xl border border-slate-200 bg-white hover:border-red-500/50 hover:shadow-md transition-all duration-300 flex flex-col justify-between items-center text-center shadow-xs cursor-pointer h-60"
           >
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-25 transition-opacity duration-300">
-              <span className="text-6xl">👨‍👩‍👦</span>
+            <div className="h-12 w-12 rounded-full flex items-center justify-center bg-red-50 text-red-600 mb-4 group-hover:scale-105 transition-transform duration-300">
+              <span className="text-2xl">👨‍👩‍👦</span>
             </div>
             <div>
-              <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-violet-500/20 text-violet-400 mb-6 group-hover:scale-110 transition-transform duration-300">
-                <span className="text-xl">🏠</span>
-              </div>
-              <h2 className="text-xl font-bold text-slate-100 mb-2">Família / Responsável</h2>
-              <p className="text-sm text-slate-400">
-                Envie comprovantes PIX, verifique o saldo atualizado dos alunos e acompanhe o histórico de recargas.
+              <h3 className="text-base font-bold text-slate-800 mb-2">Família / Responsável</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Envie comprovantes PIX, consulte o saldo atual de seus filhos e veja o histórico de recargas.
               </p>
             </div>
-            <div className="mt-8 text-xs font-semibold text-violet-400 flex items-center group-hover:translate-x-1 transition-transform">
-              Acessar Painel <span className="ml-1">→</span>
+            <div className="mt-4 text-xs font-bold text-red-600 group-hover:translate-x-0.5 transition-transform">
+              Entrar no Painel →
             </div>
           </button>
 
-          {/* Card 2: Cantina */}
+          {/* Cantina */}
           <button
             onClick={() => handleSimularLogin('cantina')}
-            className="group relative flex flex-col justify-between items-start text-left p-6 rounded-2xl border border-slate-800 bg-slate-900/50 hover:bg-slate-900 hover:border-amber-500/50 transition-all duration-300 transform hover:-translate-y-1 shadow-lg backdrop-blur-md"
+            className="group p-6 rounded-2xl border border-slate-200 bg-white hover:border-red-500/50 hover:shadow-md transition-all duration-300 flex flex-col justify-between items-center text-center shadow-xs cursor-pointer h-60"
           >
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-25 transition-opacity duration-300">
-              <span className="text-6xl">🍔</span>
+            <div className="h-12 w-12 rounded-full flex items-center justify-center bg-red-50 text-red-600 mb-4 group-hover:scale-105 transition-transform duration-300">
+              <span className="text-2xl">🍔</span>
             </div>
             <div>
-              <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-amber-500/20 text-amber-400 mb-6 group-hover:scale-110 transition-transform duration-300">
-                <span className="text-xl">🥪</span>
-              </div>
-              <h2 className="text-xl font-bold text-slate-100 mb-2">Cantina / Operador</h2>
-              <p className="text-sm text-slate-400">
-                Consulte saldo por nome do aluno ou turma e registre débitos de lanches de forma ágil e segura.
+              <h3 className="text-base font-bold text-slate-800 mb-2">Cantina / Operador</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Busca rápida de alunos e débito de consumo da cantina em tempo real (otimizado para toque).
               </p>
             </div>
-            <div className="mt-8 text-xs font-semibold text-amber-400 flex items-center group-hover:translate-x-1 transition-transform">
-              Acessar Terminal <span className="ml-1">→</span>
+            <div className="mt-4 text-xs font-bold text-red-600 group-hover:translate-x-0.5 transition-transform">
+              Acessar Terminal →
             </div>
           </button>
 
-          {/* Card 3: Admin */}
+          {/* Admin */}
           <button
             onClick={() => handleSimularLogin('admin')}
-            className="group relative flex flex-col justify-between items-start text-left p-6 rounded-2xl border border-slate-800 bg-slate-900/50 hover:bg-slate-900 hover:border-emerald-500/50 transition-all duration-300 transform hover:-translate-y-1 shadow-lg backdrop-blur-md"
+            className="group p-6 rounded-2xl border border-slate-200 bg-white hover:border-red-500/50 hover:shadow-md transition-all duration-300 flex flex-col justify-between items-center text-center shadow-xs cursor-pointer h-60"
           >
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-25 transition-opacity duration-300">
-              <span className="text-6xl">🏫</span>
+            <div className="h-12 w-12 rounded-full flex items-center justify-center bg-red-50 text-red-600 mb-4 group-hover:scale-105 transition-transform duration-300">
+              <span className="text-2xl">🏫</span>
             </div>
             <div>
-              <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-emerald-500/20 text-emerald-400 mb-6 group-hover:scale-110 transition-transform duration-300">
-                <span className="text-xl">💼</span>
-              </div>
-              <h2 className="text-xl font-bold text-slate-100 mb-2">Secretaria / Admin</h2>
-              <p className="text-sm text-slate-400">
-                Fila de aprovação de PIX, prevenção de fraudes, controle de saldos gerais e auditoria.
+              <h3 className="text-base font-bold text-slate-800 mb-2">Secretaria / Admin</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Fila de aprovação de recargas Pix, auditoria financeira de saldos e controle cadastral.
               </p>
             </div>
-            <div className="mt-8 text-xs font-semibold text-emerald-400 flex items-center group-hover:translate-x-1 transition-transform">
-              Acessar Secretaria <span className="ml-1">→</span>
+            <div className="mt-4 text-xs font-bold text-red-600 group-hover:translate-x-0.5 transition-transform">
+              Entrar na Secretaria →
             </div>
           </button>
         </div>
-
-        {/* Footer info & Simulações rápidas */}
-        <div className="border-t border-slate-800/60 pt-8 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-4">
-          <p>© 2026 Cantina Digital Escolar. Desenvolvido para simplificar e proteger.</p>
-          
-          {currentUser && (
-            <div className="flex items-center gap-3 bg-slate-900 py-1.5 px-3 rounded-full border border-slate-800">
-              <span>Logado como: <strong>{currentUser.nome}</strong> ({currentUser.role})</span>
-              <button 
-                onClick={handleLogout} 
-                className="text-red-400 hover:text-red-300 transition-colors underline font-medium cursor-pointer"
-              >
-                Sair
-              </button>
-            </div>
-          )}
-        </div>
       </div>
+
+      {/* Footer */}
+      <footer className="border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-500">
+        <p>© 2026 E.E. Antônio Caio - Cantina Digital Escolar. Todos os direitos reservados.</p>
+      </footer>
     </main>
   );
 }

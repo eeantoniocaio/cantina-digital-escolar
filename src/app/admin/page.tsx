@@ -110,22 +110,24 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="flex-1 bg-slate-950 text-slate-100 min-h-screen">
+    <div className="flex-1 bg-slate-50 text-slate-800 min-h-screen">
       {/* Navbar */}
-      <nav className="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md sticky top-0 z-20">
+      <nav className="border-b border-slate-200 bg-white sticky top-0 z-20 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">⚡</span>
-            <span className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-emerald-400 to-indigo-300 bg-clip-text text-transparent">
-              Cantina Digital
-            </span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              Administração
-            </span>
+            <div className="h-9 w-9 bg-red-600 rounded-full flex items-center justify-center text-white font-black text-xxs border border-red-700 shadow-xs">
+              EEAC
+            </div>
+            <div>
+              <span className="font-extrabold text-sm tracking-tight text-slate-800 block">
+                Cantina Digital
+              </span>
+              <span className="text-[9px] text-slate-500 font-bold uppercase block leading-none">Secretaria</span>
+            </div>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-slate-400 hidden sm:inline">Painel: <strong>{currentUser?.nome}</strong></span>
-            <a href="/" className="text-xs font-semibold text-slate-400 hover:text-slate-200 bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700 transition-colors">
+            <span className="text-xs text-slate-500 hidden sm:inline">Painel: <strong>{currentUser?.nome}</strong></span>
+            <a href="/" className="text-xs font-bold text-slate-500 hover:text-slate-700 bg-slate-100 px-3.5 py-1.5 rounded-full border border-slate-200 transition-colors">
               Sair
             </a>
           </div>
@@ -135,57 +137,57 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
         
-        {/* KPI Cards */}
+        {/* KPI Cards (Clean White with borders) */}
         <section className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-          <div className="bg-slate-900/60 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Fila de Aprovação</span>
+          <div className="bg-white border border-slate-200 p-6 rounded-2xl flex flex-col justify-between shadow-xs">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Fila de Aprovação</span>
             <div className="flex items-baseline justify-between mt-2">
-              <span className="text-3xl font-black text-amber-400">{pendentesCount}</span>
-              <span className="text-xxs text-amber-500/80 bg-amber-500/5 px-2 py-0.5 rounded border border-amber-500/10">Aguardando Revisão</span>
+              <span className="text-3xl font-black text-amber-600">{pendentesCount}</span>
+              <span className="text-xxs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-100">Pendente</span>
             </div>
           </div>
 
-          <div className="bg-slate-900/60 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total de Alunos</span>
+          <div className="bg-white border border-slate-200 p-6 rounded-2xl flex flex-col justify-between shadow-xs">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total de Alunos</span>
             <div className="flex items-baseline justify-between mt-2">
-              <span className="text-3xl font-black text-slate-200">{alunos.length}</span>
-              <span className="text-xxs text-emerald-400 bg-emerald-500/5 px-2 py-0.5 rounded border border-emerald-500/10">Ativos</span>
+              <span className="text-3xl font-black text-slate-800">{alunos.length}</span>
+              <span className="text-xxs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">Ativos</span>
             </div>
           </div>
 
-          <div className="bg-slate-900/60 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Crédito Circulante Geral</span>
+          <div className="bg-white border border-slate-200 p-6 rounded-2xl flex flex-col justify-between shadow-xs">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Crédito Circulante</span>
             <div className="flex items-baseline justify-between mt-2">
-              <span className="text-3xl font-black text-emerald-400">R$ {totalCreditosCirculando.toFixed(2)}</span>
-              <span className="text-xxs text-slate-400">Total nos Saldos</span>
+              <span className="text-3xl font-black text-emerald-600">R$ {totalCreditosCirculando.toFixed(2)}</span>
+              <span className="text-[10px] text-slate-400 font-semibold">Total em Saldo</span>
             </div>
           </div>
         </section>
 
         {/* Tab Selector */}
-        <div className="border-b border-slate-800 mb-8 flex gap-4 text-sm font-semibold">
+        <div className="border-b border-slate-200 mb-8 flex gap-4 text-xs font-bold uppercase tracking-wider">
           <button
             onClick={() => setActiveTab('fila')}
-            className={`pb-3 relative transition-colors cursor-pointer ${activeTab === 'fila' ? 'text-emerald-400' : 'text-slate-400 hover:text-slate-200'}`}
+            className={`pb-3 relative transition-colors cursor-pointer ${activeTab === 'fila' ? 'text-red-600' : 'text-slate-400 hover:text-slate-600'}`}
           >
-            📋 Fila de Pix {pendentesCount > 0 && <span className="ml-1 px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-xxs font-bold">{pendentesCount}</span>}
-            {activeTab === 'fila' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-500" />}
+            📋 Fila de Pix {pendentesCount > 0 && <span className="ml-1 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xxs font-black">{pendentesCount}</span>}
+            {activeTab === 'fila' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600" />}
           </button>
 
           <button
             onClick={() => setActiveTab('alunos')}
-            className={`pb-3 relative transition-colors cursor-pointer ${activeTab === 'alunos' ? 'text-emerald-400' : 'text-slate-400 hover:text-slate-200'}`}
+            className={`pb-3 relative transition-colors cursor-pointer ${activeTab === 'alunos' ? 'text-red-600' : 'text-slate-400 hover:text-slate-600'}`}
           >
             👥 Cadastro de Alunos
-            {activeTab === 'alunos' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-500" />}
+            {activeTab === 'alunos' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600" />}
           </button>
 
           <button
             onClick={() => setActiveTab('movimentacoes')}
-            className={`pb-3 relative transition-colors cursor-pointer ${activeTab === 'movimentacoes' ? 'text-emerald-400' : 'text-slate-400 hover:text-slate-200'}`}
+            className={`pb-3 relative transition-colors cursor-pointer ${activeTab === 'movimentacoes' ? 'text-red-600' : 'text-slate-400 hover:text-slate-600'}`}
           >
-            📊 Trilha de Auditoria (Ledger)
-            {activeTab === 'movimentacoes' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-500" />}
+            📊 Trilha de Auditoria
+            {activeTab === 'movimentacoes' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600" />}
           </button>
         </div>
 
@@ -194,14 +196,14 @@ export default function AdminDashboard() {
           <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Lista de Comprovantes */}
             <div className="lg:col-span-2 space-y-4">
-              <h3 className="text-lg font-bold text-slate-200 mb-2">Comprovantes Recebidos</h3>
+              <h3 className="text-sm font-bold text-slate-500 uppercase mb-2">Comprovantes Recebidos</h3>
               
               {comprovantes.length === 0 ? (
-                <div className="p-8 text-center text-slate-500 bg-slate-900/20 border border-slate-800 rounded-2xl">
+                <div className="p-8 text-center text-slate-500 bg-white border border-slate-200 rounded-2xl">
                   Nenhum comprovante no banco de dados.
                 </div>
               ) : comprovantes.filter(c => c.status === 'pendente').length === 0 ? (
-                <div className="p-12 text-center text-slate-400 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl">
+                <div className="p-12 text-center text-slate-600 bg-emerald-50 border border-emerald-100 rounded-2xl font-bold">
                   🎉 Todos os PIX foram analisados e aprovados! Fila vazia.
                 </div>
               ) : (
@@ -214,31 +216,31 @@ export default function AdminDashboard() {
                       onClick={() => { setSelectedComp(comp); setErrorMessage(""); }}
                       className={`w-full text-left p-5 rounded-2xl border transition-all duration-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 cursor-pointer ${
                         selectedComp?.id === comp.id
-                          ? 'bg-slate-900 border-emerald-500 shadow-md shadow-emerald-500/5'
+                          ? 'bg-white border-red-500 shadow-md'
                           : isDuplicate
-                          ? 'bg-red-500/5 border-red-500/30 hover:bg-slate-900 hover:border-red-500/40'
-                          : 'bg-slate-900/60 border-slate-800/80 hover:bg-slate-900 hover:border-slate-700'
+                          ? 'bg-red-50/50 border-red-200 hover:bg-white hover:border-red-300'
+                          : 'bg-white border-slate-200 hover:bg-slate-50 hover:border-slate-300'
                       }`}
                     >
                       <div>
                         <div className="flex items-center gap-2 mb-1.5">
-                          <span className="text-sm font-bold text-slate-100">{aluno?.nome || "Aluno Excluído"}</span>
-                          <span className="text-xxs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-800">{aluno?.turma}</span>
+                          <span className="text-sm font-bold text-slate-800">{aluno?.nome || "Aluno Excluído"}</span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">{aluno?.turma}</span>
                           {isDuplicate && (
-                            <span className="text-xxs px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 font-bold animate-pulse">
+                            <span className="text-xxs px-2 py-0.5 rounded-full bg-red-100 text-red-600 border border-red-200 font-bold animate-pulse">
                               ⚠️ ALERTA DUPLICADO
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-slate-400 space-y-0.5">
+                        <div className="text-xs text-slate-500 space-y-0.5">
                           <p>Pagador: <strong>{comp.pagador}</strong></p>
-                          <p className="font-mono text-xxs">Transação: {comp.id_transacao || "Não informada"}</p>
+                          <p className="font-mono text-[10px] text-slate-400">Transação: {comp.id_transacao || "Não informada"}</p>
                         </div>
                       </div>
 
-                      <div className="text-right flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto border-t sm:border-0 border-slate-800 pt-3 sm:pt-0">
-                        <span className="text-lg font-black text-emerald-400">R$ {comp.valor.toFixed(2)}</span>
-                        <span className="text-xxs text-slate-500">
+                      <div className="text-right flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto border-t sm:border-0 border-slate-100 pt-3 sm:pt-0">
+                        <span className="text-base font-black text-emerald-600">R$ {comp.valor.toFixed(2)}</span>
+                        <span className="text-[10px] text-slate-400">
                           {new Date(comp.criado_em).toLocaleDateString('pt-BR')} às {new Date(comp.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
@@ -250,16 +252,16 @@ export default function AdminDashboard() {
 
             {/* Visualizador de Detalhes / Lado a Lado */}
             <div className="lg:col-span-1">
-              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sticky top-24 shadow-xl">
+              <div className="bg-white border border-slate-200 rounded-3xl p-6 sticky top-24 shadow-sm">
                 {selectedComp ? (
                   <div className="space-y-6">
-                    <div className="border-b border-slate-800 pb-4">
-                      <h4 className="font-bold text-lg text-slate-100">Análise do Comprovante</h4>
-                      <p className="text-xs text-slate-500">ID interno: {selectedComp.id}</p>
+                    <div className="border-b border-slate-200 pb-4">
+                      <h4 className="font-bold text-base text-slate-800">Análise de Comprovante</h4>
+                      <p className="text-[10px] text-slate-400">ID interno: {selectedComp.id}</p>
                     </div>
 
                     {/* Imagem do Comprovante */}
-                    <div className="relative rounded-2xl border border-slate-800 bg-slate-950 h-52 overflow-hidden flex items-center justify-center">
+                    <div className="relative rounded-2xl border border-slate-200 bg-slate-50 h-52 overflow-hidden flex items-center justify-center">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={selectedComp.arquivo_url}
@@ -271,83 +273,83 @@ export default function AdminDashboard() {
                     {/* Alertas de Segurança */}
                     <div className="space-y-2">
                       {isHashDuplicate(selectedComp) ? (
-                        <div className="text-xs bg-red-500/10 border border-red-500/25 text-red-400 p-3 rounded-xl flex items-start gap-2">
+                        <div className="text-xs bg-red-50 border border-red-200 text-red-700 p-3 rounded-xl flex items-start gap-2">
                           <span className="text-base">🚨</span>
                           <div>
-                            <strong>Arquivo Duplicado:</strong> Este comprovante exato (mesma imagem) já foi submetido em outro envio. Risco de fraude.
+                            <strong>Arquivo Duplicado:</strong> Esta imagem já foi submetida em outro envio. Risco de fraude.
                           </div>
                         </div>
                       ) : (
-                        <div className="text-xs bg-emerald-500/5 border border-emerald-500/15 text-emerald-400 p-2.5 rounded-xl flex items-center gap-2">
-                          <span className="text-emerald-400">✓</span> Assinatura digital única (sem duplicados).
+                        <div className="text-[11px] bg-emerald-50 border border-emerald-100 text-emerald-700 p-2.5 rounded-xl flex items-center gap-2 font-medium">
+                          <span>✓</span> Arquivo de imagem inédito.
                         </div>
                       )}
 
                       {isTxIdDuplicate(selectedComp) ? (
-                        <div className="text-xs bg-red-500/10 border border-red-500/25 text-red-400 p-3 rounded-xl flex items-start gap-2">
+                        <div className="text-xs bg-red-50 border border-red-200 text-red-700 p-3 rounded-xl flex items-start gap-2">
                           <span className="text-base">🚨</span>
                           <div>
-                            <strong>PIX Duplicado:</strong> Este ID de transação PIX já consta como "Aprovado" no sistema. Não credite novamente.
+                            <strong>PIX Duplicado:</strong> ID de transação PIX já foi aprovado anteriormente.
                           </div>
                         </div>
                       ) : selectedComp.id_transacao ? (
-                        <div className="text-xs bg-emerald-500/5 border border-emerald-500/15 text-emerald-400 p-2.5 rounded-xl flex items-center gap-2">
-                          <span className="text-emerald-400">✓</span> ID de transação PIX inédito.
+                        <div className="text-[11px] bg-emerald-50 border border-emerald-100 text-emerald-700 p-2.5 rounded-xl flex items-center gap-2 font-medium">
+                          <span>✓</span> ID Pix livre e sem registros anteriores.
                         </div>
                       ) : null}
                     </div>
 
                     {/* Dados Lidos */}
-                    <div className="bg-slate-950 p-4 rounded-xl border border-slate-800/80 space-y-2.5 text-xs">
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2.5 text-xs">
                       <div className="flex justify-between">
-                        <span className="text-slate-500">Aluno:</span>
-                        <strong className="text-slate-200">
+                        <span className="text-slate-400">Aluno:</span>
+                        <strong className="text-slate-800">
                           {alunos.find(a => a.id === selectedComp.aluno_id)?.nome}
                         </strong>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">Valor extraído:</span>
-                        <strong className="text-emerald-400 font-bold text-sm">
+                        <span className="text-slate-400">Valor extraído:</span>
+                        <strong className="text-emerald-600 font-bold text-sm">
                           R$ {selectedComp.valor.toFixed(2)}
                         </strong>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">Pagador:</span>
-                        <strong className="text-slate-200">{selectedComp.pagador}</strong>
+                        <span className="text-slate-400">Pagador:</span>
+                        <strong className="text-slate-800">{selectedComp.pagador}</strong>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">ID Pix:</span>
-                        <strong className="text-slate-300 font-mono text-[10px] break-all">{selectedComp.id_transacao}</strong>
+                        <span className="text-slate-400">ID Pix:</span>
+                        <strong className="text-slate-600 font-mono text-[10px] break-all">{selectedComp.id_transacao}</strong>
                       </div>
                     </div>
 
                     {errorMessage && (
-                      <div className="text-xs text-red-400 bg-red-500/10 p-3 rounded-lg border border-red-500/20">
+                      <div className="text-xs text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
                         ⚠️ {errorMessage}
                       </div>
                     )}
 
                     {/* Botões de Ação */}
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 text-xs font-bold">
                       <button
                         onClick={() => { setIsRejectModalOpen(true); setErrorMessage(""); }}
-                        className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-semibold py-3 rounded-xl border border-red-500/20 transition-colors cursor-pointer"
+                        className="flex-1 bg-red-50 hover:bg-red-100 text-red-600 py-3 rounded-xl border border-red-200 transition-colors cursor-pointer"
                       >
                         Rejeitar
                       </button>
                       <button
                         onClick={() => handleApprove(selectedComp)}
                         disabled={isTxIdDuplicate(selectedComp)}
-                        className="flex-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-emerald-600/10 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                        className="flex-2 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                       >
-                        Liberar R$ {selectedComp.valor.toFixed(2)}
+                        Aprovar R$ {selectedComp.valor.toFixed(2)}
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-16 text-slate-500">
+                  <div className="text-center py-16 text-slate-400">
                     <span className="text-4xl block mb-3">🔍</span>
-                    Selecione um comprovante da fila para analisar as informações de segurança e liberar o saldo.
+                    Selecione um comprovante para analisar as assinaturas de segurança.
                   </div>
                 )}
               </div>
@@ -357,12 +359,12 @@ export default function AdminDashboard() {
 
         {/* Tab: Alunos */}
         {activeTab === 'alunos' && (
-          <section className="bg-slate-900/40 border border-slate-800 p-6 rounded-2xl">
+          <section className="bg-white border border-slate-200 p-6 rounded-2xl shadow-xs">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-bold text-slate-200">Alunos Cadastrados</h3>
+              <h3 className="text-sm font-bold text-slate-500 uppercase">Alunos Cadastrados</h3>
               <button
                 onClick={() => setIsAddAlunoOpen(true)}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs px-4.5 py-2.5 rounded-xl transition-colors cursor-pointer"
+                className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl transition-colors cursor-pointer"
               >
                 + Novo Aluno
               </button>
@@ -371,7 +373,7 @@ export default function AdminDashboard() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-800 text-xs text-slate-400 uppercase tracking-wider">
+                  <tr className="border-b border-slate-200 text-xs text-slate-500 uppercase tracking-wider bg-slate-50">
                     <th className="py-3 px-4">Nome</th>
                     <th className="py-3 px-4">Turma</th>
                     <th className="py-3 px-4">RA</th>
@@ -379,15 +381,15 @@ export default function AdminDashboard() {
                     <th className="py-3 px-4">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/40 text-sm text-slate-300">
+                <tbody className="divide-y divide-slate-100 text-xs text-slate-600">
                   {alunos.map(aluno => (
-                    <tr key={aluno.id} className="hover:bg-slate-800/5 transition-colors">
-                      <td className="py-3.5 px-4 font-bold text-slate-200">{aluno.nome}</td>
+                    <tr key={aluno.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="py-3.5 px-4 font-bold text-slate-800">{aluno.nome}</td>
                       <td className="py-3.5 px-4">{aluno.turma}</td>
-                      <td className="py-3.5 px-4 font-mono text-xs text-slate-400">{aluno.ra}</td>
-                      <td className="py-3.5 px-4 text-right font-black text-emerald-400">R$ {aluno.saldo.toFixed(2)}</td>
+                      <td className="py-3.5 px-4 font-mono text-slate-400">{aluno.ra}</td>
+                      <td className="py-3.5 px-4 text-right font-bold text-slate-800">R$ {aluno.saldo.toFixed(2)}</td>
                       <td className="py-3.5 px-4">
-                        <span className="px-2 py-0.5 rounded text-xxs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        <span className="px-2 py-0.5 rounded text-xxs font-bold bg-emerald-50 text-emerald-600 border border-emerald-100">
                           Ativo
                         </span>
                       </td>
@@ -401,13 +403,13 @@ export default function AdminDashboard() {
 
         {/* Tab: Movimentacoes */}
         {activeTab === 'movimentacoes' && (
-          <section className="bg-slate-900/40 border border-slate-800 p-6 rounded-2xl">
-            <h3 className="text-lg font-bold text-slate-200 mb-6">Trilha de Auditoria Geral (Entradas e Saídas)</h3>
+          <section className="bg-white border border-slate-200 p-6 rounded-2xl shadow-xs">
+            <h3 className="text-sm font-bold text-slate-500 uppercase mb-6">Trilha de Auditoria Geral</h3>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-800 text-xs text-slate-400 uppercase tracking-wider">
+                  <tr className="border-b border-slate-200 text-xs text-slate-500 uppercase tracking-wider bg-slate-50">
                     <th className="py-3 px-4">Aluno</th>
                     <th className="py-3 px-4">Tipo</th>
                     <th className="py-3 px-4">Valor</th>
@@ -416,25 +418,25 @@ export default function AdminDashboard() {
                     <th className="py-3 px-4">Data/Hora</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/40 text-sm text-slate-300">
+                <tbody className="divide-y divide-slate-100 text-xs text-slate-600">
                   {movimentacoes.map(mov => {
                     const aluno = alunos.find(a => a.id === mov.aluno_id);
                     return (
-                      <tr key={mov.id} className="hover:bg-slate-800/5 transition-colors">
-                        <td className="py-3.5 px-4 font-semibold text-slate-200">{aluno?.nome || "Excluído"}</td>
+                      <tr key={mov.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="py-3.5 px-4 font-bold text-slate-800">{aluno?.nome || "Excluído"}</td>
                         <td className="py-3.5 px-4">
                           {mov.tipo === 'credito' ? (
-                            <span className="px-2 py-0.5 rounded text-xxs font-bold bg-emerald-500/15 text-emerald-400">ENTRADA (PIX)</span>
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100">ENTRADA (PIX)</span>
                           ) : (
-                            <span className="px-2 py-0.5 rounded text-xxs font-bold bg-rose-500/15 text-rose-400">SAÍDA (CONSUMO)</span>
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-100">SAÍDA (CANTINA)</span>
                           )}
                         </td>
-                        <td className={`py-3.5 px-4 font-black ${mov.tipo === 'credito' ? 'text-emerald-400' : 'text-slate-300'}`}>
+                        <td className={`py-3.5 px-4 font-bold ${mov.tipo === 'credito' ? 'text-emerald-600' : 'text-slate-600'}`}>
                           {mov.tipo === 'credito' ? '+' : '-'} R$ {mov.valor.toFixed(2)}
                         </td>
-                        <td className="py-3.5 px-4 text-xs text-slate-400">{mov.descricao}</td>
-                        <td className="py-3.5 px-4 text-xs text-slate-400">{mov.criado_por === 'usr-admin' ? 'Secretaria' : 'Atendente Cantina'}</td>
-                        <td className="py-3.5 px-4 text-xs text-slate-400">
+                        <td className="py-3.5 px-4 text-slate-500">{mov.descricao}</td>
+                        <td className="py-3.5 px-4 text-slate-400">{mov.criado_por === 'usr-admin' ? 'Secretaria' : 'Atendente Cantina'}</td>
+                        <td className="py-3.5 px-4 text-slate-400">
                           {new Date(mov.criado_em).toLocaleDateString('pt-BR')} às {new Date(mov.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                         </td>
                       </tr>
@@ -449,40 +451,40 @@ export default function AdminDashboard() {
 
       {/* Modal: Rejeição de Comprovante */}
       {isRejectModalOpen && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-30">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl p-6">
-            <h3 className="text-lg font-bold text-slate-100 mb-2">Rejeitar Recarga PIX</h3>
-            <p className="text-xs text-slate-400 mb-4">Por favor, descreva o motivo da rejeição. A família visualizará este texto em seu painel para efetuar correções.</p>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-30">
+          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-md overflow-hidden shadow-xl p-6">
+            <h3 className="text-base font-extrabold text-slate-850 mb-2">Rejeitar Recarga PIX</h3>
+            <p className="text-xs text-slate-400 mb-4 font-medium">Por favor, descreva o motivo da rejeição. A família visualizará este texto em seu painel.</p>
             
             <form onSubmit={handleRejectSubmit} className="space-y-4">
               <div>
                 <textarea
                   value={rejectionReason}
                   onChange={e => setRejectionReason(e.target.value)}
-                  placeholder="Ex: Valor incorreto no comprovante, banco de destino não correspondente..."
+                  placeholder="Ex: Comprovante ilegível ou de outro favorecido..."
                   rows={4}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-red-500"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-red-500"
                   required
                 />
               </div>
 
               {errorMessage && (
-                <div className="text-xs text-red-400 bg-red-500/10 p-3 rounded-lg border border-red-500/20">
+                <div className="text-xs text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
                   ⚠️ {errorMessage}
                 </div>
               )}
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-3 pt-2 text-xs font-bold">
                 <button
                   type="button"
                   onClick={() => { setIsRejectModalOpen(false); setRejectionReason(""); }}
-                  className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold py-2.5 rounded-xl border border-slate-700 cursor-pointer"
+                  className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 py-2.5 rounded-xl border border-slate-200 cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-red-600 hover:bg-red-500 text-white text-xs font-semibold py-2.5 rounded-xl transition-colors cursor-pointer"
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl transition-colors cursor-pointer"
                 >
                   Confirmar Rejeição
                 </button>
@@ -494,18 +496,18 @@ export default function AdminDashboard() {
 
       {/* Modal: Adicionar Aluno */}
       {isAddAlunoOpen && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-30">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl p-6">
-            <h3 className="text-lg font-bold text-slate-100 mb-4">Adicionar Novo Aluno</h3>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-30">
+          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-md overflow-hidden shadow-xl p-6">
+            <h3 className="text-base font-extrabold text-slate-800 mb-4">Adicionar Novo Aluno</h3>
 
             <form onSubmit={handleAddAlunoSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">Nome Completo</label>
+                <label className="block text-xs font-bold text-slate-500 mb-1">Nome Completo</label>
                 <input
                   type="text"
                   value={alunoNome}
                   onChange={e => setAlunoNome(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-red-500"
                   placeholder="Nome do Aluno"
                   required
                 />
@@ -513,23 +515,23 @@ export default function AdminDashboard() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-1">Turma</label>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">Turma</label>
                   <input
                     type="text"
                     value={alunoTurma}
                     onChange={e => setAlunoTurma(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-red-500"
                     placeholder="Ex: 6º Ano A"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-1">RA (Registro)</label>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">RA (Registro)</label>
                   <input
                     type="text"
                     value={alunoRa}
                     onChange={e => setAlunoRa(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-red-500"
                     placeholder="123456-7"
                     required
                   />
@@ -537,11 +539,11 @@ export default function AdminDashboard() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">Vincular Responsável (Família)</label>
+                <label className="block text-xs font-bold text-slate-500 mb-1">Vincular Responsável</label>
                 <select
                   value={alunoResponsavelId}
                   onChange={e => setAlunoResponsavelId(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-red-500"
                 >
                   <option value="">Nenhum / Cadastrar desvinculado</option>
                   {profiles.map(p => (
@@ -551,22 +553,22 @@ export default function AdminDashboard() {
               </div>
 
               {errorMessage && (
-                <div className="text-xs text-red-400 bg-red-500/10 p-3 rounded-lg border border-red-500/20">
+                <div className="text-xs text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
                   ⚠️ {errorMessage}
                 </div>
               )}
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-3 pt-2 text-xs font-bold">
                 <button
                   type="button"
                   onClick={() => setIsAddAlunoOpen(false)}
-                  className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold py-2.5 rounded-xl border border-slate-700 cursor-pointer"
+                  className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 py-2.5 rounded-xl border border-slate-200 cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold py-2.5 rounded-xl transition-colors cursor-pointer"
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl transition-colors cursor-pointer"
                 >
                   Cadastrar
                 </button>
