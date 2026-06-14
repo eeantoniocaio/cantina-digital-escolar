@@ -19,16 +19,25 @@ export default function AdminSwitcher() {
     // Set up a small interval to check for user updates (since localStorage changes are not always events on the same tab)
     const interval = setInterval(() => {
       const updatedUser = DBService.getCurrentUser();
-      if (JSON.stringify(updatedUser) !== JSON.stringify(currentUser)) {
-        setCurrentUser(updatedUser);
-      }
-      if (typeof window !== "undefined" && window.location.pathname !== currentPath) {
-        setCurrentPath(window.location.pathname);
+      setCurrentUser(prevUser => {
+        if (JSON.stringify(updatedUser) !== JSON.stringify(prevUser)) {
+          return updatedUser;
+        }
+        return prevUser;
+      });
+      
+      if (typeof window !== "undefined") {
+        setCurrentPath(prevPath => {
+          if (window.location.pathname !== prevPath) {
+            return window.location.pathname;
+          }
+          return prevPath;
+        });
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [currentUser, currentPath]);
+  }, []);
 
   // Hide if not logged in or not admin/gestao
   if (!currentUser || (currentUser.role !== "admin" && currentUser.role !== "gestao")) {
