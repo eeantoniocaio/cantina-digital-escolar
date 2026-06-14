@@ -8,7 +8,7 @@ create table public.profiles (
     id uuid references auth.users on delete cascade primary key,
     email text not null,
     nome text,
-    role text not null check (role in ('admin', 'familia', 'cantina')),
+    role text not null check (role in ('admin', 'familia', 'cantina', 'aluno', 'professor', 'gestao')),
     criado_em timestamp with time zone default timezone('utc'::text, now()) not null
 );
 

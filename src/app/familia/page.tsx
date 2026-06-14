@@ -31,7 +31,7 @@ export default function FamiliaDashboard() {
 
   useEffect(() => {
     const user = DBService.getCurrentUser();
-    if (!user || user.role !== 'familia') {
+    if (!user || (user.role !== 'familia' && user.role !== 'admin' && user.role !== 'gestao')) {
       window.location.href = "/";
       return;
     }

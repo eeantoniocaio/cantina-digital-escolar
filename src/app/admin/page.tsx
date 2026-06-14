@@ -37,7 +37,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     const user = DBService.getCurrentUser();
-    if (!user || user.role !== 'admin') {
+    if (!user || (user.role !== 'admin' && user.role !== 'gestao')) {
       window.location.href = "/";
       return;
     }

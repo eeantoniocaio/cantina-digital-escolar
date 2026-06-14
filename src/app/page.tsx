@@ -6,7 +6,7 @@ import { DBService, Profile } from "@/services/db";
 export default function Home() {
   const [currentUser, setCurrentUser] = useState<Profile | null>(null);
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
-  const [registerRole, setRegisterRole] = useState<'aluno' | 'familia'>('aluno');
+  const [registerRole, setRegisterRole] = useState<'aluno' | 'familia' | 'professor'>('aluno');
 
   // Input states for Login
   const [loginEmail, setLoginEmail] = useState("");
@@ -27,6 +27,11 @@ export default function Home() {
   const [parentWhatsapp, setParentWhatsapp] = useState("");
   const [parentPassword, setParentPassword] = useState("");
 
+  // Input states for Professor Register
+  const [profNome, setProfNome] = useState("");
+  const [profEmail, setProfEmail] = useState("");
+  const [profPassword, setProfPassword] = useState("");
+
   // Feedback states
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -45,7 +50,8 @@ export default function Home() {
         const profile = await DBService.handleOAuthCallback();
         if (profile) {
           setCurrentUser(profile);
-          window.location.href = `/${profile.role}`;
+          const redirectPath = profile.role === 'gestao' ? '/admin' : `/${profile.role}`;
+          window.location.href = redirectPath;
         }
       } catch (err: any) {
         console.error("OAuth callback error:", err);
@@ -64,7 +70,8 @@ export default function Home() {
       const profile = await DBService.signIn(loginEmail, loginPassword);
       setSuccessMsg(`Bem-vindo de volta, ${profile.nome}!`);
       setTimeout(() => {
-        window.location.href = `/${profile.role}`;
+        const redirectPath = profile.role === 'gestao' ? '/admin' : `/${profile.role}`;
+        window.location.href = redirectPath;
       }, 1000);
     } catch (err: any) {
       setErrorMsg(err.message || "Erro ao fazer login. Verifique suas credenciais.");
@@ -102,6 +109,26 @@ export default function Home() {
         });
 
         setSuccessMsg("Cadastro de estudante realizado com sucesso! Verifique seu e-mail para confirmação.");
+      } else if (registerRole === 'professor') {
+        if (!profNome || !profEmail || !profPassword) {
+          setErrorMsg("Preencha todos os campos obrigatórios.");
+          setIsLoading(false);
+          return;
+        }
+        const emailLower = profEmail.toLowerCase();
+        if (!emailLower.endsWith("@prof.educacao.sp.gov.br") && !emailLower.endsWith("@servidor.educacao.sp.gov.br")) {
+          setErrorMsg("Professores e servidores devem usar o e-mail @prof.educacao.sp.gov.br ou @servidor.educacao.sp.gov.br");
+          setIsLoading(false);
+          return;
+        }
+
+        await DBService.signUpProfessor({
+          email: profEmail,
+          password: profPassword,
+          nome: profNome
+        });
+
+        setSuccessMsg("Cadastro de professor/servidor realizado com sucesso! Verifique seu e-mail para confirmação.");
       } else {
         if (!parentNome || !parentRG || !parentEmail || !parentWhatsapp || !parentPassword) {
           setErrorMsg("Preencha todos os campos obrigatórios.");
@@ -139,15 +166,21 @@ export default function Home() {
     }
   };
 
-  const handleSimularLogin = async (role: 'familia' | 'admin' | 'cantina' | 'aluno') => {
+  const handleSimularLogin = async (role: 'familia' | 'admin' | 'cantina' | 'aluno' | 'professor' | 'gestao') => {
     let email = "";
     if (role === 'admin') email = "admin@escola.com";
     else if (role === 'cantina') email = "cantina@escola.com";
     else if (role === 'aluno') email = "enzo@escola.com";
+    else if (role === 'professor') email = "professor@prof.educacao.sp.gov.br";
+    else if (role === 'gestao') email = "andre.avancini@servidor.educacao.sp.gov.br";
     else email = "pai@email.com";
 
     await DBService.login(email, role);
-    window.location.href = `/${role}`;
+    if (role === 'gestao') {
+      window.location.href = "/admin";
+    } else {
+      window.location.href = `/${role}`;
+    }
   };
 
   const handleLogout = () => {
@@ -167,6 +200,9 @@ export default function Home() {
     setParentEmail("");
     setParentWhatsapp("");
     setParentPassword("");
+    setProfNome("");
+    setProfEmail("");
+    setProfPassword("");
   };
 
   return (
@@ -311,6 +347,13 @@ export default function Home() {
                 </button>
                 <button
                   type="button"
+                  onClick={() => setRegisterRole('professor')}
+                  className={`flex-1 py-1.5 rounded transition-all cursor-pointer ${registerRole === 'professor' ? 'bg-white text-slate-850 shadow-2xs border border-slate-200/50' : ''}`}
+                >
+                  Servidor/Prof.
+                </button>
+                <button
+                  type="button"
                   onClick={() => setRegisterRole('familia')}
                   className={`flex-1 py-1.5 rounded transition-all cursor-pointer ${registerRole === 'familia' ? 'bg-white text-slate-850 shadow-2xs border border-slate-200/50' : ''}`}
                 >
@@ -318,7 +361,7 @@ export default function Home() {
                 </button>
               </div>
 
-              {registerRole === 'aluno' ? (
+              {registerRole === 'aluno' && (
                 <>
                   <div className="space-y-1">
                     <label className="block text-xxs font-bold text-slate-500 uppercase">Nome Completo</label>
@@ -396,7 +439,49 @@ export default function Home() {
                     />
                   </div>
                 </>
-              ) : (
+              )}
+
+              {registerRole === 'professor' && (
+                <>
+                  <div className="space-y-1">
+                    <label className="block text-xxs font-bold text-slate-500 uppercase">Nome Completo</label>
+                    <input
+                      type="text"
+                      value={profNome}
+                      onChange={e => setProfNome(e.target.value)}
+                      placeholder="Nome do Professor/Servidor"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-red-500 placeholder-slate-400"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-xxs font-bold text-slate-500 uppercase">E-mail Institucional</label>
+                    <input
+                      type="email"
+                      value={profEmail}
+                      onChange={e => setProfEmail(e.target.value)}
+                      placeholder="seu-nome@prof.educacao.sp.gov.br"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-red-500 placeholder-slate-400"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-xxs font-bold text-slate-500 uppercase">Senha</label>
+                    <input
+                      type="password"
+                      value={profPassword}
+                      onChange={e => setProfPassword(e.target.value)}
+                      placeholder="Mínimo 6 caracteres"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-red-500 placeholder-slate-400"
+                      required
+                    />
+                  </div>
+                </>
+              )}
+
+              {registerRole === 'familia' && (
                 <>
                   <div className="space-y-1">
                     <label className="block text-xxs font-bold text-slate-500 uppercase">Nome Completo</label>
@@ -496,6 +581,12 @@ export default function Home() {
               🎓 Aluno Teste
             </button>
             <button
+              onClick={() => handleSimularLogin('professor')}
+              className="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-lg text-[10px] font-bold transition-colors cursor-pointer"
+            >
+              💼 Professor Teste
+            </button>
+            <button
               onClick={() => handleSimularLogin('familia')}
               className="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-lg text-[10px] font-bold transition-colors cursor-pointer"
             >
@@ -512,6 +603,12 @@ export default function Home() {
               className="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-lg text-[10px] font-bold transition-colors cursor-pointer"
             >
               🏫 Secretaria Teste
+            </button>
+            <button
+              onClick={() => handleSimularLogin('gestao')}
+              className="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-lg text-[10px] font-bold transition-colors cursor-pointer"
+            >
+              🔑 Gestão Teste
             </button>
           </div>
         </div>

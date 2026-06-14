@@ -4,7 +4,7 @@ export interface Profile {
   id: string;
   email: string;
   nome: string;
-  role: 'admin' | 'familia' | 'cantina' | 'aluno';
+  role: 'admin' | 'familia' | 'cantina' | 'aluno' | 'professor' | 'gestao';
   aluno_id?: string;
   criado_em: string;
   rg?: string;
@@ -117,7 +117,7 @@ export class DBService {
     return user ? JSON.parse(user) : null;
   }
 
-  static async login(email: string, role: 'admin' | 'familia' | 'cantina' | 'aluno'): Promise<Profile> {
+  static async login(email: string, role: 'admin' | 'familia' | 'cantina' | 'aluno' | 'professor' | 'gestao'): Promise<Profile> {
     const { data: profiles, error } = await supabase
       .from('profiles')
       .select('*')
@@ -132,7 +132,7 @@ export class DBService {
         email: email.toLowerCase(),
         nome: email.split('@')[0].toUpperCase(),
         role,
-        aluno_id: role === 'aluno' ? 'aluno-1' : undefined,
+        aluno_id: role === 'aluno' ? 'aluno-1' : (role === 'professor' ? 'prof-1' : undefined),
         criado_em: new Date().toISOString()
       };
       const { error: insertError } = await supabase.from('profiles').insert([profile]);
@@ -315,17 +315,28 @@ export class DBService {
     if (!profiles || profiles.length === 0) {
       const nome = user.user_metadata.full_name || user.email?.split('@')[0].toUpperCase() || "USUÁRIO GOOGLE";
       const email = user.email || "";
-      const isStudentEmail = email.toLowerCase().endsWith('@al.educacao.sp.gov.br');
-      const role = isStudentEmail ? 'aluno' : 'familia';
+      const emailLower = email.toLowerCase();
+      
+      const isStudentEmail = emailLower.endsWith('@al.educacao.sp.gov.br');
+      const isTeacherEmail = emailLower.endsWith('@prof.educacao.sp.gov.br') || emailLower.endsWith('@servidor.educacao.sp.gov.br');
+      
+      let role: 'admin' | 'familia' | 'cantina' | 'aluno' | 'professor' | 'gestao' = 'familia';
+      if (emailLower === 'andre.avancini@servidor.educacao.sp.gov.br') {
+        role = 'gestao';
+      } else if (isTeacherEmail) {
+        role = 'professor';
+      } else if (isStudentEmail) {
+        role = 'aluno';
+      }
       
       let aluno_id: string | undefined = undefined;
-      if (isStudentEmail) {
+      if (isStudentEmail || isTeacherEmail) {
         // Cria também o Aluno
         const novoAluno = {
           nome,
-          ra: "G-" + Math.random().toString(36).substr(2, 6).toUpperCase(),
+          ra: (isTeacherEmail ? "P-" : "G-") + Math.random().toString(36).substr(2, 6).toUpperCase(),
           digito: "0",
-          turma: "Não Definitiva",
+          turma: isTeacherEmail ? "Professor" : "Não Definitiva",
           saldo: 0.00,
           ativo: true,
           criado_em: new Date().toISOString()
@@ -354,6 +365,72 @@ export class DBService {
       localStorage.setItem('cantina_current_user', JSON.stringify(profile));
     }
     return profile;
+  }
+
+  static async signUpProfessor(params: {
+    email: string;
+    password: string;
+    nome: string;
+  }): Promise<Profile> {
+    const emailLower = params.email.toLowerCase();
+    const isAllowedDomain = emailLower.endsWith('@prof.educacao.sp.gov.br') || emailLower.endsWith('@servidor.educacao.sp.gov.br');
+    if (!isAllowedDomain) {
+      throw new Error("E-mail deve utilizar os domínios @prof.educacao.sp.gov.br ou @servidor.educacao.sp.gov.br");
+    }
+
+    const role: Profile['role'] = emailLower === 'andre.avancini@servidor.educacao.sp.gov.br' ? 'gestao' : 'professor';
+
+    // 1. Cadastra no Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: params.email,
+      password: params.password,
+      options: {
+        data: {
+          nome: params.nome,
+          role: role
+        }
+      }
+    });
+
+    if (authError) throw authError;
+    if (!authData.user) throw new Error("Erro ao criar usuário no Supabase Auth.");
+
+    // 2. Cria o registro do aluno/funcionário
+    const novoAluno = {
+      nome: params.nome,
+      ra: "P-" + Math.random().toString(36).substr(2, 6).toUpperCase(),
+      digito: "0",
+      turma: "Professor",
+      saldo: 0.00,
+      ativo: true,
+      criado_em: new Date().toISOString()
+    };
+    
+    const { data: alunoData, error: alunoError } = await supabase
+      .from('alunos')
+      .insert([novoAluno])
+      .select();
+
+    if (alunoError) throw alunoError;
+    const aluno = alunoData[0] as Aluno;
+
+    // 3. Cria o perfil do usuário
+    const perfil = {
+      id: authData.user.id,
+      email: params.email.toLowerCase(),
+      nome: params.nome,
+      role,
+      aluno_id: aluno.id,
+      criado_em: new Date().toISOString()
+    };
+
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .insert([perfil]);
+
+    if (profileError) throw profileError;
+
+    return perfil;
   }
 
   static async addAluno(nome: string, ra: string, turma: string, responsavelId?: string): Promise<Aluno> {

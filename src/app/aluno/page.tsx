@@ -15,7 +15,7 @@ export default function AlunoDashboard() {
 
   useEffect(() => {
     const user = DBService.getCurrentUser();
-    if (!user || user.role !== 'aluno') {
+    if (!user || (user.role !== 'aluno' && user.role !== 'admin' && user.role !== 'gestao')) {
       window.location.href = "/";
       return;
     }

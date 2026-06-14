@@ -99,7 +99,7 @@ export default function CantinaTerminal() {
 
   useEffect(() => {
     const user = DBService.getCurrentUser();
-    if (!user || user.role !== 'cantina') {
+    if (!user || (user.role !== 'cantina' && user.role !== 'admin' && user.role !== 'gestao')) {
       window.location.href = "/";
       return;
     }
