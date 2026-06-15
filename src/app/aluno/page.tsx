@@ -11,6 +11,10 @@ export default function AlunoDashboard() {
   const [copiedLink, setCopiedLink] = useState(false);
   const [isCardModalOpen, setIsCardModalOpen] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  
+  // Estados adicionais para resiliência e painel administrativo
+  const [allAlunos, setAllAlunos] = useState<Aluno[]>([]);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -21,22 +25,36 @@ export default function AlunoDashboard() {
       return;
     }
     setCurrentUser(user);
-    loadData(user.aluno_id || 'aluno-1');
+    loadData(user.aluno_id || '', user.role);
   }, []);
 
-  const loadData = async (alunoId: string) => {
+  const loadData = async (alunoId: string, userRole: string) => {
     try {
-      const alunos = await DBService.getAlunos();
-      const info = alunos.find(a => a.id === alunoId);
+      const alunosList = await DBService.getAlunos();
+      setAllAlunos(alunosList);
+
+      let targetId = alunoId;
+      
+      // Se for admin ou gestão e não possuir ID de aluno direto, visualiza o primeiro aluno cadastrado por padrão
+      if ((userRole === 'admin' || userRole === 'gestao') && !targetId) {
+        if (alunosList.length > 0) {
+          targetId = alunosList[0].id;
+        }
+      }
+
+      const info = alunosList.find(a => a.id === targetId);
       if (info) {
         setAlunoInfo(info);
+        // Filtra compras deste aluno
+        const movimentacoes = await DBService.getMovimentacoes();
+        setCompras(movimentacoes.filter(m => m.aluno_id === targetId && m.tipo === 'debito').reverse());
+      } else {
+        setAlunoInfo(null);
       }
-      
-      // Filtra compras deste aluno
-      const movimentacoes = await DBService.getMovimentacoes();
-      setCompras(movimentacoes.filter(m => m.aluno_id === alunoId && m.tipo === 'debito').reverse());
     } catch (err) {
       console.error("Erro ao carregar dados do aluno:", err);
+    } finally {
+      setHasLoaded(true);
     }
   };
 
@@ -82,10 +100,58 @@ export default function AlunoDashboard() {
     window.print();
   };
 
-  if (!alunoInfo) {
+  if (!hasLoaded) {
     return (
       <div className="flex-1 bg-slate-50 flex items-center justify-center min-h-screen text-slate-500">
-        Carregando...
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-3 border-red-600 border-t-transparent"></div>
+          <span className="text-xs font-bold text-slate-400">Carregando...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!alunoInfo) {
+    return (
+      <div className="flex-1 bg-slate-50 text-slate-800 min-h-screen">
+        <Header />
+        <main className="max-w-md mx-auto px-4 py-16 text-center">
+          <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm space-y-6">
+            <span className="text-5xl block">⚠️</span>
+            
+            {currentUser?.role === 'admin' || currentUser?.role === 'gestao' ? (
+              <div className="space-y-3">
+                <h2 className="font-extrabold text-base text-slate-800">Nenhum aluno cadastrado</h2>
+                <p className="text-xs text-slate-450 leading-relaxed">
+                  Para poder visualizar a tela do estudante e gerar carteirinhas, é necessário ter pelo menos um aluno cadastrado no sistema.
+                </p>
+                <div className="pt-2">
+                  <a
+                    href="/configuracoes"
+                    className="inline-block bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-6 py-3 rounded-xl transition-all cursor-pointer shadow-xs active:scale-95"
+                  >
+                    Ir para Configurações (Cadastrar Turmas)
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <h2 className="font-extrabold text-base text-slate-800">Cadastro Não Encontrado</h2>
+                <p className="text-xs text-slate-450 leading-relaxed">
+                  Não localizamos o registro de estudante vinculado à sua conta. Por favor, procure a secretaria ou gestão da escola para regularizar o seu cadastro.
+                </p>
+                <div className="pt-2">
+                  <a
+                    href="/"
+                    className="inline-block bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-250 font-bold text-xs px-6 py-3 rounded-xl transition-all cursor-pointer"
+                  >
+                    Voltar para o Início
+                  </a>
+                </div>
+              </div>
+            )}
+          </div>
+        </main>
       </div>
     );
   }
@@ -99,6 +165,36 @@ export default function AlunoDashboard() {
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 py-8 space-y-6">
         
+        {/* Admin Student Switcher */}
+        {(currentUser?.role === 'admin' || currentUser?.role === 'gestao') && allAlunos.length > 0 && (
+          <div className="bg-white border border-slate-200 rounded-3xl p-4 shadow-xs flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="text-left">
+              <span className="text-[10px] text-slate-400 font-black uppercase block tracking-wider">Visualização Administrativa</span>
+              <p className="text-xxs text-slate-505 mt-0.5">Selecione um aluno para simular seu extrato, saldo e carteirinha escolar.</p>
+            </div>
+            <select
+              value={alunoInfo.id}
+              onChange={(e) => {
+                const selectedId = e.target.value;
+                const info = allAlunos.find(a => a.id === selectedId);
+                if (info) {
+                  setAlunoInfo(info);
+                  DBService.getMovimentacoes().then(movimentacoes => {
+                    setCompras(movimentacoes.filter(m => m.aluno_id === selectedId && m.tipo === 'debito').reverse());
+                  });
+                }
+              }}
+              className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-755 focus:outline-none focus:border-red-500 w-full sm:w-64 cursor-pointer"
+            >
+              {allAlunos.map(a => (
+                <option key={a.id} value={a.id}>
+                  {a.nome} ({a.turma})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         {/* Top Header Card */}
         <div className="bg-white border border-slate-200 rounded-3xl p-6 flex flex-col md:flex-row justify-between items-center gap-6 shadow-xs">
           <div className="flex items-center gap-4 text-left w-full md:w-auto">
