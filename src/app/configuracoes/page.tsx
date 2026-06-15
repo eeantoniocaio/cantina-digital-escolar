@@ -21,11 +21,15 @@ export default function ConfigissoesPage() {
   // Modais
   const [importingTurma, setImportingTurma] = useState<string | null>(null);
   const [csvText, setCsvText] = useState("");
+  const [importMethod, setImportMethod] = useState<'file' | 'text'>('file');
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+
   const [editingAluno, setEditingAluno] = useState<Aluno | null>(null);
   const [editNome, setEditNome] = useState("");
   const [editRa, setEditRa] = useState("");
   const [editDigito, setEditDigito] = useState("");
   const [editTurma, setEditTurma] = useState("");
+  const [editNascimento, setEditNascimento] = useState("");
 
   // Feedback states
   const [isLoading, setIsLoading] = useState(false);
@@ -196,33 +200,176 @@ export default function ConfigissoesPage() {
     }
   };
 
+  const readFileAsText = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve((e.target?.result as string) || "");
+      reader.onerror = (err) => reject(err);
+      reader.readAsText(file, "UTF-8");
+    });
+  };
+
+  const parseCSVFile = (text: string, targetTurma: string): any[] => {
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    if (lines.length === 0) {
+      throw new Error("O arquivo CSV está vazio.");
+    }
+
+    // Identificar a linha de cabeçalho
+    let headerIndex = -1;
+    let delimiter = ';';
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      let cols = line.split(';').map(c => c.trim().replace(/^["']|["']$/g, ''));
+      const hasNome = cols.some(c => c.toLowerCase().includes('nome do aluno') || c.toLowerCase() === 'nome');
+      const hasRa = cols.some(c => c.toLowerCase() === 'ra');
+      if (hasNome && hasRa) {
+        headerIndex = i;
+        delimiter = ';';
+        break;
+      }
+      
+      cols = line.split(',').map(c => c.trim().replace(/^["']|["']$/g, ''));
+      const hasNomeComma = cols.some(c => c.toLowerCase().includes('nome do aluno') || c.toLowerCase() === 'nome');
+      const hasRaComma = cols.some(c => c.toLowerCase() === 'ra');
+      if (hasNomeComma && hasRaComma) {
+        headerIndex = i;
+        delimiter = ',';
+        break;
+      }
+    }
+
+    if (headerIndex === -1) {
+      throw new Error("Não foi possível encontrar o cabeçalho no arquivo CSV. Certifique-se de que a tabela possui as colunas 'Nome do Aluno' e 'RA'.");
+    }
+
+    const headers = lines[headerIndex].split(delimiter).map(c => c.trim().replace(/^["']|["']$/g, ''));
+    
+    const findColumnIndex = (keyword: string) => {
+      return headers.findIndex(h => h.toLowerCase() === keyword.toLowerCase() || h.toLowerCase().includes(keyword.toLowerCase()));
+    };
+
+    const nomeIdx = findColumnIndex('nome do aluno') !== -1 ? findColumnIndex('nome do aluno') : findColumnIndex('nome');
+    const raIdx = findColumnIndex('ra');
+    const digIdx = findColumnIndex('dig. ra') !== -1 ? findColumnIndex('dig. ra') : (findColumnIndex('dig') !== -1 ? findColumnIndex('dig') : findColumnIndex('dígito'));
+    const nascCIdx = findColumnIndex('data de nascimento') !== -1 ? findColumnIndex('data de nascimento') : (findColumnIndex('nascimento') !== -1 ? findColumnIndex('nascimento') : findColumnIndex('nasc'));
+    const sitIdx = findColumnIndex('situação') !== -1 ? findColumnIndex('situação') : findColumnIndex('situacao');
+
+    if (nomeIdx === -1 || raIdx === -1) {
+      throw new Error("Colunas obrigatórias ('Nome do Aluno' e 'RA') não foram encontradas na linha do cabeçalho.");
+    }
+
+    const ignoredSituations = ["REMA", "TRAN", "BXTR", "NCOM", "RECL"];
+    const parsedAlunos: any[] = [];
+    const seenLocalKeys = new Set<string>();
+
+    for (let i = headerIndex + 1; i < lines.length; i++) {
+      const line = lines[i];
+      if (!line.trim()) continue;
+
+      let cols: string[] = [];
+      if (delimiter === ';') {
+        cols = line.split(';').map(c => c.trim().replace(/^["']|["']$/g, ''));
+      } else {
+        cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.trim().replace(/^["']|["']$/g, ''));
+      }
+
+      if (cols.length <= Math.max(nomeIdx, raIdx)) continue;
+
+      const nome = cols[nomeIdx]?.trim();
+      if (!nome) continue;
+
+      // Filtrar por situação inativa
+      if (sitIdx !== -1 && cols[sitIdx]) {
+        const situacao = cols[sitIdx].trim().toUpperCase();
+        if (ignoredSituations.includes(situacao)) {
+          continue; // Pula aluno
+        }
+      }
+
+      // Tratamento de RA científico (Ex: "1,15E+08" -> 115000000)
+      let raRaw = cols[raIdx]?.trim() || "";
+      let raClean = raRaw.replace(',', '.');
+      let raNum = Number(raClean);
+      let ra = isNaN(raNum) ? raRaw : Math.round(raNum).toString();
+
+      let digito = digIdx !== -1 ? cols[digIdx]?.trim() || "" : "";
+      if (digito && !isNaN(Number(digito))) {
+        digito = Math.round(Number(digito)).toString();
+      }
+
+      let dataNascimento = nascCIdx !== -1 ? cols[nascCIdx]?.trim() || "" : "";
+
+      // Deduplicação na própria lista do CSV
+      const localKey = `${ra}-${digito}`.toUpperCase();
+      if (seenLocalKeys.has(localKey)) continue;
+
+      // Deduplicação contra alunos já existentes no banco
+      const existsInDb = alunos.some(existing => 
+        existing.ra === ra && 
+        (existing.digito || "") === (digito || "")
+      );
+      if (existsInDb) continue;
+
+      seenLocalKeys.add(localKey);
+      parsedAlunos.push({
+        nome: nome.toUpperCase(),
+        ra,
+        digito,
+        data_nascimento: dataNascimento,
+        turma: targetTurma,
+        saldo: 0.00,
+        ativo: true
+      });
+    }
+
+    return parsedAlunos;
+  };
+
   const handleImportCsv = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!importingTurma || !csvText.trim()) return;
+    if (!importingTurma) return;
 
     setIsLoading(true);
     try {
-      const names = csvText
-        .split("\n")
-        .map(line => line.trim())
-        .filter(line => line.length > 0);
+      let newAlunos: any[] = [];
 
-      if (names.length === 0) {
-        throw new Error("A lista de nomes está vazia.");
+      if (importMethod === 'file') {
+        if (!csvFile) {
+          throw new Error("Por favor, selecione um arquivo CSV.");
+        }
+        const text = await readFileAsText(csvFile);
+        newAlunos = parseCSVFile(text, importingTurma);
+      } else {
+        if (!csvText.trim()) {
+          throw new Error("A lista de nomes está vazia.");
+        }
+        const names = csvText
+          .split("\n")
+          .map(line => line.trim())
+          .filter(line => line.length > 0);
+
+        if (names.length === 0) {
+          throw new Error("A lista de nomes está vazia.");
+        }
+
+        newAlunos = names.map(name => {
+          const ra = Math.floor(100000 + Math.random() * 900000).toString();
+          const digito = Math.floor(0 + Math.random() * 10).toString();
+          return {
+            nome: name.toUpperCase(),
+            ra,
+            digito,
+            turma: importingTurma,
+            saldo: 0.00,
+            ativo: true
+          };
+        });
       }
 
-      const newAlunos = names.map(name => {
-        const ra = Math.floor(100000 + Math.random() * 900000).toString();
-        const digito = Math.floor(0 + Math.random() * 10).toString();
-        return {
-          nome: name.toUpperCase(),
-          ra,
-          digito,
-          turma: importingTurma,
-          saldo: 0.00,
-          ativo: true
-        };
-      });
+      if (newAlunos.length === 0) {
+        throw new Error("Nenhum aluno novo para importar (todos já existem, foram ignorados ou são duplicados).");
+      }
 
       await DBService.addAlunosBulk(newAlunos);
 
@@ -234,6 +381,7 @@ export default function ConfigissoesPage() {
       }
 
       setCsvText("");
+      setCsvFile(null);
       setImportingTurma(null);
       await loadAllData();
       setSuccessMsg(`${newAlunos.length} alunos importados com sucesso!`);
@@ -251,6 +399,7 @@ export default function ConfigissoesPage() {
     setEditRa(aluno.ra);
     setEditDigito(aluno.digito || "0");
     setEditTurma(aluno.turma);
+    setEditNascimento(aluno.data_nascimento || "");
   };
 
   const handleSaveEdit = async (e: React.FormEvent) => {
@@ -263,7 +412,8 @@ export default function ConfigissoesPage() {
         nome: editNome.trim().toUpperCase(),
         ra: editRa.trim(),
         digito: editDigito.trim(),
-        turma: editTurma.trim().toUpperCase()
+        turma: editTurma.trim().toUpperCase(),
+        data_nascimento: editNascimento.trim()
       });
 
       setEditingAluno(null);
@@ -619,25 +769,84 @@ export default function ConfigissoesPage() {
           <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl p-6 space-y-4">
             <div>
               <h3 className="text-base font-extrabold text-slate-800">Importar Alunos para {importingTurma}</h3>
-              <p className="text-xs text-slate-400 mt-1">Cole uma lista de nomes de alunos abaixo (um por linha) para adicioná-los em lote.</p>
+              <p className="text-xs text-slate-400 mt-1">Selecione o método de importação de estudantes.</p>
+            </div>
+
+            {/* Alternador de abas */}
+            <div className="flex bg-slate-100 p-1 rounded-xl">
+              <button
+                type="button"
+                onClick={() => setImportMethod('file')}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
+                  importMethod === 'file'
+                    ? "bg-white text-slate-800 shadow-xxs"
+                    : "text-slate-450 hover:text-slate-650"
+                }`}
+              >
+                📁 Planilha CSV
+              </button>
+              <button
+                type="button"
+                onClick={() => setImportMethod('text')}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
+                  importMethod === 'text'
+                    ? "bg-white text-slate-800 shadow-xxs"
+                    : "text-slate-450 hover:text-slate-650"
+                }`}
+              >
+                📝 Lista Manual
+              </button>
             </div>
 
             <form onSubmit={handleImportCsv} className="space-y-4">
-              <div>
-                <textarea
-                  value={csvText}
-                  onChange={e => setCsvText(e.target.value)}
-                  placeholder="ANA BEATRIZ BUENO OLIVEIRA&#10;ANA BEATRIZ DE LIMA SOUZA&#10;ARTHUR HENRIQUE PEREIRA SALES"
-                  rows={8}
-                  className="w-full bg-slate-50 border border-slate-250 rounded-2xl px-4 py-3.5 text-xs text-slate-800 focus:outline-none focus:border-red-500 font-mono"
-                  required
-                />
-              </div>
+              {importMethod === 'file' ? (
+                <div className="space-y-3">
+                  <div className="border-2 border-dashed border-slate-200 hover:border-red-400 rounded-2xl p-6 transition-colors flex flex-col items-center justify-center text-center relative bg-slate-50/50">
+                    <span className="text-3xl mb-2">📊</span>
+                    <span className="text-xs font-extrabold text-slate-700">
+                      {csvFile ? csvFile.name : "Clique para selecionar o arquivo CSV"}
+                    </span>
+                    <span className="text-[10px] text-slate-400 mt-1">
+                      {csvFile ? `${(csvFile.size / 1024).toFixed(1)} KB` : "Mapeia Nome do Aluno, RA, Dig. RA, Data de Nascimento e Situação"}
+                    </span>
+                    <input
+                      type="file"
+                      accept=".csv"
+                      onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
+                      className="absolute inset-0 opacity-0 cursor-pointer animate-pulse"
+                      required={importMethod === 'file'}
+                    />
+                  </div>
+                  <div className="text-[10px] text-slate-455 bg-amber-50 border border-amber-100 rounded-xl p-3 leading-normal">
+                    📌 <strong>Regras da Importação:</strong><br/>
+                    • O cabeçalho deve conter as colunas <strong>"Nome do Aluno"</strong> e <strong>"RA"</strong>.<br/>
+                    • Serão lidos os campos opcionais <strong>"Dig. RA"</strong> e <strong>"Data de Nascimento"</strong>.<br/>
+                    • Serão ignorados alunos com situação <strong>REMA, TRAN, BXTR, NCOM ou RECL</strong>.<br/>
+                    • Alunos já matriculados com o mesmo RA serão ignorados automaticamente.
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <textarea
+                    value={csvText}
+                    onChange={e => setCsvText(e.target.value)}
+                    placeholder="ANA BEATRIZ BUENO OLIVEIRA&#10;ANA BEATRIZ DE LIMA SOUZA&#10;ARTHUR HENRIQUE PEREIRA SALES"
+                    rows={6}
+                    className="w-full bg-slate-50 border border-slate-250 rounded-2xl px-4 py-3.5 text-xs text-slate-800 focus:outline-none focus:border-red-500 font-mono"
+                    required={importMethod === 'text'}
+                  />
+                  <p className="text-[9px] text-slate-400 mt-1">Cole um nome de aluno por linha. RAs e dígitos serão gerados aleatoriamente.</p>
+                </div>
+              )}
 
               <div className="flex gap-3 text-xs font-bold">
                 <button
                   type="button"
-                  onClick={() => { setImportingTurma(null); setCsvText(""); }}
+                  onClick={() => {
+                    setImportingTurma(null);
+                    setCsvText("");
+                    setCsvFile(null);
+                  }}
                   className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-655 py-2.5 rounded-xl border border-slate-200 cursor-pointer"
                 >
                   Cancelar
@@ -705,6 +914,17 @@ export default function ConfigissoesPage() {
                   onChange={e => setEditTurma(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-red-500 uppercase font-bold"
                   required
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-[10px] font-bold text-slate-400 uppercase">Data de Nascimento</label>
+                <input
+                  type="text"
+                  value={editNascimento}
+                  onChange={e => setEditNascimento(e.target.value)}
+                  placeholder="Ex: 10/07/2014"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-red-500 font-bold"
                 />
               </div>
 

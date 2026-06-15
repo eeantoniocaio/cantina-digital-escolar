@@ -237,7 +237,10 @@ export default function AlunoDashboard() {
                   {alunoInfo.turma}
                 </span>
               </div>
-              <p className="text-xxs text-slate-400 mt-1.5">Registro do Aluno (RA): {alunoInfo.ra}</p>
+              <p className="text-xxs text-slate-400 mt-1.5 font-mono">
+                RA: {alunoInfo.ra}-{alunoInfo.digito || "0"}
+                {alunoInfo.data_nascimento && ` • Nascimento: ${alunoInfo.data_nascimento}`}
+              </p>
             </div>
           </div>
 
@@ -404,7 +407,10 @@ export default function AlunoDashboard() {
                   </div>
                   
                   <div className="pt-2 border-t border-white/10 text-[8px] text-red-100 font-semibold space-y-0.5">
-                    <p className="font-mono">RA: {alunoInfo.ra}</p>
+                    <p className="font-mono">RA: {alunoInfo.ra}-{alunoInfo.digito || "0"}</p>
+                    {alunoInfo.data_nascimento && (
+                      <p>NASC: {alunoInfo.data_nascimento}</p>
+                    )}
                     <p className="text-[7px] text-white/60">ANO LETIVO: 2026</p>
                   </div>
                 </div>

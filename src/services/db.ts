@@ -20,6 +20,7 @@ export interface Aluno {
   saldo: number;
   ativo: boolean;
   foto?: string;
+  data_nascimento?: string;
   criado_em: string;
 }
 
@@ -433,11 +434,13 @@ export class DBService {
     return perfil;
   }
 
-  static async addAluno(nome: string, ra: string, turma: string, responsavelId?: string): Promise<Aluno> {
+  static async addAluno(nome: string, ra: string, turma: string, responsavelId?: string, digito?: string, dataNascimento?: string): Promise<Aluno> {
     const novoAluno = {
       nome,
       ra,
+      digito,
       turma,
+      data_nascimento: dataNascimento,
       saldo: 0.00,
       ativo: true,
       criado_em: new Date().toISOString()
@@ -628,7 +631,7 @@ export class DBService {
     if (error) throw error;
   }
 
-  static async addAlunosBulk(alunosList: { nome: string; ra: string; digito: string; turma: string; saldo: number; ativo: boolean }[]): Promise<void> {
+  static async addAlunosBulk(alunosList: { nome: string; ra: string; digito: string; turma: string; saldo: number; ativo: boolean; data_nascimento?: string }[]): Promise<void> {
     const { error } = await supabase.from('alunos').insert(alunosList);
     if (error) throw error;
   }
