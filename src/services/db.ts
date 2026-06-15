@@ -622,4 +622,14 @@ export class DBService {
     }
     return data[0] as Profile;
   }
+
+  static async deleteAluno(id: string): Promise<void> {
+    const { error } = await supabase.from('alunos').delete().eq('id', id);
+    if (error) throw error;
+  }
+
+  static async addAlunosBulk(alunosList: { nome: string; ra: string; digito: string; turma: string; saldo: number; ativo: boolean }[]): Promise<void> {
+    const { error } = await supabase.from('alunos').insert(alunosList);
+    if (error) throw error;
+  }
 }
