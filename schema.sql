@@ -1,15 +1,19 @@
--- Schema Inicial - Cantina Digital Escolar
+-- Schema Atualizado - Cantina Digital Escolar
+-- Alinhado com o banco de dados remoto no Supabase
 
--- 1. Habilitar UUID
+-- 1. Habilitar UUID e extensões
 create extension if not exists "uuid-ossp";
 
 -- 2. Tabela de Perfis (perfis de usuários vinculados à auth.users)
 create table public.profiles (
     id uuid references auth.users on delete cascade primary key,
     email text not null,
-    nome text,
+    nome text not null,
     role text not null check (role in ('admin', 'familia', 'cantina', 'aluno', 'professor', 'gestao')),
-    criado_em timestamp with time zone default timezone('utc'::text, now()) not null
+    aluno_id text, -- Vínculo opcional se o perfil for um aluno
+    rg text,
+    whatsapp text,
+    criado_em timestamp with time zone default timezone('utc'::text, now())
 );
 
 alter table public.profiles enable row level security;
@@ -18,40 +22,40 @@ alter table public.profiles enable row level security;
 create table public.alunos (
     id uuid default uuid_generate_v4() primary key,
     nome text not null,
-    ra text unique,
-    turma text,
+    ra text not null unique,
+    digito text,
+    turma text not null,
     saldo numeric(10, 2) default 0.00 not null check (saldo >= 0),
     ativo boolean default true not null,
-    criado_em timestamp with time zone default timezone('utc'::text, now()) not null
+    foto text,
+    criado_em timestamp with time zone default timezone('utc'::text, now())
 );
 
 alter table public.alunos enable row level security;
 
 -- 4. Tabela de Relacionamento Responsaveis -> Alunos (muitos para muitos)
-create table public.responsaveis_alunos (
-    id uuid default uuid_generate_v4() primary key,
+create table public.responsaveis (
     familia_id uuid references public.profiles(id) on delete cascade not null,
     aluno_id uuid references public.alunos(id) on delete cascade not null,
-    criado_em timestamp with time zone default timezone('utc'::text, now()) not null,
-    unique(familia_id, aluno_id)
+    primary key (familia_id, aluno_id)
 );
 
-alter table public.responsaveis_alunos enable row level security;
+alter table public.responsaveis enable row level security;
 
 -- 5. Tabela de Comprovantes (Uploads de Pix)
 create table public.comprovantes (
     id uuid default uuid_generate_v4() primary key,
-    aluno_id uuid references public.alunos(id) on delete cascade not null,
+    aluno_id uuid references public.alunos(id) on delete cascade,
     responsavel_id uuid references public.profiles(id) on delete cascade not null,
     valor numeric(10, 2) not null check (valor > 0),
-    pagador text,
-    data_pagamento timestamp with time zone,
-    id_transacao text unique, -- E2E ID do Pix
+    pagador text not null,
+    data_pagamento timestamp with time zone not null,
+    id_transacao text not null unique, -- E2E ID do Pix
     status text default 'pendente' not null check (status in ('pendente', 'aprovado', 'rejeitado')),
     arquivo_url text not null,
-    hash_comprovante text unique not null, -- Evitar envio do mesmo arquivo
+    hash_comprovante text not null unique, -- Evitar envio do mesmo arquivo
     observacao text,
-    criado_em timestamp with time zone default timezone('utc'::text, now()) not null
+    criado_em timestamp with time zone default timezone('utc'::text, now())
 );
 
 alter table public.comprovantes enable row level security;
@@ -59,15 +63,27 @@ alter table public.comprovantes enable row level security;
 -- 6. Tabela de Movimentacoes (Ledger / Auditoria Financeira)
 create table public.movimentacoes (
     id uuid default uuid_generate_v4() primary key,
-    aluno_id uuid references public.alunos(id) on delete cascade not null,
+    aluno_id uuid references public.alunos(id) on delete cascade,
     tipo text not null check (tipo in ('credito', 'debito')),
     valor numeric(10, 2) not null check (valor > 0),
     descricao text not null,
-    criado_por uuid references public.profiles(id) on delete set null,
-    criado_em timestamp with time zone default timezone('utc'::text, now()) not null
+    criado_por uuid references public.profiles(id) on delete set null not null,
+    criado_em timestamp with time zone default timezone('utc'::text, now())
 );
 
 alter table public.movimentacoes enable row level security;
+
+-- 7. Tabela de Produtos (Gerenciamento de Itens da Cantina)
+create table public.produtos (
+    id uuid default uuid_generate_v4() primary key,
+    nome text not null,
+    preco numeric(10, 2) not null check (preco >= 0),
+    categoria text not null check (categoria in ('salgado', 'bebida', 'doce', 'outro')),
+    ativo boolean default true not null,
+    criado_em timestamp with time zone default timezone('utc'::text, now())
+);
+
+alter table public.produtos enable row level security;
 
 --------------------------------------------------------------------------------
 -- TRIGGERS E FUNÇÕES AUTOMATIZADAS
@@ -164,7 +180,7 @@ create policy "Admins e Cantina podem ver todos os alunos" on public.alunos
 create policy "Famílias podem ver alunos vinculados" on public.alunos
   for select using (
     exists (
-      select 1 from public.responsaveis_alunos ra
+      select 1 from public.responsaveis ra
       where ra.aluno_id = public.alunos.id and ra.familia_id = auth.uid()
     )
   );
@@ -177,11 +193,11 @@ create policy "Apenas admins podem inserir/editar alunos" on public.alunos
     )
   );
 
--- Policies para Responsaveis Alunos
-create policy "Qualquer usuário logado pode ver os vínculos" on public.responsaveis_alunos
+-- Policies para Responsaveis
+create policy "Qualquer usuário logado pode ver os vínculos" on public.responsaveis
   for select using (auth.role() = 'authenticated');
 
-create policy "Apenas admins podem cadastrar vínculos" on public.responsaveis_alunos
+create policy "Apenas admins podem cadastrar vínculos" on public.responsaveis
   for all using (
     exists (
       select 1 from public.profiles 
@@ -208,7 +224,7 @@ create policy "Admins podem ver e atualizar todos os comprovantes" on public.com
 create policy "Famílias podem ver movimentações dos seus alunos vinculados" on public.movimentacoes
   for select using (
     exists (
-      select 1 from public.responsaveis_alunos ra
+      select 1 from public.responsaveis ra
       where ra.aluno_id = public.movimentacoes.aluno_id and ra.familia_id = auth.uid()
     )
   );
@@ -218,5 +234,17 @@ create policy "Admins e Cantina podem ver e criar movimentações" on public.mov
     exists (
       select 1 from public.profiles 
       where id = auth.uid() and role in ('admin', 'cantina')
+    )
+  );
+
+-- Policies para Produtos
+create policy "Qualquer um logado pode ver produtos" on public.produtos
+  for select using (auth.role() = 'authenticated');
+
+create policy "Apenas admins podem modificar produtos" on public.produtos
+  for all using (
+    exists (
+      select 1 from public.profiles 
+      where id = auth.uid() and role = 'admin'
     )
   );

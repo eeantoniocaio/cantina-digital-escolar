@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { DBService, Aluno, Comprovante, DADOS_PIX_ESCOLA } from "@/services/db";
 import { OCRService, OCRResult } from "@/services/ocr";
+import Header from "../components/Header";
 
 export default function FamiliaDashboard() {
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -161,28 +162,7 @@ export default function FamiliaDashboard() {
 
   return (
     <div className="flex-1 bg-slate-50 text-slate-800 min-h-screen">
-      {/* Navbar - idêntico ao outro app */}
-      <nav className="border-b border-slate-200 bg-white sticky top-0 z-20 shadow-xs">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <div className="h-9 w-9 bg-red-600 rounded-full flex items-center justify-center text-white font-black text-xxs border border-red-700 shadow-xs">
-              EEAC
-            </div>
-            <div>
-              <span className="font-extrabold text-sm tracking-tight text-slate-800 block">
-                Cantina Digital
-              </span>
-              <span className="text-[9px] text-slate-500 font-bold uppercase block leading-none">Família</span>
-            </div>
-          </a>
-          <div className="flex items-center gap-4">
-            <span className="text-xs text-slate-500 hidden sm:inline">Olá, <strong>{currentUser?.nome}</strong></span>
-            <a href="/" className="text-xs font-bold text-slate-500 hover:text-slate-700 bg-slate-100 px-3.5 py-1.5 rounded-full border border-slate-200 transition-colors">
-              Sair
-            </a>
-          </div>
-        </div>
-      </nav>
+      <Header />
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 py-8">

@@ -608,4 +608,18 @@ export class DBService {
     const { error } = await supabase.from('produtos').delete().eq('id', id);
     if (error) throw error;
   }
+
+  static async updateProfile(profileId: string, updates: Partial<Profile>): Promise<Profile> {
+    const { data, error } = await supabase.from('profiles').update(updates).eq('id', profileId).select();
+    if (error) throw error;
+    
+    const currentUser = this.getCurrentUser();
+    if (currentUser && currentUser.id === profileId) {
+      const updatedUser = { ...currentUser, ...data[0] };
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('cantina_current_user', JSON.stringify(updatedUser));
+      }
+    }
+    return data[0] as Profile;
+  }
 }
