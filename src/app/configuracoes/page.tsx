@@ -454,78 +454,6 @@ export default function ConfigissoesPage() {
             {/* Grid de Cartões estilo do outro app */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               
-              {/* Card: Tipos de Evento (Mock) */}
-              <div className="bg-amber-500 text-white rounded-3xl p-6 shadow-sm border border-amber-600/10 flex flex-col justify-between h-44 opacity-50 relative overflow-hidden select-none">
-                <div className="space-y-1">
-                  <span className="text-2xl block">📅</span>
-                  <h3 className="font-extrabold text-base">Tipos de Evento</h3>
-                </div>
-                <div className="flex justify-between items-center mt-4">
-                  <span className="bg-black/15 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border border-white/10">5 itens</span>
-                  <span className="text-[10px] text-white/60 font-semibold uppercase">Apenas leitura</span>
-                </div>
-              </div>
-
-              {/* Card: Tipos de Evidência (Mock) */}
-              <div className="bg-sky-500 text-white rounded-3xl p-6 shadow-sm border border-sky-600/10 flex flex-col justify-between h-44 opacity-50 relative overflow-hidden select-none">
-                <div className="space-y-1">
-                  <span className="text-2xl block">🏷️</span>
-                  <h3 className="font-extrabold text-base">Tipos de Evidência</h3>
-                </div>
-                <div className="flex justify-between items-center mt-4">
-                  <span className="bg-black/15 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border border-white/10">10 itens</span>
-                  <span className="text-[10px] text-white/60 font-semibold uppercase">Apenas leitura</span>
-                </div>
-              </div>
-
-              {/* Card: Corpo Docente (Mock) */}
-              <div className="bg-green-500 text-white rounded-3xl p-6 shadow-sm border border-green-600/10 flex flex-col justify-between h-44 opacity-50 relative overflow-hidden select-none">
-                <div className="space-y-1">
-                  <span className="text-2xl block">👥</span>
-                  <h3 className="font-extrabold text-base">Corpo Docente</h3>
-                </div>
-                <div className="flex justify-between items-center mt-4">
-                  <span className="bg-black/15 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border border-white/10">36 itens</span>
-                  <span className="text-[10px] text-white/60 font-semibold uppercase">Apenas leitura</span>
-                </div>
-              </div>
-
-              {/* Card: Equipe de Gestão (Mock) */}
-              <div className="bg-orange-500 text-white rounded-3xl p-6 shadow-sm border border-orange-600/10 flex flex-col justify-between h-44 opacity-50 relative overflow-hidden select-none">
-                <div className="space-y-1">
-                  <span className="text-2xl block">💼</span>
-                  <h3 className="font-extrabold text-base">Equipe de Gestão</h3>
-                </div>
-                <div className="flex justify-between items-center mt-4">
-                  <span className="bg-black/15 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border border-white/10">5 itens</span>
-                  <span className="text-[10px] text-white/60 font-semibold uppercase">Apenas leitura</span>
-                </div>
-              </div>
-
-              {/* Card: Secretaria (Mock) */}
-              <div className="bg-pink-500 text-white rounded-3xl p-6 shadow-sm border border-pink-600/10 flex flex-col justify-between h-44 opacity-50 relative overflow-hidden select-none">
-                <div className="space-y-1">
-                  <span className="text-2xl block">🏫</span>
-                  <h3 className="font-extrabold text-base">Secretaria</h3>
-                </div>
-                <div className="flex justify-between items-center mt-4">
-                  <span className="bg-black/15 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border border-white/10">0 itens</span>
-                  <span className="text-[10px] text-white/60 font-semibold uppercase">Apenas leitura</span>
-                </div>
-              </div>
-
-              {/* Card: Técnicos (Mock) */}
-              <div className="bg-cyan-500 text-white rounded-3xl p-6 shadow-sm border border-cyan-600/10 flex flex-col justify-between h-44 opacity-50 relative overflow-hidden select-none">
-                <div className="space-y-1">
-                  <span className="text-2xl block">🔧</span>
-                  <h3 className="font-extrabold text-base">Técnicos</h3>
-                </div>
-                <div className="flex justify-between items-center mt-4">
-                  <span className="bg-black/15 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border border-white/10">0 itens</span>
-                  <span className="text-[10px] text-white/60 font-semibold uppercase">Apenas leitura</span>
-                </div>
-              </div>
-
               {/* Card: TURMAS (ATIVO - CLICÁVEL) */}
               <button
                 onClick={() => setView('turmas')}
@@ -544,14 +472,26 @@ export default function ConfigissoesPage() {
                 </div>
               </button>
 
-              {/* Card: Disciplinas (Mock) */}
-              <div className="bg-violet-500 text-white rounded-3xl p-6 shadow-sm border border-violet-600/10 flex flex-col justify-between h-44 opacity-50 relative overflow-hidden select-none">
+              {/* Card: Corpo Docente (Mock) */}
+              <div className="bg-green-500 text-white rounded-3xl p-6 shadow-sm border border-green-600/10 flex flex-col justify-between h-44 opacity-50 relative overflow-hidden select-none">
                 <div className="space-y-1">
-                  <span className="text-2xl block">📖</span>
-                  <h3 className="font-extrabold text-base">Disciplinas</h3>
+                  <span className="text-2xl block">👥</span>
+                  <h3 className="font-extrabold text-base">Corpo Docente</h3>
                 </div>
                 <div className="flex justify-between items-center mt-4">
-                  <span className="bg-black/15 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border border-white/10">33 itens</span>
+                  <span className="bg-black/15 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border border-white/10">36 itens</span>
+                  <span className="text-[10px] text-white/60 font-semibold uppercase">Apenas leitura</span>
+                </div>
+              </div>
+
+              {/* Card: Secretaria (Mock) */}
+              <div className="bg-pink-500 text-white rounded-3xl p-6 shadow-sm border border-pink-600/10 flex flex-col justify-between h-44 opacity-50 relative overflow-hidden select-none">
+                <div className="space-y-1">
+                  <span className="text-2xl block">🏫</span>
+                  <h3 className="font-extrabold text-base">Secretaria</h3>
+                </div>
+                <div className="flex justify-between items-center mt-4">
+                  <span className="bg-black/15 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border border-white/10">0 itens</span>
                   <span className="text-[10px] text-white/60 font-semibold uppercase">Apenas leitura</span>
                 </div>
               </div>
