@@ -204,13 +204,16 @@ export class DBService {
       throw new Error("Estudantes só podem usar o domínio de e-mail @al.educacao.sp.gov.br");
     }
 
-    // 1. Cadastra no Supabase Auth
+    // 1. Cadastra no Supabase Auth com metadados (trigger handle_new_user cria profile e aluno com SECURITY DEFINER)
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: params.email,
       password: params.password,
       options: {
         data: {
           nome: params.nome,
+          ra: params.ra,
+          digito: params.digito,
+          turma: params.turma,
           role: 'aluno'
         }
       }
@@ -219,45 +222,13 @@ export class DBService {
     if (authError) throw authError;
     if (!authData.user) throw new Error("Erro ao criar usuário no Supabase Auth.");
 
-    // 2. Cria o registro do aluno
-    const novoAluno = {
-      nome: params.nome,
-      ra: params.ra,
-      digito: params.digito,
-      turma: params.turma,
-      saldo: 0.00,
-      ativo: true,
-      criado_em: new Date().toISOString()
-    };
-    
-    const { data: alunoData, error: alunoError } = await supabase
-      .from('alunos')
-      .insert([novoAluno])
-      .select();
-
-    if (alunoError) throw alunoError;
-    const aluno = alunoData[0] as Aluno;
-
-    // 3. Cria o perfil do usuário
-    const perfil = {
+    return {
       id: authData.user.id,
       email: params.email.toLowerCase(),
       nome: params.nome,
-      role: 'aluno' as const,
-      aluno_id: aluno.id,
+      role: 'aluno',
       criado_em: new Date().toISOString()
     };
-
-    // Upsert em vez de insert: o trigger on_auth_user_created pode ter criado
-    // um profile básico antes do código chegar aqui. O upsert atualiza com
-    // dados ricos (nome completo, aluno_id) sem falhar por conflito de PK.
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .upsert([perfil], { onConflict: 'id' });
-
-    if (profileError) throw profileError;
-
-    return perfil;
   }
 
   static async signUpResponsavel(params: {
@@ -267,13 +238,15 @@ export class DBService {
     rg: string;
     whatsapp: string;
   }): Promise<Profile> {
-    // 1. Cadastra no Supabase Auth
+    // 1. Cadastra no Supabase Auth com metadados (trigger handle_new_user cria profile com SECURITY DEFINER)
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: params.email,
       password: params.password,
       options: {
         data: {
           nome: params.nome,
+          rg: params.rg,
+          whatsapp: params.whatsapp,
           role: 'familia'
         }
       }
@@ -282,25 +255,15 @@ export class DBService {
     if (authError) throw authError;
     if (!authData.user) throw new Error("Erro ao criar usuário no Supabase Auth.");
 
-    // 2. Cria o perfil do usuário (com os campos rg e whatsapp)
-    const perfil = {
+    return {
       id: authData.user.id,
       email: params.email.toLowerCase(),
       nome: params.nome,
-      role: 'familia' as const,
+      role: 'familia',
       rg: params.rg,
       whatsapp: params.whatsapp,
       criado_em: new Date().toISOString()
     };
-
-    // Upsert: mesmo motivo de signUpAluno — evita conflito com trigger.
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .upsert([perfil], { onConflict: 'id' });
-
-    if (profileError) throw profileError;
-
-    return perfil;
   }
 
   static async signIn(email: string, password: string): Promise<Profile> {
@@ -346,7 +309,7 @@ export class DBService {
 
     const user = session.user;
     
-    // Verifica se já tem perfil
+    // Verifica se já tem perfil criado pelo trigger handle_new_user
     const { data: profiles, error: pError } = await supabase
       .from('profiles')
       .select('*')
@@ -356,50 +319,26 @@ export class DBService {
 
     let profile: Profile;
     if (!profiles || profiles.length === 0) {
-      const nome = user.user_metadata.full_name || user.email?.split('@')[0].toUpperCase() || "USUÁRIO GOOGLE";
-      const email = user.email || "";
-      const emailLower = email.toLowerCase();
-      
-      const isStudentEmail = emailLower.endsWith('@al.educacao.sp.gov.br');
-      const isTeacherEmail = emailLower.endsWith('@prof.educacao.sp.gov.br') || emailLower.endsWith('@servidor.educacao.sp.gov.br');
-      
-      let role: 'admin' | 'familia' | 'cantina' | 'aluno' | 'professor' | 'gestao' = 'familia';
+      const emailLower = (user.email || '').toLowerCase();
+      let role: Profile['role'] = 'familia';
+      let is_master = false;
       if (emailLower === 'andre.avancini@servidor.educacao.sp.gov.br') {
         role = 'gestao';
-      } else if (isTeacherEmail) {
+        is_master = true;
+      } else if (emailLower.endsWith('@prof.educacao.sp.gov.br') || emailLower.endsWith('@servidor.educacao.sp.gov.br')) {
         role = 'professor';
-      } else if (isStudentEmail) {
+      } else if (emailLower.endsWith('@al.educacao.sp.gov.br')) {
         role = 'aluno';
-      }
-      
-      let aluno_id: string | undefined = undefined;
-      if (isStudentEmail || isTeacherEmail) {
-        // Cria também o Aluno
-        const novoAluno = {
-          nome,
-          ra: (isTeacherEmail ? "P-" : "G-") + Math.random().toString(36).substr(2, 6).toUpperCase(),
-          digito: "0",
-          turma: isTeacherEmail ? "Professor" : "Não Definitiva",
-          saldo: 0.00,
-          ativo: true,
-          criado_em: new Date().toISOString()
-        };
-        const { data: aData, error: aError } = await supabase.from('alunos').insert([novoAluno]).select();
-        if (!aError && aData && aData.length > 0) {
-          aluno_id = aData[0].id;
-        }
       }
 
       profile = {
         id: user.id,
-        email,
-        nome,
+        email: user.email || '',
+        nome: user.user_metadata?.full_name || user.email?.split('@')[0].toUpperCase() || 'USUÁRIO GOOGLE',
         role,
-        aluno_id,
+        is_master,
         criado_em: new Date().toISOString()
       };
-
-      await supabase.from('profiles').upsert([profile], { onConflict: 'id' });
     } else {
       profile = profiles[0];
     }
@@ -422,8 +361,9 @@ export class DBService {
     }
 
     const role: Profile['role'] = emailLower === 'andre.avancini@servidor.educacao.sp.gov.br' ? 'gestao' : 'professor';
+    const isMaster = emailLower === 'andre.avancini@servidor.educacao.sp.gov.br';
 
-    // 1. Cadastra no Supabase Auth
+    // 1. Cadastra no Supabase Auth com metadados (trigger handle_new_user cria profile e aluno com SECURITY DEFINER)
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: params.email,
       password: params.password,
@@ -438,43 +378,14 @@ export class DBService {
     if (authError) throw authError;
     if (!authData.user) throw new Error("Erro ao criar usuário no Supabase Auth.");
 
-    // 2. Cria o registro do aluno/funcionário
-    const novoAluno = {
-      nome: params.nome,
-      ra: "P-" + Math.random().toString(36).substr(2, 6).toUpperCase(),
-      digito: "0",
-      turma: "Professor",
-      saldo: 0.00,
-      ativo: true,
-      criado_em: new Date().toISOString()
-    };
-    
-    const { data: alunoData, error: alunoError } = await supabase
-      .from('alunos')
-      .insert([novoAluno])
-      .select();
-
-    if (alunoError) throw alunoError;
-    const aluno = alunoData[0] as Aluno;
-
-    // 3. Cria o perfil do usuário
-    const perfil = {
+    return {
       id: authData.user.id,
       email: params.email.toLowerCase(),
       nome: params.nome,
       role,
-      aluno_id: aluno.id,
+      is_master: isMaster,
       criado_em: new Date().toISOString()
     };
-
-    // Upsert: mesmo motivo de signUpAluno — evita conflito com trigger.
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .upsert([perfil], { onConflict: 'id' });
-
-    if (profileError) throw profileError;
-
-    return perfil;
   }
 
   static async addAluno(nome: string, ra: string, turma: string, responsavelId?: string, digito?: string, dataNascimento?: string): Promise<Aluno> {
