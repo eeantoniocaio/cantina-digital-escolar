@@ -133,7 +133,7 @@ export default function AdminDashboard() {
 
   const handleApprove = async (comp: Comprovante) => {
     try {
-      await DBService.approveComprovante(comp.id, currentUser.id);
+      await DBService.approveComprovante(comp.id);
       setSelectedComp(null);
       await loadAllData();
     } catch (err: any) {

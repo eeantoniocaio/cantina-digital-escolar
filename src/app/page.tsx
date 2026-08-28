@@ -166,22 +166,27 @@ export default function Home() {
     }
   };
 
-  const handleSimularLogin = async (role: 'familia' | 'admin' | 'cantina' | 'aluno' | 'professor' | 'gestao') => {
-    let email = "";
-    if (role === 'admin') email = "admin@escola.com";
-    else if (role === 'cantina') email = "cantina@escola.com";
-    else if (role === 'aluno') email = "enzo@escola.com";
-    else if (role === 'professor') email = "professor@prof.educacao.sp.gov.br";
-    else if (role === 'gestao') email = "andre.avancini@servidor.educacao.sp.gov.br";
-    else email = "pai@email.com";
+  // DEV-ONLY: função de simulação de login sem autenticação real.
+  // Completamente excluída do bundle de produção pelo tree-shaking do Next.js
+  // (process.env.NODE_ENV é substituído por 'production' em build e eliminado).
+  const handleSimularLogin = process.env.NODE_ENV === 'development'
+    ? async (role: 'familia' | 'admin' | 'cantina' | 'aluno' | 'professor' | 'gestao') => {
+        let email = '';
+        if (role === 'admin') email = 'admin@escola.com';
+        else if (role === 'cantina') email = 'cantina@escola.com';
+        else if (role === 'aluno') email = 'enzo@escola.com';
+        else if (role === 'professor') email = 'professor@prof.educacao.sp.gov.br';
+        else if (role === 'gestao') email = 'andre.avancini@servidor.educacao.sp.gov.br';
+        else email = 'pai@email.com';
 
-    await DBService.login(email, role);
-    if (role === 'gestao') {
-      window.location.href = "/admin";
-    } else {
-      window.location.href = `/${role}`;
-    }
-  };
+        await DBService.login(email, role);
+        if (role === 'gestao') {
+          window.location.href = '/admin';
+        } else {
+          window.location.href = `/${role}`;
+        }
+      }
+    : undefined;
 
   const handleLogout = () => {
     DBService.logout();
@@ -570,48 +575,50 @@ export default function Home() {
           )}
         </div>
 
-        {/* Simulador Dev / Backdoor buttons */}
-        <div className="mt-8 bg-white border border-slate-200 rounded-2xl p-4 w-full text-center space-y-2.5">
-          <span className="text-[10px] text-slate-400 uppercase font-extrabold tracking-wider block">Atalhos Prototipagem (Bypass Login)</span>
-          <div className="flex flex-wrap gap-2 justify-center">
-            <button
-              onClick={() => handleSimularLogin('aluno')}
-              className="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-lg text-[10px] font-bold transition-colors cursor-pointer"
-            >
-              🎓 Aluno Teste
-            </button>
-            <button
-              onClick={() => handleSimularLogin('professor')}
-              className="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-lg text-[10px] font-bold transition-colors cursor-pointer"
-            >
-              💼 Professor Teste
-            </button>
-            <button
-              onClick={() => handleSimularLogin('familia')}
-              className="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-lg text-[10px] font-bold transition-colors cursor-pointer"
-            >
-              👨‍👩‍👦 Família Teste
-            </button>
-            <button
-              onClick={() => handleSimularLogin('cantina')}
-              className="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-lg text-[10px] font-bold transition-colors cursor-pointer"
-            >
-              🍔 Cantina Teste
-            </button>
-            <button
-              onClick={() => handleSimularLogin('admin')}
-              className="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-lg text-[10px] font-bold transition-colors cursor-pointer"
-            >
-              🏫 Secretaria Teste
-            </button>
-            <button
-              onClick={() => handleSimularLogin('gestao')}
-              className="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-lg text-[10px] font-bold transition-colors cursor-pointer"
-            >
-              🔑 Gestão Teste
-            </button>
+        {/* Simulador Dev — renderizado APENAS em NODE_ENV=development */}
+        {process.env.NODE_ENV === 'development' && handleSimularLogin && (
+          <div className="mt-8 bg-amber-50 border border-amber-200 rounded-2xl p-4 w-full text-center space-y-2.5">
+            <span className="text-[10px] text-amber-600 uppercase font-extrabold tracking-wider block">⚠️ Atalhos Dev (Bypass Login) — Não aparece em produção</span>
+            <div className="flex flex-wrap gap-2 justify-center">
+              <button
+                onClick={() => handleSimularLogin('aluno')}
+                className="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-lg text-[10px] font-bold transition-colors cursor-pointer"
+              >
+                🎓 Aluno Teste
+              </button>
+              <button
+                onClick={() => handleSimularLogin('professor')}
+                className="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-lg text-[10px] font-bold transition-colors cursor-pointer"
+              >
+                💼 Professor Teste
+              </button>
+              <button
+                onClick={() => handleSimularLogin('familia')}
+                className="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-lg text-[10px] font-bold transition-colors cursor-pointer"
+              >
+                👨‍👩‍👦 Família Teste
+              </button>
+              <button
+                onClick={() => handleSimularLogin('cantina')}
+                className="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-lg text-[10px] font-bold transition-colors cursor-pointer"
+              >
+                🍔 Cantina Teste
+              </button>
+              <button
+                onClick={() => handleSimularLogin('admin')}
+                className="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-lg text-[10px] font-bold transition-colors cursor-pointer"
+              >
+                🏫 Secretaria Teste
+              </button>
+              <button
+                onClick={() => handleSimularLogin('gestao')}
+                className="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-lg text-[10px] font-bold transition-colors cursor-pointer"
+              >
+                🔑 Gestão Teste
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Footer */}

@@ -1,5 +1,32 @@
 import { supabase } from './supabaseClient';
 
+// ----------------------------------------------------------------
+// Utilitário: traduz erros do PostgreSQL/RPCs para mensagens amigáveis
+// Códigos P0000–P0009 são lançados pelas RPCs SECURITY DEFINER.
+// ----------------------------------------------------------------
+export function handleDbError(error: any): string {
+  const msg: string = error?.message || '';
+  if (msg.startsWith('nao_autenticado'))          return 'Usuário não autenticado. Faça login novamente.';
+  if (msg.startsWith('aluno_nao_encontrado'))     return 'Aluno não encontrado ou inativo.';
+  if (msg.startsWith('aluno_inexistente'))        return 'O aluno vinculado a este comprovante não existe.';
+  if (msg.startsWith('aluno_inativo'))            return 'O aluno está inativo e não pode receber créditos.';
+  if (msg.startsWith('saldo_insuficiente'))       return 'Saldo insuficiente para realizar esta compra.';
+  if (msg.startsWith('comprovante_nao_encontrado')) return 'Comprovante não encontrado.';
+  if (msg.startsWith('comprovante_ja_processado')) return 'Este comprovante já foi processado anteriormente.';
+  if (msg.startsWith('transacao_ja_aprovada'))    return 'Esta transação PIX já foi aprovada em outro comprovante.';
+  if (msg.startsWith('observacao_obrigatoria'))   return 'Informe o motivo da rejeição.';
+  if (msg.startsWith('valor_invalido'))           return 'Valor de cobrança inválido.';
+  if (msg.startsWith('alteracao_role_nao_autorizada')) return 'Operação não permitida: somente administradores podem alterar roles.';
+  // Violação de UNIQUE constraint (hash_comprovante ou id_transacao duplicado)
+  if (error?.code === '23505') return 'Este comprovante já foi enviado anteriormente.';
+  return error?.message || 'Erro inesperado. Tente novamente.';
+}
+
+// Tipo para updateAluno: exclui campos que não devem ser sobrescritos pelo cliente.
+// saldo: alterado apenas via RPC registrar_debito / aprovar_comprovante.
+// id e criado_em: imutáveis.
+export type AlunoUpdateFields = Omit<Aluno, 'id' | 'saldo' | 'criado_em'>;
+
 export interface Profile {
   id: string;
   email: string;
@@ -118,7 +145,17 @@ export class DBService {
     return user ? JSON.parse(user) : null;
   }
 
+  /**
+   * @deprecated DEV-ONLY — NÃO USAR EM PRODUÇÃO.
+   * Este método bypassa o Supabase Auth, cria UUIDs falsos sem correspondência
+   * em auth.users e viola a FK profiles.id → auth.users(id).
+   * Use signIn() para produção.
+   * Habilitado apenas quando NODE_ENV === 'development'.
+   */
   static async login(email: string, role: 'admin' | 'familia' | 'cantina' | 'aluno' | 'professor' | 'gestao'): Promise<Profile> {
+    if (process.env.NODE_ENV !== 'development') {
+      throw new Error('[login] Este método só pode ser usado em ambiente de desenvolvimento.');
+    }
     const { data: profiles, error } = await supabase
       .from('profiles')
       .select('*')
@@ -128,12 +165,12 @@ export class DBService {
 
     let profile: Profile;
     if (!profiles || profiles.length === 0) {
+      // ATENÇÃO: UUID gerado localmente — inválido em produção (sem auth.users)
       profile = {
         id: crypto.randomUUID(),
         email: email.toLowerCase(),
         nome: email.split('@')[0].toUpperCase(),
         role,
-        aluno_id: role === 'aluno' ? 'aluno-1' : (role === 'professor' ? 'prof-1' : undefined),
         criado_em: new Date().toISOString()
       };
       const { error: insertError } = await supabase.from('profiles').insert([profile]);
@@ -210,9 +247,12 @@ export class DBService {
       criado_em: new Date().toISOString()
     };
 
+    // Upsert em vez de insert: o trigger on_auth_user_created pode ter criado
+    // um profile básico antes do código chegar aqui. O upsert atualiza com
+    // dados ricos (nome completo, aluno_id) sem falhar por conflito de PK.
     const { error: profileError } = await supabase
       .from('profiles')
-      .insert([perfil]);
+      .upsert([perfil], { onConflict: 'id' });
 
     if (profileError) throw profileError;
 
@@ -252,9 +292,10 @@ export class DBService {
       criado_em: new Date().toISOString()
     };
 
+    // Upsert: mesmo motivo de signUpAluno — evita conflito com trigger.
     const { error: profileError } = await supabase
       .from('profiles')
-      .insert([perfil]);
+      .upsert([perfil], { onConflict: 'id' });
 
     if (profileError) throw profileError;
 
@@ -425,9 +466,10 @@ export class DBService {
       criado_em: new Date().toISOString()
     };
 
+    // Upsert: mesmo motivo de signUpAluno — evita conflito com trigger.
     const { error: profileError } = await supabase
       .from('profiles')
-      .insert([perfil]);
+      .upsert([perfil], { onConflict: 'id' });
 
     if (profileError) throw profileError;
 
@@ -500,83 +542,56 @@ export class DBService {
     return data[0] as Comprovante;
   }
 
-  static async approveComprovante(comprovanteId: string, adminId: string): Promise<void> {
-    const { data: comps, error: compError } = await supabase.from('comprovantes').select('*').eq('id', comprovanteId);
-    if (compError) throw compError;
-    if (!comps || comps.length === 0) throw new Error("Comprovante não encontrado.");
-    
-    const comp = comps[0];
-    if (comp.status !== 'pendente') throw new Error("Comprovante já processado.");
-
-    if (comp.id_transacao) {
-      const { data: activeTx, error: txError } = await supabase.from('comprovantes').select('id').eq('id_transacao', comp.id_transacao).eq('status', 'aprovado');
-      if (txError) throw txError;
-      if (activeTx && activeTx.length > 0) {
-        throw new Error("Transação com este ID já foi aprovada em outro comprovante.");
-      }
-    }
-
-    const { error: updError } = await supabase.from('comprovantes').update({ status: 'aprovado' }).eq('id', comprovanteId);
-    if (updError) throw updError;
-
-    const novaMov = {
-      aluno_id: comp.aluno_id,
-      tipo: 'credito',
-      valor: comp.valor,
-      descricao: `Recarga PIX Aprovada - ID: ${comp.id_transacao || 'N/A'}`,
-      criado_por: adminId,
-      criado_em: new Date().toISOString()
-    };
-    const { error: movError } = await supabase.from('movimentacoes').insert([novaMov]);
-    if (movError) throw movError;
-
-    const { data: aluno, error: aError } = await supabase.from('alunos').select('saldo').eq('id', comp.aluno_id).single();
-    if (aError) throw aError;
-    
-    const newSaldo = parseFloat(aluno.saldo) + parseFloat(comp.valor);
-    const { error: aUpdError } = await supabase.from('alunos').update({ saldo: newSaldo }).eq('id', comp.aluno_id);
-    if (aUpdError) throw aUpdError;
+  /**
+   * Aprova um comprovante PIX via RPC atômica.
+   * O operador autenticado é obtido via auth.uid() no servidor (AJUSTE 3).
+   * Não aceita adminId do cliente — evita falsificação de identidade.
+   * A RPC: (1) valida aluno ativo (AJUSTE 2), (2) aplica lock FOR UPDATE,
+   * (3) credita saldo, (4) registra no ledger — tudo em uma transação.
+   */
+  static async approveComprovante(comprovanteId: string): Promise<void> {
+    const { error } = await supabase.rpc('aprovar_comprovante', {
+      p_comprovante_id: comprovanteId
+    });
+    if (error) throw new Error(handleDbError(error));
   }
 
+  /**
+   * Rejeita um comprovante PIX via RPC atômica.
+   * O rejeitador é obtido via auth.uid() no servidor (AJUSTE 3).
+   */
   static async rejectComprovante(comprovanteId: string, observacao: string): Promise<void> {
-    const { data: comps, error: compError } = await supabase.from('comprovantes').select('status').eq('id', comprovanteId);
-    if (compError) throw compError;
-    if (!comps || comps.length === 0) throw new Error("Comprovante não encontrado.");
-    
-    if (comps[0].status !== 'pendente') throw new Error("Comprovante já processado.");
-
-    const { error: updError } = await supabase.from('comprovantes').update({ status: 'rejeitado', observacao }).eq('id', comprovanteId);
-    if (updError) throw updError;
+    const { error } = await supabase.rpc('rejeitar_comprovante', {
+      p_comprovante_id: comprovanteId,
+      p_observacao: observacao
+    });
+    if (error) throw new Error(handleDbError(error));
   }
 
-  static async registrarConsumo(alunoId: string, valor: number, descricao: string, operadorId: string): Promise<Movimentacao> {
-    const { data: aluno, error: aError } = await supabase.from('alunos').select('*').eq('id', alunoId).single();
-    if (aError) throw aError;
-    if (!aluno) throw new Error("Aluno não encontrado.");
-    
-    const saldoAtual = parseFloat(aluno.saldo);
-    if (saldoAtual < valor) {
-      throw new Error(`Saldo insuficiente. Saldo atual: R$ ${saldoAtual.toFixed(2)}`);
-    }
-
-    const { error: aUpdError } = await supabase.from('alunos').update({ saldo: saldoAtual - valor }).eq('id', alunoId);
-    if (aUpdError) throw aUpdError;
-
-    const novaMov = {
-      aluno_id: alunoId,
-      tipo: 'debito',
-      valor,
-      descricao,
-      criado_por: operadorId,
-      criado_em: new Date().toISOString()
-    };
-    
-    const { data, error } = await supabase.from('movimentacoes').insert([novaMov]).select();
-    if (error) throw error;
-    return data[0] as Movimentacao;
+  /**
+   * Registra uma compra/débito na cantina via RPC atômica.
+   * O operador autenticado é obtido via auth.uid() no servidor (AJUSTE 3).
+   * Não aceita operadorId do cliente — evita falsificação de identidade.
+   * A RPC: (1) aplica SELECT FOR UPDATE no aluno, (2) valida saldo,
+   * (3) debita saldo, (4) registra no ledger — tudo em uma transação.
+   * Retorna o id da movimentação criada.
+   */
+  static async registrarConsumo(alunoId: string, valor: number, descricao: string): Promise<{ id: string }> {
+    const { data: movId, error } = await supabase.rpc('registrar_debito', {
+      p_aluno_id:  alunoId,
+      p_valor:     valor,
+      p_descricao: descricao
+    });
+    if (error) throw new Error(handleDbError(error));
+    return { id: movId as string };
   }
 
-  static async updateAluno(alunoId: string, updates: Partial<Aluno>): Promise<Aluno> {
+  /**
+   * Atualiza dados cadastrais de um aluno.
+   * SEGURANÇA: 'saldo', 'id' e 'criado_em' são excluídos do tipo.
+   * O saldo só pode ser alterado via RPC registrar_debito / aprovar_comprovante.
+   */
+  static async updateAluno(alunoId: string, updates: Partial<AlunoUpdateFields>): Promise<Aluno> {
     const { data, error } = await supabase.from('alunos').update(updates).eq('id', alunoId).select();
     if (error) throw error;
     return data[0] as Aluno;

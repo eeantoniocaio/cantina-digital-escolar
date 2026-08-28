@@ -196,8 +196,7 @@ export default function CantinaTerminal() {
       await DBService.registrarConsumo(
         selectedAluno.id,
         amount,
-        chargeDesc,
-        currentUser.id
+        chargeDesc
       );
 
       setSuccessMsg(`Débito de R$ ${amount.toFixed(2)} realizado com sucesso para ${selectedAluno.nome}!`);
