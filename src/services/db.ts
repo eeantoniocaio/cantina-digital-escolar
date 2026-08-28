@@ -398,7 +398,7 @@ export class DBService {
         criado_em: new Date().toISOString()
       };
 
-      await supabase.from('profiles').insert([profile]);
+      await supabase.from('profiles').upsert([profile], { onConflict: 'id' });
     } else {
       profile = profiles[0];
     }
