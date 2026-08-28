@@ -50,7 +50,7 @@ export default function Home() {
         const profile = await DBService.handleOAuthCallback();
         if (profile) {
           setCurrentUser(profile);
-          const redirectPath = profile.role === 'gestao' ? '/admin' : `/${profile.role}`;
+          const redirectPath = (profile.is_master || profile.role === 'gestao' || profile.role === 'admin') ? '/admin' : `/${profile.role}`;
           window.location.href = redirectPath;
         }
       } catch (err: any) {
@@ -70,7 +70,7 @@ export default function Home() {
       const profile = await DBService.signIn(loginEmail, loginPassword);
       setSuccessMsg(`Bem-vindo de volta, ${profile.nome}!`);
       setTimeout(() => {
-        const redirectPath = profile.role === 'gestao' ? '/admin' : `/${profile.role}`;
+        const redirectPath = (profile.is_master || profile.role === 'gestao' || profile.role === 'admin') ? '/admin' : `/${profile.role}`;
         window.location.href = redirectPath;
       }, 1000);
     } catch (err: any) {
