@@ -36,6 +36,7 @@ export default function Home() {
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   useEffect(() => {
     // Check if user is already logged in locally
@@ -44,8 +45,27 @@ export default function Home() {
       setCurrentUser(user);
     }
     
-    // Check if returning from Google OAuth redirect
+    // Check if returning from Google OAuth redirect or handling errors
     const checkOAuth = async () => {
+      // Check for error parameters in URL hash or query params
+      if (typeof window !== 'undefined') {
+        const hash = window.location.hash;
+        const search = window.location.search;
+        if (hash.includes('error=') || search.includes('error=')) {
+          const params = new URLSearchParams(hash.startsWith('#') ? hash.substring(1) : search);
+          const errorDesc = params.get('error_description') || params.get('error') || 'Erro na autenticação OAuth';
+          const errorCode = params.get('error_code');
+          if (errorCode === 'bad_oauth_state' || errorDesc.includes('expired')) {
+            setErrorMsg("A sessão de login expirou ou foi cancelada. Por favor, tente entrar com o Google novamente.");
+          } else {
+            setErrorMsg(`Erro na autenticação Google: ${errorDesc.replace(/\+/g, ' ')}`);
+          }
+          // Limpa o hash de erro da URL para evitar replays
+          window.history.replaceState(null, '', window.location.pathname);
+          return;
+        }
+      }
+
       try {
         const profile = await DBService.handleOAuthCallback();
         if (profile) {
@@ -158,11 +178,14 @@ export default function Home() {
   };
 
   const handleGoogleLogin = async () => {
+    if (isGoogleLoading) return;
     setErrorMsg("");
+    setIsGoogleLoading(true);
     try {
       await DBService.signInWithGoogle();
     } catch (err: any) {
       setErrorMsg("Erro ao iniciar autenticação com o Google.");
+      setIsGoogleLoading(false);
     }
   };
 
@@ -275,7 +298,8 @@ export default function Home() {
           <div className="space-y-3">
             <button
               onClick={handleGoogleLogin}
-              className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-650 font-bold text-xs py-3 rounded-xl border border-slate-200 shadow-2xs transition-all active:scale-98 cursor-pointer"
+              disabled={isGoogleLoading}
+              className={`w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-650 font-bold text-xs py-3 rounded-xl border border-slate-200 shadow-2xs transition-all active:scale-98 ${isGoogleLoading ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24">
                 <path fill="#EA4335" d="M12 5.04c1.66 0 3.2.57 4.38 1.69l3.27-3.27C17.67 1.53 14.97 1 12 1 7.24 1 3.21 3.73 1.29 7.71l3.88 3C6.11 7.73 8.78 5.04 12 5.04z" />
@@ -283,7 +307,7 @@ export default function Home() {
                 <path fill="#FBBC05" d="M5.17 14.71c-.24-.71-.38-1.47-.38-2.26s.14-1.55.38-2.26L1.29 7.19C.46 8.86 0 10.73 0 12.7c0 1.97.46 3.84 1.29 5.51l3.88-3z" />
                 <path fill="#34A853" d="M12 23c3.24 0 5.95-1.08 7.93-2.91l-3.76-2.91c-1.08.72-2.45 1.16-4.17 1.16-3.22 0-5.89-2.69-6.83-5.67l-3.88 3C3.21 20.27 7.24 23 12 23z" />
               </svg>
-              <span>{activeTab === 'login' ? 'Entrar com Google' : 'Cadastrar com Google'}</span>
+              <span>{isGoogleLoading ? 'Redirecionando...' : (activeTab === 'login' ? 'Entrar com Google' : 'Cadastrar com Google')}</span>
             </button>
             <div className="flex items-center justify-center gap-3">
               <div className="h-[1px] bg-slate-200 flex-1"></div>
