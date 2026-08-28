@@ -36,6 +36,7 @@ export interface Profile {
   criado_em: string;
   rg?: string;
   whatsapp?: string;
+  is_master?: boolean;
 }
 
 export interface Aluno {

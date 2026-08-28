@@ -39,8 +39,8 @@ export default function AdminSwitcher() {
     return () => clearInterval(interval);
   }, []);
 
-  // Hide if not logged in or not admin/gestao
-  if (!currentUser || (currentUser.role !== "admin" && currentUser.role !== "gestao")) {
+  // Hide if not logged in or not master/admin/gestao
+  if (!currentUser || (!currentUser.is_master && currentUser.role !== "admin" && currentUser.role !== "gestao")) {
     return null;
   }
 
@@ -66,7 +66,7 @@ export default function AdminSwitcher() {
         
         {/* Badge */}
         <span className="absolute -top-1.5 -right-1.5 bg-slate-900 text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-full border border-slate-700 leading-none">
-          {currentUser.role}
+          {currentUser.is_master ? "MASTER" : currentUser.role}
         </span>
       </button>
 

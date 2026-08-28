@@ -57,7 +57,7 @@ export default function Header() {
 
   // Links de navegação baseados na role do usuário
   const getNavLinks = () => {
-    if (currentUser.role === "admin" || currentUser.role === "gestao") {
+    if (currentUser.is_master || currentUser.role === "admin" || currentUser.role === "gestao") {
       return [
         { label: "Início", path: "/admin" },
         { label: "Terminal Cantina", path: "/cantina" },
@@ -182,7 +182,7 @@ export default function Header() {
                     {currentUser.nome}
                   </h4>
                   <span className="mt-1 text-[9px] font-black text-red-650 bg-red-50 px-2.5 py-0.5 rounded-full border border-red-150 uppercase tracking-wide leading-none">
-                    {roleLabels[currentUser.role] || currentUser.role}
+                    {currentUser.is_master ? "👑 Admin Master" : (roleLabels[currentUser.role] || currentUser.role)}
                   </span>
                 </div>
 
