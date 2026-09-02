@@ -457,63 +457,69 @@ export default function ConfigissoesPage() {
               }
             />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {/* Card: TURMAS (ATIVO) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Card: TURMAS (ATIVO) em Superfície Pastel Amarela */}
               <button
                 onClick={() => setView('turmas')}
-                className="bg-white hover:border-slate-300 hover:shadow-md border border-slate-200 rounded-3xl p-6 shadow-xs flex flex-col justify-between h-48 transition-all cursor-pointer text-left group"
+                className="bg-[#FFFCE8] rounded-3xl p-7 shadow-xs flex flex-col justify-between h-52 transition-all cursor-pointer text-left group hover:shadow-md hover:-translate-y-0.5"
               >
-                <div className="space-y-2">
-                  <div className="h-10 w-10 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center border border-red-100 group-hover:scale-105 transition-transform">
-                    <School className="h-5 w-5" />
+                <div className="space-y-3">
+                  <div className="h-12 w-12 rounded-2xl bg-white text-[#CA8A04] flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+                    <School className="h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-base text-slate-900 group-hover:text-red-600 transition-colors">
+                    <h3 className="font-black text-lg text-[#713F12] leading-tight">
                       Turmas & Estudantes
                     </h3>
-                    <p className="text-xs text-slate-400 font-medium mt-0.5">
-                      Configuração de turmas e enturmação via planilha
+                    <p className="text-xs text-[#854D0E] font-medium mt-1">
+                      Configuração de salas e enturmação via CSV SED
                     </p>
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center pt-4 border-t border-slate-100">
-                  <Badge variant="brand">{allTurmas.length} turmas</Badge>
-                  <span className="text-xs font-bold text-slate-700 group-hover:text-red-600 transition-colors">
+                <div className="flex justify-between items-center pt-4 border-t border-amber-200/50">
+                  <span className="text-xs font-black uppercase px-3 py-1 rounded-full bg-[#FFCD20]/40 text-[#854D0E]">
+                    {allTurmas.length} turmas ativas
+                  </span>
+                  <span className="text-xs font-black text-[#101828] group-hover:translate-x-1 transition-transform">
                     Gerenciar →
                   </span>
                 </div>
               </button>
 
-              {/* Card: Servidores (Leitura) */}
-              <div className="bg-white/60 border border-slate-200 rounded-3xl p-6 shadow-2xs flex flex-col justify-between h-48 opacity-60">
-                <div className="space-y-2">
-                  <div className="h-10 w-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
-                    <Users className="h-5 w-5" />
+              {/* Card: Servidores em Superfície Pastel Verde */}
+              <div className="bg-[#F0FCEE] rounded-3xl p-7 shadow-xs flex flex-col justify-between h-52">
+                <div className="space-y-3">
+                  <div className="h-12 w-12 rounded-2xl bg-white text-[#16A34A] flex items-center justify-center shadow-xs">
+                    <Users className="h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-base text-slate-700">Corpo Docente</h3>
-                    <p className="text-xs text-slate-400 font-medium mt-0.5">Professores e servidores habilitados</p>
+                    <h3 className="font-black text-lg text-[#14532D]">Corpo Docente</h3>
+                    <p className="text-xs text-[#166534] font-medium mt-1">Professores e servidores habilitados</p>
                   </div>
                 </div>
-                <div className="flex justify-between items-center pt-4 border-t border-slate-100">
-                  <Badge variant="neutral">Apenas Leitura</Badge>
+                <div className="flex justify-between items-center pt-4 border-t border-emerald-200/50">
+                  <span className="text-xs font-black uppercase px-3 py-1 rounded-full bg-[#A6F686]/40 text-[#166534]">
+                    Apenas Leitura
+                  </span>
                 </div>
               </div>
 
-              {/* Card: Secretaria Geral */}
-              <div className="bg-white/60 border border-slate-200 rounded-3xl p-6 shadow-2xs flex flex-col justify-between h-48 opacity-60">
-                <div className="space-y-2">
-                  <div className="h-10 w-10 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center border border-sky-100">
-                    <Layers className="h-5 w-5" />
+              {/* Card: Secretaria Geral em Superfície Pastel Azul */}
+              <div className="bg-[#EBF9FD] rounded-3xl p-7 shadow-xs flex flex-col justify-between h-52">
+                <div className="space-y-3">
+                  <div className="h-12 w-12 rounded-2xl bg-white text-[#0284C7] flex items-center justify-center shadow-xs">
+                    <Layers className="h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-base text-slate-700">Secretaria & Permissões</h3>
-                    <p className="text-xs text-slate-400 font-medium mt-0.5">Controle de perfis de acesso</p>
+                    <h3 className="font-black text-lg text-[#0C4A6E]">Secretaria & Permissões</h3>
+                    <p className="text-xs text-[#075985] font-medium mt-1">Controle de perfis de acesso</p>
                   </div>
                 </div>
-                <div className="flex justify-between items-center pt-4 border-t border-slate-100">
-                  <Badge variant="neutral">Apenas Leitura</Badge>
+                <div className="flex justify-between items-center pt-4 border-t border-sky-200/50">
+                  <span className="text-xs font-black uppercase px-3 py-1 rounded-full bg-[#84E2FA]/40 text-[#075985]">
+                    Apenas Leitura
+                  </span>
                 </div>
               </div>
             </div>
@@ -638,22 +644,21 @@ export default function ConfigissoesPage() {
                           Ações da Turma:
                         </span>
                         <div className="flex gap-2">
-                          <Button
-                            variant="secondary"
-                            size="sm"
+                          <button
+                            type="button"
                             onClick={() => setImportingTurma(turma)}
-                            leftIcon={<FileSpreadsheet className="h-3.5 w-3.5 text-red-600" />}
+                            className="px-4 py-2 rounded-full bg-[#101828] text-white hover:bg-[#1E293B] text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
                           >
-                            Importar CSV
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                            <FileSpreadsheet className="h-3.5 w-3.5 text-[#84E2FA]" />
+                            <span>Importar CSV</span>
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => handleClearList(turma)}
-                            className="text-slate-500 hover:text-rose-600"
+                            className="px-4 py-2 rounded-full bg-[#FFF0F8] text-[#991B1B] hover:bg-rose-100 text-xs font-bold transition-all cursor-pointer"
                           >
                             Limpar Turma
-                          </Button>
+                          </button>
                         </div>
                       </div>
 

@@ -111,12 +111,12 @@ export default function ProfessorDashboard() {
       <Header />
 
       <main className="max-w-4xl mx-auto px-4 py-8 space-y-6">
-        {/* Top Header Card */}
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 flex flex-col md:flex-row justify-between items-center gap-6 shadow-xs">
+        {/* Top Header Card em Superfície Pastel Verde */}
+        <div className="bg-[#F0FCEE] rounded-3xl p-7 flex flex-col md:flex-row justify-between items-center gap-6 shadow-xs">
           <div className="flex items-center gap-4 w-full md:w-auto">
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="group relative h-16 w-16 rounded-full bg-slate-900 text-white font-black flex items-center justify-center text-xl cursor-pointer overflow-hidden border-2 border-slate-800 shrink-0 shadow-xs"
+              className="group relative h-18 w-18 rounded-2xl bg-white text-[#16A34A] font-black flex items-center justify-center text-2xl cursor-pointer overflow-hidden shadow-xs shrink-0"
               title="Clique para alterar foto"
             >
               {alunoInfo.foto ? (
@@ -150,23 +150,23 @@ export default function ProfessorDashboard() {
             />
 
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="font-extrabold text-lg text-slate-900 leading-tight">
+              <div className="flex items-center gap-2.5">
+                <h2 className="font-black text-xl text-[#14532D] leading-tight">
                   {alunoInfo.nome}
                 </h2>
-                <Badge variant="neutral">
+                <span className="text-[11px] font-black uppercase px-3 py-1 rounded-full bg-[#A6F686]/40 text-[#166534]">
                   {currentUser.role === 'gestao' ? 'Gestão Escolar' : 'Professor(a) / Servidor'}
-                </Badge>
+                </span>
               </div>
-              <p className="text-xs text-slate-400 font-mono mt-1">
+              <p className="text-xs text-[#166534] font-mono mt-1 font-medium">
                 E-mail: {currentUser.email} • Registro: {alunoInfo.ra}
               </p>
             </div>
           </div>
 
-          <div className="text-right w-full md:w-auto flex md:flex-col justify-between items-center md:items-end border-t md:border-0 border-slate-100 pt-4 md:pt-0">
-            <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Saldo de Consumo</span>
-            <span className="text-3xl font-black text-emerald-600">R$ {alunoInfo.saldo.toFixed(2)}</span>
+          <div className="text-right w-full md:w-auto flex md:flex-col justify-between items-center md:items-end border-t md:border-0 border-emerald-200/50 pt-4 md:pt-0">
+            <span className="text-[10px] text-[#166534] uppercase font-black tracking-widest">Saldo de Consumo</span>
+            <span className="text-4xl font-black text-[#101828]">R$ {alunoInfo.saldo.toFixed(2)}</span>
           </div>
         </div>
 
@@ -174,43 +174,41 @@ export default function ProfessorDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
           {/* QR Code */}
-          <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs flex flex-col items-center justify-between text-center space-y-4 md:col-span-1">
+          <div className="bg-white rounded-3xl p-7 shadow-xs flex flex-col items-center justify-between text-center space-y-5 md:col-span-1">
             <div>
-              <h3 className="font-extrabold text-sm text-slate-900">QR Code de Consumo</h3>
+              <h3 className="font-black text-base text-[#101828]">QR Code de Consumo</h3>
               <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                Apresente este código no caixa da cantina para consumir.
+                Apresente este código no caixa da cantina para debitar refeições e lanches.
               </p>
             </div>
 
-            <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-2xl flex items-center justify-center shadow-inner">
+            <div className="bg-[#F7F6F3] p-5 rounded-3xl flex items-center justify-center shadow-inner">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={qrCodeUrl}
-                alt="QR Code do Servidor"
-                className="w-40 h-40 object-contain rounded-xl"
+                alt="QR Code do Professor"
+                className="w-44 h-44 object-contain rounded-2xl"
               />
             </div>
 
-            <div className="w-full space-y-2">
-              <Button
-                variant="brand"
-                size="md"
+            <div className="w-full space-y-2.5">
+              <button
+                type="button"
                 onClick={handleShare}
-                leftIcon={copiedLink ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
-                className="w-full"
+                className="w-full py-3.5 px-4 rounded-full bg-[#101828] text-white hover:bg-[#1E293B] font-bold text-xs transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
               >
-                {copiedLink ? "Link Copiado!" : "Compartilhar QR"}
-              </Button>
+                {copiedLink ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
+                <span>{copiedLink ? "Link Copiado!" : "Compartilhar QR"}</span>
+              </button>
 
-              <Button
-                variant="secondary"
-                size="md"
+              <button
+                type="button"
                 onClick={() => setIsCardModalOpen(true)}
-                leftIcon={<CreditCard className="h-4 w-4" />}
-                className="w-full"
+                className="w-full py-3.5 px-4 rounded-full bg-[#F7F6F3] text-slate-700 hover:bg-slate-200 font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
-                Carteirinha Digital
-              </Button>
+                <CreditCard className="h-4 w-4 text-slate-500" />
+                <span>Minha Carteirinha</span>
+              </button>
             </div>
           </div>
 

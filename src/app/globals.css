@@ -137,14 +137,11 @@
   --color-border: var(--border);
   --color-border-light: var(--border-light);
 
-  --color-accent-blue: var(--accent-blue);
-  --color-accent-blue-light: var(--accent-blue-light);
-  --color-accent-pink: var(--accent-pink);
-  --color-accent-pink-light: var(--accent-pink-light);
-  --color-accent-green: var(--accent-green);
-  --color-accent-green-light: var(--accent-green-light);
-  --color-accent-yellow: var(--accent-yellow);
-  --color-accent-yellow-light: var(--accent-yellow-light);
+  --color-accent-blue: #84E2FA;
+  --color-accent-pink: #FF88D3;
+  --color-accent-green: #A6F686;
+  --color-accent-yellow: #FFCD20;
+  --color-dark-hero: #101828;
 
   --font-sans: var(--font-lexend), system-ui, sans-serif;
 
@@ -153,6 +150,43 @@
   --shadow-md: var(--shadow-md);
   --shadow-lg: var(--shadow-lg);
   --shadow-xl: var(--shadow-xl);
+}
+
+/* ----------------------------------------------------------------
+   2.1 PASTEL & EDITORIAL SURFACES
+   ---------------------------------------------------------------- */
+.surface-pastel-blue {
+  background-color: #E6F9FD;
+  color: #0C4A6E;
+  border: 1px solid rgba(132, 226, 250, 0.35);
+}
+
+.surface-pastel-pink {
+  background-color: #FFF0F8;
+  color: #831843;
+  border: 1px solid rgba(255, 136, 211, 0.35);
+}
+
+.surface-pastel-green {
+  background-color: #F0FCEE;
+  color: #14532D;
+  border: 1px solid rgba(166, 246, 134, 0.4);
+}
+
+.surface-pastel-yellow {
+  background-color: #FFFDF0;
+  color: #713F12;
+  border: 1px solid rgba(255, 205, 32, 0.35);
+}
+
+.surface-dark-hero {
+  background-color: #101828;
+  color: #FFFFFF;
+}
+
+.surface-soft-white {
+  background-color: #FFFFFF;
+  box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.04);
 }
 
 /* ----------------------------------------------------------------

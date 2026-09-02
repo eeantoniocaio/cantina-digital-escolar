@@ -202,63 +202,78 @@ export default function FamiliaDashboard() {
         {/* 1. SEÇÃO DE DEPENDENTES */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+            <h2 className="text-base font-extrabold text-[#101828] flex items-center gap-2.5">
               <Users className="h-4 w-4 text-slate-400" />
               Estudantes Vinculados
             </h2>
-            <span className="text-xs text-slate-400 font-medium">
+            <span className="text-xs font-bold text-[#075985] bg-[#EBF9FD] px-3.5 py-1 rounded-full">
               {alunos.length} dependente(s)
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {alunos.map(aluno => (
-              <div
-                key={aluno.id}
-                onClick={() => handleOpenProfile(aluno)}
-                className="group text-left bg-white border border-slate-200 hover:border-slate-300 hover:shadow-md rounded-3xl p-6 relative overflow-hidden shadow-xs transition-all cursor-pointer"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3.5">
-                    <div className="h-12 w-12 rounded-2xl bg-red-100 text-red-700 font-black flex items-center justify-center text-lg border border-red-200/80 shrink-0">
-                      {aluno.foto ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={aluno.foto} alt={aluno.nome} className="h-full w-full object-cover rounded-2xl" />
-                      ) : (
-                        aluno.nome.charAt(0)
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="font-extrabold text-base text-slate-900 group-hover:text-red-600 transition-colors leading-tight">
-                        {aluno.nome}
-                      </h3>
-                      <p className="text-xs text-slate-400 mt-0.5 font-mono">RA: {aluno.ra}</p>
-                    </div>
-                  </div>
-                  <Badge variant="brand">{aluno.turma}</Badge>
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {alunos.map((aluno, idx) => {
+              // Paleta contextual para cada dependente
+              const pastelPalettes = [
+                { bg: "bg-[#EBF9FD]", text: "text-[#0C4A6E]", badge: "bg-[#84E2FA]/30 text-[#075985]", avatarBg: "bg-white text-[#0284C7]" },
+                { bg: "bg-[#FFF0F8]", text: "text-[#831843]", badge: "bg-[#FF88D3]/30 text-[#9D174D]", avatarBg: "bg-white text-[#DB2777]" },
+                { bg: "bg-[#F0FCEE]", text: "text-[#14532D]", badge: "bg-[#A6F686]/35 text-[#166534]", avatarBg: "bg-white text-[#16A34A]" },
+                { bg: "bg-[#FFFCE8]", text: "text-[#713F12]", badge: "bg-[#FFCD20]/30 text-[#854D0E]", avatarBg: "bg-white text-[#CA8A04]" },
+              ];
+              const theme = pastelPalettes[idx % pastelPalettes.length];
 
-                <div className="mt-5 border-t border-slate-100 pt-4 flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Saldo Disponível</span>
-                    <span className="text-2xl font-black text-emerald-600">
-                      R$ {aluno.saldo.toFixed(2)}
+              return (
+                <div
+                  key={aluno.id}
+                  onClick={() => handleOpenProfile(aluno)}
+                  className={`group text-left ${theme.bg} rounded-3xl p-7 relative overflow-hidden shadow-xs hover:shadow-md transition-all cursor-pointer hover:-translate-y-0.5`}
+                >
+                  <div className="flex items-start justify-between mb-6">
+                    <div className="flex items-center gap-4">
+                      <div className={`h-14 w-14 rounded-2xl ${theme.avatarBg} font-black flex items-center justify-center text-xl shadow-xs shrink-0 overflow-hidden`}>
+                        {aluno.foto ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={aluno.foto} alt={aluno.nome} className="h-full w-full object-cover" />
+                        ) : (
+                          aluno.nome.charAt(0)
+                        )}
+                      </div>
+                      <div>
+                        <h3 className={`font-black text-lg ${theme.text} leading-tight`}>
+                          {aluno.nome}
+                        </h3>
+                        <p className="text-xs opacity-75 mt-0.5 font-mono">RA: {aluno.ra}</p>
+                      </div>
+                    </div>
+                    <span className={`text-[11px] font-black uppercase px-3 py-1 rounded-full ${theme.badge}`}>
+                      {aluno.turma}
                     </span>
                   </div>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRecarregarFromProfile(aluno.id);
-                    }}
-                    leftIcon={<CreditCard className="h-3.5 w-3.5 text-red-600" />}
-                  >
-                    Recarregar
-                  </Button>
+
+                  <div className="mt-6 pt-5 border-t border-black/5 flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-widest opacity-60 block">Saldo Atual</span>
+                      <span className="text-3xl font-black text-[#101828]">
+                        R$ {aluno.saldo.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRecarregarFromProfile(aluno.id);
+                        }}
+                        className="px-4 py-2.5 rounded-full bg-[#101828] text-white hover:bg-[#1E293B] text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <CreditCard className="h-3.5 w-3.5" />
+                        Recarregar Pix
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 
@@ -378,19 +393,19 @@ export default function FamiliaDashboard() {
                   1. Realize o Pix para a Escola
                 </h4>
 
-                <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200/80 space-y-3">
+                <div className="bg-[#FFFCE8] rounded-3xl p-5 space-y-3">
                   <div>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
+                    <span className="text-[10px] text-[#713F12] font-black uppercase tracking-widest block">
                       Chave Pix ({DADOS_PIX_ESCOLA.tipoChave})
                     </span>
-                    <div className="flex items-center justify-between mt-1 bg-white p-2.5 rounded-xl border border-slate-200">
-                      <span className="text-xs font-mono font-bold text-red-600 truncate mr-2 select-all">
+                    <div className="flex items-center justify-between mt-1 bg-white p-3 rounded-2xl shadow-2xs">
+                      <span className="text-xs font-mono font-black text-[#991B1B] truncate mr-2 select-all">
                         {DADOS_PIX_ESCOLA.chave}
                       </span>
                       <button
                         type="button"
                         onClick={handleCopyPix}
-                        className="text-slate-500 hover:text-slate-900 p-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
+                        className="text-slate-600 hover:text-[#101828] p-1.5 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
                         title="Copiar Chave Pix"
                       >
                         {copiedPix ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
@@ -398,28 +413,28 @@ export default function FamiliaDashboard() {
                     </div>
                   </div>
 
-                  <div className="space-y-1.5 text-xs text-slate-600 border-t border-slate-200/60 pt-3">
+                  <div className="space-y-1.5 text-xs text-[#713F12] border-t border-amber-200/50 pt-3">
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Beneficiário:</span>
-                      <strong className="text-slate-800">{DADOS_PIX_ESCOLA.beneficiario}</strong>
+                      <span className="opacity-75">Beneficiário:</span>
+                      <strong className="text-[#101828] font-bold">{DADOS_PIX_ESCOLA.beneficiario}</strong>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Banco:</span>
-                      <strong className="text-slate-800">{DADOS_PIX_ESCOLA.banco}</strong>
+                      <span className="opacity-75">Banco:</span>
+                      <strong className="text-[#101828] font-bold">{DADOS_PIX_ESCOLA.banco}</strong>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Cidade:</span>
-                      <strong className="text-slate-800">{DADOS_PIX_ESCOLA.cidade}</strong>
+                      <span className="opacity-75">Cidade:</span>
+                      <strong className="text-[#101828] font-bold">{DADOS_PIX_ESCOLA.cidade}</strong>
                     </div>
                   </div>
                 </div>
 
-                <div className="text-xs text-slate-600 bg-red-50/70 p-3.5 rounded-2xl border border-red-100 leading-relaxed space-y-1">
-                  <p className="font-bold text-red-900 flex items-center gap-1.5">
-                    <AlertCircle className="h-3.5 w-3.5 text-red-600 shrink-0" />
+                <div className="text-xs text-slate-600 bg-[#EBF9FD] p-4 rounded-3xl leading-relaxed space-y-1">
+                  <p className="font-black text-[#0C4A6E] flex items-center gap-1.5">
+                    <AlertCircle className="h-4 w-4 text-[#0284C7] shrink-0" />
                     Como funciona:
                   </p>
-                  <p className="text-[11px] text-red-800">
+                  <p className="text-[11px] text-[#075985] font-medium">
                     Copie a chave Pix acima, efetue o pagamento no app do seu banco, tire print do comprovante e faça o upload ao lado.
                   </p>
                 </div>
@@ -428,7 +443,7 @@ export default function FamiliaDashboard() {
               {/* Coluna 2: Upload do Comprovante e Leitor OCR */}
               <div className="p-6 flex flex-col justify-between">
                 <form onSubmit={handleUploadSubmit} className="space-y-4 flex-1">
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-400">
                     2. Enviar Comprovante
                   </h4>
 
@@ -452,12 +467,12 @@ export default function FamiliaDashboard() {
                   {!selectedFile ? (
                     <div
                       onClick={() => fileInputRef.current?.click()}
-                      className="border-2 border-dashed border-slate-200 hover:border-red-400 rounded-2xl p-8 text-center cursor-pointer hover:bg-red-50/30 transition-all flex flex-col items-center justify-center space-y-2"
+                      className="border-2 border-dashed border-slate-200 hover:border-[#101828] rounded-3xl p-8 text-center cursor-pointer hover:bg-slate-50 transition-all flex flex-col items-center justify-center space-y-2"
                     >
-                      <div className="h-12 w-12 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center">
+                      <div className="h-12 w-12 rounded-2xl bg-[#FFF0F8] text-[#DB2777] flex items-center justify-center">
                         <UploadCloud className="h-6 w-6" />
                       </div>
-                      <span className="text-xs font-bold text-slate-700">Carregar Foto ou PDF do Comprovante</span>
+                      <span className="text-xs font-black text-[#101828]">Carregar Foto ou PDF do Comprovante</span>
                       <span className="text-[10px] text-slate-400">Formatos aceitos: JPG, PNG e PDF</span>
                       <input
                         type="file"
@@ -490,57 +505,60 @@ export default function FamiliaDashboard() {
                             setFilePreview(null);
                             setOcrData(null);
                           }}
-                          className="absolute top-2 right-2 bg-slate-900 text-white rounded-full p-1 text-xs hover:bg-red-600 transition-colors cursor-pointer shadow-xs"
+                          className="absolute top-2 right-2 bg-[#101828] text-white rounded-full p-1 text-xs hover:bg-red-600 transition-colors cursor-pointer shadow-xs"
                         >
                           <X className="h-3.5 w-3.5" />
                         </button>
                       </div>
 
                       {isProcessingOCR && (
-                        <div className="flex items-center justify-center gap-2.5 p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
-                          <div className="h-4 w-4 rounded-full border-2 border-red-600 border-t-transparent animate-spin" />
-                          <span className="text-xs text-slate-600 font-medium animate-pulse">
+                        <div className="flex items-center justify-center gap-2.5 p-3.5 bg-[#EBF9FD] rounded-2xl">
+                          <div className="h-4 w-4 rounded-full border-2 border-[#0284C7] border-t-transparent animate-spin" />
+                          <span className="text-xs text-[#075985] font-bold animate-pulse">
                             Identificando dados do Pix...
                           </span>
                         </div>
                       )}
 
                       {ocrData && !isProcessingOCR && (
-                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3 animate-fade-in">
+                        <div className="bg-[#F0FCEE] p-4 rounded-2xl space-y-3 animate-fade-in">
                           <div className="flex justify-between items-center">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                              Dados Confirmados pelo Leitor
+                            <span className="text-[10px] font-black text-[#14532D] uppercase tracking-widest">
+                              Dados Confirmados
                             </span>
-                            <Badge variant="success" dot>Leitura Concluída</Badge>
+                            <span className="text-[10px] font-black bg-emerald-200 text-[#14532D] px-2.5 py-0.5 rounded-full">
+                              Leitura Concluída
+                            </span>
                           </div>
 
                           <div className="grid grid-cols-2 gap-2.5">
                             <div>
-                              <label className="block text-[10px] font-bold text-slate-500 mb-1">Valor (R$)</label>
+                              <label className="block text-[10px] font-bold text-[#14532D] mb-1">Valor (R$)</label>
                               <Input
                                 type="text"
                                 value={manualValor}
                                 onChange={e => setManualValor(e.target.value)}
-                                className="font-black"
+                                className="font-black bg-white"
                                 required
                               />
                             </div>
                             <div>
-                              <label className="block text-[10px] font-bold text-slate-500 mb-1">ID da Transação</label>
+                              <label className="block text-[10px] font-bold text-[#14532D] mb-1">ID da Transação</label>
                               <Input
                                 type="text"
                                 value={manualTransacao}
                                 onChange={e => setManualTransacao(e.target.value)}
-                                className="font-mono text-xs"
+                                className="font-mono text-xs bg-white"
                                 required
                               />
                             </div>
                             <div className="col-span-2">
-                              <label className="block text-[10px] font-bold text-slate-500 mb-1">Nome do Pagador</label>
+                              <label className="block text-[10px] font-bold text-[#14532D] mb-1">Nome do Pagador</label>
                               <Input
                                 type="text"
                                 value={manualPagador}
                                 onChange={e => setManualPagador(e.target.value)}
+                                className="bg-white"
                                 required
                               />
                             </div>
@@ -551,30 +569,26 @@ export default function FamiliaDashboard() {
                   )}
 
                   {errorMessage && (
-                    <div className="text-xs text-rose-700 bg-rose-50 p-3 rounded-2xl border border-rose-200">
+                    <div className="text-xs text-rose-700 bg-rose-50 p-3.5 rounded-2xl border border-rose-200">
                       {errorMessage}
                     </div>
                   )}
 
                   <div className="border-t border-slate-100 pt-4 flex gap-2.5">
-                    <Button
+                    <button
                       type="button"
-                      variant="secondary"
-                      size="md"
                       onClick={resetForm}
-                      className="flex-1"
+                      className="flex-1 py-3 px-5 rounded-full text-xs font-bold text-slate-600 bg-[#F7F6F3] hover:bg-slate-200 transition-colors cursor-pointer"
                     >
                       Cancelar
-                    </Button>
-                    <Button
+                    </button>
+                    <button
                       type="submit"
-                      variant="brand"
-                      size="md"
                       disabled={isProcessingOCR || !selectedFile}
-                      className="flex-1 shadow-xs"
+                      className="flex-1 py-3 px-5 rounded-full text-xs font-black text-white bg-[#101828] hover:bg-[#1E293B] transition-colors cursor-pointer shadow-xs disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       Enviar Comprovante
-                    </Button>
+                    </button>
                   </div>
                 </form>
               </div>

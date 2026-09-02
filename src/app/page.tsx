@@ -280,21 +280,21 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 w-full shadow-xs space-y-6">
+        <div className="bg-white rounded-3xl p-8 w-full shadow-xs space-y-6">
           {/* Custom Tab Selector */}
-          <div className="flex bg-slate-100 p-1 rounded-2xl gap-1 text-xs font-bold text-slate-600">
+          <div className="flex bg-[#F7F6F3] p-1.5 rounded-full gap-1 text-xs font-bold text-slate-600">
             <button
               onClick={() => { setActiveTab('login'); setErrorMsg(""); setSuccessMsg(""); }}
-              className={`flex-1 py-2 rounded-xl transition-all cursor-pointer text-center ${
-                activeTab === 'login' ? 'bg-white text-slate-900 shadow-xs' : 'hover:text-slate-900'
+              className={`flex-1 py-2.5 rounded-full transition-all cursor-pointer text-center ${
+                activeTab === 'login' ? 'bg-[#101828] text-white shadow-xs' : 'hover:text-[#101828]'
               }`}
             >
               Entrar
             </button>
             <button
               onClick={() => { setActiveTab('register'); setErrorMsg(""); setSuccessMsg(""); }}
-              className={`flex-1 py-2 rounded-xl transition-all cursor-pointer text-center ${
-                activeTab === 'register' ? 'bg-white text-slate-900 shadow-xs' : 'hover:text-slate-900'
+              className={`flex-1 py-2.5 rounded-full transition-all cursor-pointer text-center ${
+                activeTab === 'register' ? 'bg-[#101828] text-white shadow-xs' : 'hover:text-[#101828]'
               }`}
             >
               Cadastrar-se
@@ -306,8 +306,8 @@ export default function Home() {
             <button
               onClick={handleGoogleLogin}
               disabled={isGoogleLoading}
-              className={`w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs py-3 rounded-2xl border border-slate-200 shadow-2xs transition-all active:scale-98 ${
-                isGoogleLoading ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:border-slate-300'
+              className={`w-full flex items-center justify-center gap-3 bg-[#F7F6F3] hover:bg-slate-200 text-[#101828] font-bold text-xs py-3.5 rounded-full transition-all active:scale-98 ${
+                isGoogleLoading ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
               }`}
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24">
@@ -320,9 +320,9 @@ export default function Home() {
             </button>
 
             <div className="flex items-center justify-center gap-3">
-              <div className="h-[1px] bg-slate-200 flex-1"></div>
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Ou com e-mail</span>
-              <div className="h-[1px] bg-slate-200 flex-1"></div>
+              <div className="h-[1px] bg-slate-100 flex-1"></div>
+              <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Ou com e-mail</span>
+              <div className="h-[1px] bg-slate-100 flex-1"></div>
             </div>
           </div>
 
@@ -354,38 +354,36 @@ export default function Home() {
               </div>
 
               {errorMsg && (
-                <div className="text-xs text-rose-700 bg-rose-50 p-3 rounded-2xl border border-rose-200 flex items-center gap-2">
+                <div className="text-xs text-rose-700 bg-rose-50 p-3.5 rounded-2xl border border-rose-200 flex items-center gap-2">
                   <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
                   <span>{errorMsg}</span>
                 </div>
               )}
 
               {successMsg && (
-                <div className="text-xs text-emerald-700 bg-emerald-50 p-3 rounded-2xl border border-emerald-200 flex items-center gap-2">
+                <div className="text-xs text-emerald-700 bg-emerald-50 p-3.5 rounded-2xl border border-emerald-200 flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
                   <span>{successMsg}</span>
                 </div>
               )}
 
-              <Button
+              <button
                 type="submit"
-                variant="brand"
-                size="lg"
-                loading={isLoading}
-                className="w-full shadow-xs"
+                disabled={isLoading}
+                className="w-full py-4 px-6 rounded-full text-xs font-black text-white bg-[#101828] hover:bg-[#1E293B] shadow-md transition-all active:scale-98 cursor-pointer disabled:opacity-50"
               >
-                Entrar na Conta
-              </Button>
+                {isLoading ? "Acessando..." : "Entrar na Conta"}
+              </button>
             </form>
           ) : (
             <form onSubmit={handleRegisterSubmit} className="space-y-4">
-              {/* Role Selector */}
-              <div className="flex border border-slate-200 p-1 rounded-2xl text-xs font-bold text-slate-600 bg-slate-50 gap-1">
+              {/* Role Selector em Pills */}
+              <div className="flex bg-[#F7F6F3] p-1.5 rounded-full text-xs font-bold text-slate-600 gap-1">
                 <button
                   type="button"
                   onClick={() => setRegisterRole('aluno')}
-                  className={`flex-1 py-1.5 rounded-xl transition-all cursor-pointer ${
-                    registerRole === 'aluno' ? 'bg-white text-slate-900 shadow-xs' : 'hover:text-slate-900'
+                  className={`flex-1 py-2 rounded-full transition-all cursor-pointer ${
+                    registerRole === 'aluno' ? 'bg-[#101828] text-white shadow-xs' : 'hover:text-[#101828]'
                   }`}
                 >
                   Estudante
@@ -393,8 +391,8 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => setRegisterRole('professor')}
-                  className={`flex-1 py-1.5 rounded-xl transition-all cursor-pointer ${
-                    registerRole === 'professor' ? 'bg-white text-slate-900 shadow-xs' : 'hover:text-slate-900'
+                  className={`flex-1 py-2 rounded-full transition-all cursor-pointer ${
+                    registerRole === 'professor' ? 'bg-[#101828] text-white shadow-xs' : 'hover:text-[#101828]'
                   }`}
                 >
                   Professor
@@ -402,8 +400,8 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => setRegisterRole('familia')}
-                  className={`flex-1 py-1.5 rounded-xl transition-all cursor-pointer ${
-                    registerRole === 'familia' ? 'bg-white text-slate-900 shadow-xs' : 'hover:text-slate-900'
+                  className={`flex-1 py-2 rounded-full transition-all cursor-pointer ${
+                    registerRole === 'familia' ? 'bg-[#101828] text-white shadow-xs' : 'hover:text-[#101828]'
                   }`}
                 >
                   Responsável
@@ -609,59 +607,63 @@ export default function Home() {
                 </div>
               )}
 
-              <Button
+              <button
                 type="submit"
-                variant="brand"
-                size="lg"
-                loading={isLoading}
-                className="w-full shadow-xs"
+                disabled={isLoading}
+                className="w-full py-4 px-6 rounded-full text-xs font-black text-white bg-[#101828] hover:bg-[#1E293B] shadow-md transition-all active:scale-98 cursor-pointer disabled:opacity-50"
               >
-                Criar Conta
-              </Button>
+                {isLoading ? "Criando Conta..." : "Criar Conta"}
+              </button>
             </form>
           )}
         </div>
 
         {/* Simulador Dev */}
         {process.env.NODE_ENV === 'development' && handleSimularLogin && (
-          <div className="mt-8 bg-amber-50/90 border border-amber-200 rounded-3xl p-4 w-full text-center space-y-2.5">
-            <span className="text-[10px] text-amber-700 uppercase font-extrabold tracking-wider block">
+          <div className="mt-8 bg-[#FFFCE8] rounded-3xl p-5 w-full text-center space-y-3 shadow-2xs">
+            <span className="text-[10px] text-[#713F12] uppercase font-black tracking-widest block">
               Atalhos de Simulação (Ambiente Local)
             </span>
             <div className="flex flex-wrap gap-2 justify-center">
               <button
+                type="button"
                 onClick={() => handleSimularLogin('aluno')}
-                className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-xl text-[11px] font-bold shadow-2xs transition-colors cursor-pointer"
+                className="bg-white hover:bg-slate-100 text-[#075985] py-2 px-3.5 rounded-full text-xs font-bold shadow-2xs transition-colors cursor-pointer"
               >
                 Estudante
               </button>
               <button
+                type="button"
                 onClick={() => handleSimularLogin('professor')}
-                className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-xl text-[11px] font-bold shadow-2xs transition-colors cursor-pointer"
+                className="bg-white hover:bg-slate-100 text-[#166534] py-2 px-3.5 rounded-full text-xs font-bold shadow-2xs transition-colors cursor-pointer"
               >
                 Professor
               </button>
               <button
+                type="button"
                 onClick={() => handleSimularLogin('familia')}
-                className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-xl text-[11px] font-bold shadow-2xs transition-colors cursor-pointer"
+                className="bg-white hover:bg-slate-100 text-[#831843] py-2 px-3.5 rounded-full text-xs font-bold shadow-2xs transition-colors cursor-pointer"
               >
                 Família
               </button>
               <button
+                type="button"
                 onClick={() => handleSimularLogin('cantina')}
-                className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-xl text-[11px] font-bold shadow-2xs transition-colors cursor-pointer"
+                className="bg-white hover:bg-slate-100 text-[#713F12] py-2 px-3.5 rounded-full text-xs font-bold shadow-2xs transition-colors cursor-pointer"
               >
                 Cantina
               </button>
               <button
+                type="button"
                 onClick={() => handleSimularLogin('admin')}
-                className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-xl text-[11px] font-bold shadow-2xs transition-colors cursor-pointer"
+                className="bg-white hover:bg-slate-100 text-red-600 py-2 px-3.5 rounded-full text-xs font-bold shadow-2xs transition-colors cursor-pointer"
               >
                 Secretaria
               </button>
               <button
+                type="button"
                 onClick={() => handleSimularLogin('gestao')}
-                className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-xl text-[11px] font-bold shadow-2xs transition-colors cursor-pointer"
+                className="bg-white hover:bg-slate-100 text-[#101828] py-2 px-3.5 rounded-full text-xs font-bold shadow-2xs transition-colors cursor-pointer"
               >
                 Gestão
               </button>

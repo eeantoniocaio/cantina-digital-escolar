@@ -267,20 +267,20 @@ export default function AdminDashboard() {
         </section>
 
         {/* Tab Navigation Pills */}
-        <div className="bg-white border border-slate-200 p-1.5 rounded-2xl mb-8 flex flex-wrap gap-1 shadow-xs">
+        <div className="bg-[#F7F6F3] p-1.5 rounded-full mb-8 flex flex-wrap gap-1 w-fit">
           <button
             onClick={() => setActiveTab('fila')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'fila'
-                ? 'bg-slate-900 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                ? 'bg-[#101828] text-white shadow-xs'
+                : 'text-slate-600 hover:text-[#101828] hover:bg-white/80'
             }`}
           >
-            <FileText className="h-3.5 w-3.5" />
+            <FileText className="h-4 w-4" />
             <span>Fila de Pix</span>
             {pendentesCount > 0 && (
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                activeTab === 'fila' ? 'bg-red-500 text-white' : 'bg-amber-100 text-amber-800'
+              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black ${
+                activeTab === 'fila' ? 'bg-[#FF88D3] text-[#831843]' : 'bg-[#FFCD20]/40 text-[#854D0E]'
               }`}>
                 {pendentesCount}
               </span>
@@ -289,38 +289,38 @@ export default function AdminDashboard() {
 
           <button
             onClick={() => setActiveTab('alunos')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'alunos'
-                ? 'bg-slate-900 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                ? 'bg-[#101828] text-white shadow-xs'
+                : 'text-slate-600 hover:text-[#101828] hover:bg-white/80'
             }`}
           >
-            <Users className="h-3.5 w-3.5" />
+            <Users className="h-4 w-4" />
             <span>Cadastro de Alunos</span>
           </button>
 
           <button
             onClick={() => setActiveTab('produtos')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'produtos'
-                ? 'bg-slate-900 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                ? 'bg-[#101828] text-white shadow-xs'
+                : 'text-slate-600 hover:text-[#101828] hover:bg-white/80'
             }`}
           >
-            <UtensilsCrossed className="h-3.5 w-3.5" />
-            <span>Gerenciar Cardápio</span>
+            <UtensilsCrossed className="h-4 w-4" />
+            <span>Cardápio</span>
           </button>
 
           <button
             onClick={() => setActiveTab('movimentacoes')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'movimentacoes'
-                ? 'bg-slate-900 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                ? 'bg-[#101828] text-white shadow-xs'
+                : 'text-slate-600 hover:text-[#101828] hover:bg-white/80'
             }`}
           >
-            <History className="h-3.5 w-3.5" />
-            <span>Trilha de Auditoria</span>
+            <History className="h-4 w-4" />
+            <span>Auditoria</span>
           </button>
         </div>
 
@@ -329,10 +329,10 @@ export default function AdminDashboard() {
           <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-4">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-widest">
                   Comprovantes em Espera
                 </h3>
-                <span className="text-xs text-slate-400 font-medium">
+                <span className="text-xs text-slate-500 font-bold bg-[#EBF9FD] text-[#075985] px-3 py-0.5 rounded-full">
                   {comprovantes.filter(c => c.status === 'pendente').length} pendente(s)
                 </span>
               </div>
@@ -341,7 +341,8 @@ export default function AdminDashboard() {
                 <EmptyState
                   icon={<CheckCircle2 className="h-7 w-7 text-emerald-500" />}
                   title="Fila de análise zerada!"
-                  description="Todos os comprovantes Pix enviados pelas famílias foram analisados e creditados."
+                  description="Todos os comprovantes Pix enviados pelas famílias foram analisados e creditados com sucesso."
+                  variant="green"
                 />
               ) : (
                 comprovantes.filter(c => c.status === 'pendente').map(comp => {
@@ -353,35 +354,41 @@ export default function AdminDashboard() {
                     <div
                       key={comp.id}
                       onClick={() => { setSelectedComp(comp); setErrorMessage(""); }}
-                      className={`p-5 rounded-3xl border transition-all cursor-pointer flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${
+                      className={`p-6 rounded-3xl transition-all cursor-pointer flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${
                         isSelected
-                          ? 'bg-white border-red-500 shadow-md ring-2 ring-red-500/10'
+                          ? 'bg-[#101828] text-white shadow-lg -translate-y-0.5'
                           : isDuplicate
-                          ? 'bg-rose-50/40 border-rose-200 hover:bg-white hover:border-rose-300'
-                          : 'bg-white border-slate-200 hover:bg-slate-50/80 hover:border-slate-300 shadow-xs'
+                          ? 'bg-[#FFF0F8] text-[#831843] hover:shadow-md'
+                          : 'bg-white hover:bg-[#EBF9FD] hover:shadow-md shadow-2xs'
                       }`}
                     >
                       <div className="space-y-1.5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-slate-900">{aluno?.nome || "Aluno Excluído"}</span>
-                          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                        <div className="flex items-center gap-2.5">
+                          <span className={`text-base font-extrabold ${isSelected ? 'text-white' : 'text-[#101828]'}`}>
+                            {aluno?.nome || "Aluno Excluído"}
+                          </span>
+                          <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider ${
+                            isSelected ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+                          }`}>
                             {aluno?.turma}
                           </span>
                           {isDuplicate && (
-                            <Badge variant="danger" dot>
-                              Alerta Duplicidade
-                            </Badge>
+                            <span className="text-[10px] font-black bg-rose-500 text-white px-2.5 py-0.5 rounded-full">
+                              Duplicidade
+                            </span>
                           )}
                         </div>
-                        <div className="text-xs text-slate-500 space-y-0.5">
-                          <p>Pagador: <strong className="text-slate-700">{comp.pagador}</strong></p>
-                          <p className="font-mono text-[11px] text-slate-400">ID Pix: {comp.id_transacao || "Não identificado"}</p>
+                        <div className={`text-xs space-y-0.5 ${isSelected ? 'text-white/70' : 'text-slate-500'}`}>
+                          <p>Pagador: <strong className={isSelected ? 'text-white' : 'text-slate-800'}>{comp.pagador}</strong></p>
+                          <p className="font-mono text-[11px] opacity-75">ID Pix: {comp.id_transacao || "Não identificado"}</p>
                         </div>
                       </div>
 
-                      <div className="text-right flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto border-t sm:border-0 border-slate-100 pt-3 sm:pt-0">
-                        <span className="text-lg font-black text-emerald-600">R$ {comp.valor.toFixed(2)}</span>
-                        <span className="text-[11px] text-slate-400 font-medium">
+                      <div className="text-right flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto border-t sm:border-0 border-white/10 pt-3 sm:pt-0">
+                        <span className={`text-2xl font-black ${isSelected ? 'text-[#A6F686]' : 'text-emerald-600'}`}>
+                          R$ {comp.valor.toFixed(2)}
+                        </span>
+                        <span className={`text-[11px] font-medium ${isSelected ? 'text-white/60' : 'text-slate-400'}`}>
                           {new Date(comp.criado_em).toLocaleDateString('pt-BR')} às {new Date(comp.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
@@ -440,55 +447,53 @@ export default function AdminDashboard() {
                     </div>
 
                     {/* Metadados Extraídos */}
-                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-2.5 text-xs">
+                    <div className="bg-[#F7F6F3] p-5 rounded-2xl space-y-2.5 text-xs">
                       <div className="flex justify-between items-center">
-                        <span className="text-slate-400">Estudante:</span>
-                        <strong className="text-slate-900 font-bold">
+                        <span className="text-slate-400 font-medium">Estudante:</span>
+                        <strong className="text-[#101828] font-bold text-sm">
                           {alunos.find(a => a.id === selectedComp.aluno_id)?.nome}
                         </strong>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-slate-400">Valor identificado:</span>
-                        <strong className="text-emerald-600 font-black text-sm">
+                        <span className="text-slate-400 font-medium">Valor identificado:</span>
+                        <strong className="text-emerald-600 font-black text-base">
                           R$ {selectedComp.valor.toFixed(2)}
                         </strong>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-slate-400">Nome Pagador:</span>
+                        <span className="text-slate-400 font-medium">Nome Pagador:</span>
                         <strong className="text-slate-800">{selectedComp.pagador}</strong>
                       </div>
-                      <div className="flex flex-col gap-0.5 pt-1 border-t border-slate-200/60">
-                        <span className="text-slate-400 text-[10px]">ID Pix:</span>
+                      <div className="flex flex-col gap-0.5 pt-2 border-t border-black/5">
+                        <span className="text-slate-400 text-[10px] font-bold uppercase">ID Pix:</span>
                         <strong className="text-slate-600 font-mono text-[11px] break-all">{selectedComp.id_transacao || "Não consta"}</strong>
                       </div>
                     </div>
 
                     {errorMessage && (
-                      <div className="text-xs text-rose-700 bg-rose-50 p-3 rounded-2xl border border-rose-200 flex items-center gap-2">
+                      <div className="text-xs text-rose-700 bg-rose-50 p-3.5 rounded-2xl border border-rose-200 flex items-center gap-2">
                         <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0" />
                         <span>{errorMessage}</span>
                       </div>
                     )}
 
                     {/* Botões de Decisão */}
-                    <div className="flex gap-2 pt-2">
-                      <Button
-                        variant="secondary"
-                        size="md"
+                    <div className="flex gap-2.5 pt-2">
+                      <button
+                        type="button"
                         onClick={() => { setIsRejectModalOpen(true); setErrorMessage(""); }}
-                        className="flex-1 text-rose-600 hover:bg-rose-50 hover:border-rose-200"
+                        className="flex-1 py-3 px-4 rounded-full text-xs font-bold text-[#991B1B] bg-[#FFF0F8] hover:bg-rose-100 transition-colors cursor-pointer"
                       >
                         Rejeitar
-                      </Button>
-                      <Button
-                        variant="brand"
-                        size="md"
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => handleApprove(selectedComp)}
                         disabled={isTxIdDuplicate(selectedComp)}
-                        className="flex-2 shadow-xs"
+                        className="flex-2 py-3 px-5 rounded-full text-xs font-bold text-white bg-[#101828] hover:bg-[#1E293B] transition-colors cursor-pointer shadow-xs disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         Aprovar R$ {selectedComp.valor.toFixed(2)}
-                      </Button>
+                      </button>
                     </div>
                   </>
                 ) : (

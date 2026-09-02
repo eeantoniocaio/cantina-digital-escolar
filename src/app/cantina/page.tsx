@@ -259,21 +259,20 @@ export default function CantinaTerminal() {
           <div className="lg:col-span-2 space-y-6">
 
             {/* 1. Busca / Identificação do Aluno */}
-            <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs relative">
+            <div className="bg-white rounded-3xl p-6 shadow-xs relative">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
-                  <span className="h-6 w-6 rounded-full bg-red-100 text-red-600 text-xs font-bold flex items-center justify-center">1</span>
+                <h3 className="text-sm font-extrabold text-[#101828] flex items-center gap-2.5">
+                  <span className="h-7 w-7 rounded-full bg-[#101828] text-white text-xs font-black flex items-center justify-center">1</span>
                   Identificar Estudante ou Servidor
                 </h3>
                 {selectedAluno && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                  <button
+                    type="button"
                     onClick={() => setSelectedAluno(null)}
-                    className="text-slate-500 hover:text-slate-800"
+                    className="text-xs font-bold text-slate-500 hover:text-red-600 cursor-pointer transition-colors"
                   >
                     Trocar Aluno
-                  </Button>
+                  </button>
                 )}
               </div>
 
@@ -296,18 +295,18 @@ export default function CantinaTerminal() {
 
                   {/* Resultados da Busca */}
                   {filteredAlunos.length > 0 && (
-                    <div className="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl z-20 overflow-hidden divide-y divide-slate-100 animate-fade-in">
+                    <div className="absolute left-0 right-0 mt-2 bg-white rounded-3xl shadow-xl z-20 overflow-hidden divide-y divide-slate-100 animate-fade-in border border-black/5">
                       {filteredAlunos.map(aluno => (
                         <button
                           key={aluno.id}
                           onClick={() => handleSelectAluno(aluno)}
-                          className="w-full text-left p-4 hover:bg-slate-50 transition-colors flex justify-between items-center cursor-pointer text-xs"
+                          className="w-full text-left p-4 hover:bg-[#EBF9FD] transition-colors flex justify-between items-center cursor-pointer text-xs"
                         >
                           <div className="space-y-0.5">
-                            <span className="font-bold text-slate-900 block text-sm">{aluno.nome}</span>
+                            <span className="font-extrabold text-[#101828] block text-sm">{aluno.nome}</span>
                             <span className="text-slate-400">RA: {aluno.ra} • Turma: {aluno.turma}</span>
                           </div>
-                          <span className="font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                          <span className="font-black text-emerald-700 bg-[#F0FCEE] px-3.5 py-1.5 rounded-full text-xs">
                             R$ {aluno.saldo.toFixed(2)}
                           </span>
                         </button>
@@ -316,16 +315,14 @@ export default function CantinaTerminal() {
                   )}
                 </div>
 
-                <Button
+                <button
                   type="button"
-                  variant="brand"
-                  size="md"
                   onClick={() => { setIsScanning(true); setSuccessMsg(""); setErrorMsg(""); }}
-                  leftIcon={<Camera className="h-4 w-4" />}
-                  className="shrink-0"
+                  className="px-5 py-2.5 rounded-2xl bg-[#FFCD20] text-[#713F12] font-black text-xs hover:bg-[#FACC15] transition-all flex items-center gap-2 shrink-0 cursor-pointer shadow-2xs active:scale-95"
                 >
+                  <Camera className="h-4 w-4 text-[#854D0E]" />
                   <span className="hidden sm:inline">Escanear</span> QR
-                </Button>
+                </button>
               </div>
 
               {searchQuery.trim() !== "" && filteredAlunos.length === 0 && (
@@ -337,39 +334,39 @@ export default function CantinaTerminal() {
 
             {/* Aluno Selecionado e Carrinho */}
             {selectedAluno ? (
-              <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-6 animate-fade-in">
+              <div className="bg-white rounded-3xl p-7 shadow-xs space-y-7 animate-fade-in">
 
-                {/* Banner de Dados do Aluno */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-5 bg-slate-50 rounded-2xl border border-slate-200/80 gap-4">
-                  <div className="flex items-center gap-3.5">
-                    <div className="h-12 w-12 rounded-full bg-red-100 text-red-700 font-black flex items-center justify-center text-lg border border-red-200 shrink-0">
+                {/* Banner de Dados do Aluno em Superfície Pastel */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-6 bg-[#EBF9FD] rounded-3xl gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="h-14 w-14 rounded-2xl bg-white text-[#0284C7] font-black flex items-center justify-center text-xl shadow-xs shrink-0 overflow-hidden">
                       {selectedAluno.foto ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={selectedAluno.foto} alt={selectedAluno.nome} className="h-full w-full object-cover rounded-full" />
+                        <img src={selectedAluno.foto} alt={selectedAluno.nome} className="h-full w-full object-cover" />
                       ) : (
                         selectedAluno.nome.charAt(0)
                       )}
                     </div>
                     <div>
-                      <h4 className="font-extrabold text-base text-slate-900 leading-tight">{selectedAluno.nome}</h4>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        Turma: <strong className="text-slate-700">{selectedAluno.turma}</strong> • RA: {selectedAluno.ra}
+                      <h4 className="font-black text-lg text-[#0C4A6E] leading-tight">{selectedAluno.nome}</h4>
+                      <p className="text-xs text-[#075985] mt-1 font-medium">
+                        Turma: <strong className="text-[#0C4A6E]">{selectedAluno.turma}</strong> • RA: {selectedAluno.ra}
                       </p>
                     </div>
                   </div>
 
-                  <div className="text-right flex sm:flex-col justify-between w-full sm:w-auto items-center sm:items-end border-t sm:border-0 border-slate-200 pt-3 sm:pt-0">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Saldo Disponível</span>
-                    <span className="text-2xl font-black text-emerald-600">R$ {selectedAluno.saldo.toFixed(2)}</span>
+                  <div className="text-right flex sm:flex-col justify-between w-full sm:w-auto items-center sm:items-end border-t sm:border-0 border-sky-200/50 pt-3 sm:pt-0">
+                    <span className="text-[10px] text-[#075985] uppercase font-black tracking-widest">Saldo Disponível</span>
+                    <span className="text-3xl font-black text-[#101828]">R$ {selectedAluno.saldo.toFixed(2)}</span>
                   </div>
                 </div>
 
                 {/* 2. Selecionar Itens */}
-                <div className="space-y-4">
+                <div className="space-y-5">
                   <div className="flex justify-between items-center">
-                    <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
-                      <span className="h-6 w-6 rounded-full bg-red-100 text-red-600 text-xs font-bold flex items-center justify-center">2</span>
-                      Selecione os Itens do Cardápio
+                    <h3 className="text-sm font-extrabold text-[#101828] flex items-center gap-2.5">
+                      <span className="h-7 w-7 rounded-full bg-[#101828] text-white text-xs font-black flex items-center justify-center">2</span>
+                      Escolha os Produtos no Cardápio
                     </h3>
                   </div>
 
@@ -378,23 +375,29 @@ export default function CantinaTerminal() {
                     {['salgado', 'bebida', 'doce', 'outro'].map(cat => {
                       const catProds = produtos.filter(p => p.categoria === cat);
                       if (catProds.length === 0) return null;
+
+                      const catStyles = {
+                        salgado: { label: "Salgados", bg: "bg-[#FFFCE8] hover:bg-[#FEF08A]/40", text: "text-[#713F12]" },
+                        bebida: { label: "Bebidas", bg: "bg-[#EBF9FD] hover:bg-[#BAE6FD]/40", text: "text-[#075985]" },
+                        doce: { label: "Doces", bg: "bg-[#FFF0F8] hover:bg-[#FBCFE8]/40", text: "text-[#831843]" },
+                        outro: { label: "Outros", bg: "bg-[#F0FCEE] hover:bg-[#BBF7D0]/40", text: "text-[#14532D]" },
+                      }[cat as 'salgado' | 'bebida' | 'doce' | 'outro'];
+
                       return (
-                        <div key={cat} className="space-y-2">
-                          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                            {cat === 'salgado' ? 'Salgados' :
-                             cat === 'bebida' ? 'Bebidas' :
-                             cat === 'doce' ? 'Doces' : 'Outros'}
+                        <div key={cat} className="space-y-2.5">
+                          <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 block">
+                            {catStyles.label}
                           </span>
-                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                             {catProds.map(prod => (
                               <button
                                 key={prod.id}
                                 type="button"
                                 onClick={() => addToCart(prod)}
-                                className="bg-slate-50 hover:bg-white hover:border-red-300 border border-slate-200 rounded-2xl p-3 text-left transition-all cursor-pointer flex flex-col justify-between h-20 shadow-2xs hover:shadow-xs active:scale-95"
+                                className={`${catStyles.bg} rounded-3xl p-4 text-left transition-all cursor-pointer flex flex-col justify-between h-24 shadow-2xs hover:shadow-md active:scale-95`}
                               >
-                                <span className="font-bold text-slate-800 text-xs leading-tight line-clamp-2">{prod.nome}</span>
-                                <span className="font-black text-emerald-600 text-xs mt-1">R$ {prod.preco.toFixed(2)}</span>
+                                <span className={`font-extrabold text-xs leading-snug line-clamp-2 ${catStyles.text}`}>{prod.nome}</span>
+                                <span className="font-black text-sm text-[#101828] mt-2">R$ {prod.preco.toFixed(2)}</span>
                               </button>
                             ))}
                           </div>
@@ -405,42 +408,42 @@ export default function CantinaTerminal() {
 
                   {/* Resumo do Carrinho */}
                   {cart.length > 0 && (
-                    <div className="border border-red-100 bg-red-50/40 rounded-2xl p-4 space-y-3 animate-fade-in">
-                      <div className="flex justify-between items-center pb-2 border-b border-red-100">
-                        <span className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
-                          <ShoppingCart className="h-3.5 w-3.5 text-red-600" />
+                    <div className="bg-[#FFF0F8] rounded-3xl p-5 space-y-4 animate-fade-in">
+                      <div className="flex justify-between items-center pb-2 border-b border-pink-200/50">
+                        <span className="text-xs font-black text-[#831843] flex items-center gap-2">
+                          <ShoppingCart className="h-4 w-4 text-[#DB2777]" />
                           Itens Selecionados ({cart.reduce((s, i) => s + i.qtd, 0)})
                         </span>
                         <button
                           type="button"
                           onClick={clearCart}
-                          className="text-[11px] font-bold text-red-600 hover:text-red-800 transition-colors cursor-pointer"
+                          className="text-[11px] font-bold text-[#DB2777] hover:underline cursor-pointer"
                         >
                           Limpar Carrinho
                         </button>
                       </div>
 
-                      <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                      <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
                         {cart.map(item => (
                           <div key={item.produto.id} className="flex justify-between items-center text-xs">
-                            <span className="font-medium text-slate-800">{item.produto.nome}</span>
+                            <span className="font-bold text-[#831843]">{item.produto.nome}</span>
                             <div className="flex items-center gap-3">
-                              <span className="font-mono text-slate-500 font-bold">
+                              <span className="font-mono text-[#831843] font-black">
                                 R$ {(item.produto.preco * item.qtd).toFixed(2)}
                               </span>
-                              <div className="flex items-center gap-1 border border-slate-200 bg-white rounded-xl p-0.5">
+                              <div className="flex items-center gap-1 bg-white rounded-full p-1 shadow-2xs">
                                 <button
                                   type="button"
                                   onClick={() => removeFromCart(item.produto.id)}
-                                  className="w-6 h-6 flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors"
+                                  className="w-6 h-6 flex items-center justify-center text-slate-700 hover:bg-slate-100 rounded-full cursor-pointer transition-colors"
                                 >
                                   <Minus className="h-3 w-3" />
                                 </button>
-                                <span className="w-5 text-center font-bold text-slate-900">{item.qtd}</span>
+                                <span className="w-5 text-center font-black text-[#101828]">{item.qtd}</span>
                                 <button
                                   type="button"
                                   onClick={() => addToCart(item.produto)}
-                                  className="w-6 h-6 flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors"
+                                  className="w-6 h-6 flex items-center justify-center text-slate-700 hover:bg-slate-100 rounded-full cursor-pointer transition-colors"
                                 >
                                   <Plus className="h-3 w-3" />
                                 </button>
@@ -456,20 +459,20 @@ export default function CantinaTerminal() {
                   <form onSubmit={handleChargeSubmit} className="space-y-4 pt-4 border-t border-slate-100">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div>
-                        <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                          Total a Debitar (R$)
+                        <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                          Total (R$)
                         </label>
                         <Input
                           type="text"
                           value={chargeAmount}
                           onChange={e => setChargeAmount(e.target.value)}
                           placeholder="0,00"
-                          className="font-black text-base"
+                          className="font-black text-lg text-[#101828]"
                           required
                         />
                       </div>
                       <div className="sm:col-span-2">
-                        <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                        <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
                           Descrição do Consumo
                         </label>
                         <Input
@@ -484,38 +487,34 @@ export default function CantinaTerminal() {
 
                     {/* Feedbacks */}
                     {errorMsg && (
-                      <div className="text-xs text-rose-700 bg-rose-50 p-3 rounded-2xl border border-rose-200 flex items-center gap-2">
+                      <div className="text-xs text-rose-700 bg-rose-50 p-3.5 rounded-2xl border border-rose-200 flex items-center gap-2">
                         <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0" />
                         <span>{errorMsg}</span>
                       </div>
                     )}
 
                     {successMsg && (
-                      <div className="text-xs text-emerald-700 bg-emerald-50 p-3 rounded-2xl border border-emerald-200 flex items-center gap-2">
+                      <div className="text-xs text-emerald-700 bg-emerald-50 p-3.5 rounded-2xl border border-emerald-200 flex items-center gap-2">
                         <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
                         <span>{successMsg}</span>
                       </div>
                     )}
 
                     {/* Ações */}
-                    <div className="flex gap-3 pt-2">
-                      <Button
+                    <div className="flex gap-3 pt-3">
+                      <button
                         type="button"
-                        variant="secondary"
-                        size="lg"
                         onClick={() => setSelectedAluno(null)}
-                        className="flex-1"
+                        className="flex-1 py-4 px-6 rounded-full text-xs font-bold text-slate-600 bg-[#F7F6F3] hover:bg-slate-200 transition-colors cursor-pointer"
                       >
                         Cancelar
-                      </Button>
-                      <Button
+                      </button>
+                      <button
                         type="submit"
-                        variant="brand"
-                        size="lg"
-                        className="flex-2 shadow-xs"
+                        className="flex-2 py-4 px-6 rounded-full text-sm font-black text-white bg-[#101828] hover:bg-[#1E293B] shadow-md transition-all active:scale-98 cursor-pointer"
                       >
                         Confirmar Débito R$ {parseFloat(chargeAmount || "0").toFixed(2)}
-                      </Button>
+                      </button>
                     </div>
                   </form>
                 </div>
