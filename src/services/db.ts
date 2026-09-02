@@ -81,11 +81,23 @@ export interface Movimentacao {
   criado_em: string;
 }
 
+export interface CategoriaCardapio {
+  id: string;
+  nome: string;
+  slug: string;
+  ativo: boolean;
+  ordem?: number;
+  produtos_count?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Produto {
   id: string;
   nome: string;
   preco: number;
-  categoria: 'salgado' | 'bebida' | 'doce' | 'outro';
+  categoria: string;
+  categoria_id?: string;
   ativo: boolean;
   criado_em: string;
 }
@@ -515,11 +527,77 @@ export class DBService {
     return data || [];
   }
 
-  static async addProduto(nome: string, preco: number, categoria: 'salgado' | 'bebida' | 'doce' | 'outro'): Promise<Produto> {
+  static async getCategorias(incluirInativas = true): Promise<CategoriaCardapio[]> {
+    let query = supabase.from('cardapio_categorias').select('*, produtos:produtos(count)');
+    if (!incluirInativas) {
+      query = query.eq('ativo', true);
+    }
+    const { data, error } = await query.order('ordem', { ascending: true }).order('nome', { ascending: true });
+    if (error) throw error;
+    return (data || []).map((c: any) => ({
+      ...c,
+      produtos_count: c.produtos?.[0]?.count ?? 0,
+    }));
+  }
+
+  static async addCategoria(nome: string, ativo = true): Promise<CategoriaCardapio> {
+    const trimmedNome = nome.trim();
+    if (!trimmedNome) throw new Error("O nome da categoria é obrigatório.");
+    const slug = trimmedNome
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+    const { data, error } = await supabase
+      .from('cardapio_categorias')
+      .insert([{ nome: trimmedNome, slug, ativo }])
+      .select();
+    if (error) {
+      if (error.code === '23505') {
+        throw new Error("Já existe uma categoria com este nome.");
+      }
+      throw error;
+    }
+    return data[0];
+  }
+
+  static async updateCategoria(id: string, updates: { nome?: string; ativo?: boolean; ordem?: number }): Promise<CategoriaCardapio> {
+    const payload: any = { ...updates };
+    if (updates.nome) {
+      payload.nome = updates.nome.trim();
+      payload.slug = payload.nome
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    }
+    const { data, error } = await supabase
+      .from('cardapio_categorias')
+      .update(payload)
+      .eq('id', id)
+      .select();
+    if (error) {
+      if (error.code === '23505') {
+        throw new Error("Já existe uma categoria com este nome.");
+      }
+      throw error;
+    }
+    return data[0];
+  }
+
+  static async toggleCategoriaStatus(id: string, ativo: boolean): Promise<CategoriaCardapio> {
+    return this.updateCategoria(id, { ativo });
+  }
+
+  static async addProduto(nome: string, preco: number, categoria: string, categoria_id?: string): Promise<Produto> {
     const novoProduto = {
-      nome,
+      nome: nome.trim(),
       preco,
-      categoria,
+      categoria: categoria || 'outro',
+      categoria_id: categoria_id || null,
       ativo: true,
       criado_em: new Date().toISOString()
     };

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { DBService, Aluno, Movimentacao, Produto } from "@/services/db";
+import { DBService, Aluno, Movimentacao, Produto, CategoriaCardapio } from "@/services/db";
 import Header from "../components/Header";
 import { PageHeader } from "../components/ui/PageHeader";
 import { Badge } from "../components/ui/Badge";
@@ -27,6 +27,7 @@ export default function CantinaTerminal() {
   // Data States
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [categorias, setCategorias] = useState<CategoriaCardapio[]>([]);
   const [recentSales, setRecentSales] = useState<Movimentacao[]>([]);
 
   // Checkout States
@@ -128,6 +129,8 @@ export default function CantinaTerminal() {
       setAlunos(allAlunos);
       const allProds = await DBService.getProdutos();
       setProdutos(allProds.filter(p => p.ativo));
+      const allCats = await DBService.getCategorias(false);
+      setCategorias(allCats);
       const allMovs = await DBService.getMovimentacoes();
       setRecentSales(allMovs.filter(m => m.tipo === 'debito').reverse().slice(0, 10));
     } catch (err) {
@@ -372,21 +375,28 @@ export default function CantinaTerminal() {
 
                   {/* Categorias e Produtos */}
                   <div className="space-y-4">
-                    {['salgado', 'bebida', 'doce', 'outro'].map(cat => {
-                      const catProds = produtos.filter(p => p.categoria === cat);
+                    {categorias.map((cat, idx) => {
+                      const catProds = produtos.filter(p =>
+                        p.ativo && (
+                          p.categoria_id === cat.id ||
+                          p.categoria.toLowerCase() === cat.slug.toLowerCase() ||
+                          p.categoria.toLowerCase() === cat.nome.toLowerCase()
+                        )
+                      );
                       if (catProds.length === 0) return null;
 
-                      const catStyles = {
-                        salgado: { label: "Salgados", bg: "bg-[#FFFCE8] hover:bg-[#FEF08A]/40", text: "text-[#713F12]" },
-                        bebida: { label: "Bebidas", bg: "bg-[#EBF9FD] hover:bg-[#BAE6FD]/40", text: "text-[#075985]" },
-                        doce: { label: "Doces", bg: "bg-[#FFF0F8] hover:bg-[#FBCFE8]/40", text: "text-[#831843]" },
-                        outro: { label: "Outros", bg: "bg-[#F0FCEE] hover:bg-[#BBF7D0]/40", text: "text-[#14532D]" },
-                      }[cat as 'salgado' | 'bebida' | 'doce' | 'outro'];
+                      const colorThemes = [
+                        { bg: "bg-[#FFFCE8] hover:bg-[#FEF08A]/40", text: "text-[#713F12]" },
+                        { bg: "bg-[#EBF9FD] hover:bg-[#BAE6FD]/40", text: "text-[#075985]" },
+                        { bg: "bg-[#FFF0F8] hover:bg-[#FBCFE8]/40", text: "text-[#831843]" },
+                        { bg: "bg-[#F0FCEE] hover:bg-[#BBF7D0]/40", text: "text-[#14532D]" },
+                      ];
+                      const style = colorThemes[idx % colorThemes.length];
 
                       return (
-                        <div key={cat} className="space-y-2.5">
+                        <div key={cat.id} className="space-y-2.5">
                           <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 block">
-                            {catStyles.label}
+                            {cat.nome}
                           </span>
                           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                             {catProds.map(prod => (
@@ -394,9 +404,9 @@ export default function CantinaTerminal() {
                                 key={prod.id}
                                 type="button"
                                 onClick={() => addToCart(prod)}
-                                className={`${catStyles.bg} rounded-3xl p-4 text-left transition-all cursor-pointer flex flex-col justify-between h-24 shadow-2xs hover:shadow-md active:scale-95`}
+                                className={`${style.bg} rounded-3xl p-4 text-left transition-all cursor-pointer flex flex-col justify-between h-24 shadow-2xs hover:shadow-md active:scale-95`}
                               >
-                                <span className={`font-extrabold text-xs leading-snug line-clamp-2 ${catStyles.text}`}>{prod.nome}</span>
+                                <span className={`font-extrabold text-xs leading-snug line-clamp-2 ${style.text}`}>{prod.nome}</span>
                                 <span className="font-black text-sm text-[#101828] mt-2">R$ {prod.preco.toFixed(2)}</span>
                               </button>
                             ))}
@@ -404,6 +414,40 @@ export default function CantinaTerminal() {
                         </div>
                       );
                     })}
+
+                    {/* Fallback para produtos sem categoria ativa mapeada */}
+                    {(() => {
+                      const unmappedProds = produtos.filter(p =>
+                        p.ativo &&
+                        !categorias.some(c =>
+                          p.categoria_id === c.id ||
+                          p.categoria.toLowerCase() === c.slug.toLowerCase() ||
+                          p.categoria.toLowerCase() === c.nome.toLowerCase()
+                        )
+                      );
+                      if (unmappedProds.length === 0) return null;
+
+                      return (
+                        <div className="space-y-2.5">
+                          <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 block">
+                            Outros Itens
+                          </span>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            {unmappedProds.map(prod => (
+                              <button
+                                key={prod.id}
+                                type="button"
+                                onClick={() => addToCart(prod)}
+                                className="bg-[#F7F6F3] hover:bg-slate-200/70 rounded-3xl p-4 text-left transition-all cursor-pointer flex flex-col justify-between h-24 shadow-2xs hover:shadow-md active:scale-95"
+                              >
+                                <span className="font-extrabold text-xs leading-snug line-clamp-2 text-slate-800">{prod.nome}</span>
+                                <span className="font-black text-sm text-[#101828] mt-2">R$ {prod.preco.toFixed(2)}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Resumo do Carrinho */}

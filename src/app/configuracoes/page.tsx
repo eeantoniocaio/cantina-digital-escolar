@@ -21,7 +21,8 @@ import {
   Check,
   AlertCircle,
   X,
-  Layers
+  Layers,
+  UtensilsCrossed
 } from "lucide-react";
 
 export default function ConfigissoesPage() {
@@ -486,6 +487,37 @@ export default function ConfigissoesPage() {
                   </span>
                 </div>
               </button>
+
+              {/* Card: Categorias do Cardápio (GESTÃO) */}
+              {(currentUser?.role === 'admin' || currentUser?.role === 'gestao' || currentUser?.is_master) && (
+                <a
+                  href="/configuracoes/categorias"
+                  className="bg-[#FFF0F8] rounded-3xl p-7 shadow-xs flex flex-col justify-between h-52 transition-all cursor-pointer text-left group hover:shadow-md hover:-translate-y-0.5"
+                >
+                  <div className="space-y-3">
+                    <div className="h-12 w-12 rounded-2xl bg-white text-[#DB2777] flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+                      <UtensilsCrossed className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-lg text-[#831843] leading-tight">
+                        Categorias do Cardápio
+                      </h3>
+                      <p className="text-xs text-[#9D174D] font-medium mt-1">
+                        Gerencie as categorias utilizadas no Terminal Cantina
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center pt-4 border-t border-pink-200/50">
+                    <span className="text-xs font-black uppercase px-3 py-1 rounded-full bg-[#FF88D3]/35 text-[#9D174D]">
+                      GESTÃO
+                    </span>
+                    <span className="text-xs font-black text-[#101828] group-hover:translate-x-1 transition-transform">
+                      Gerenciar →
+                    </span>
+                  </div>
+                </a>
+              )}
 
               {/* Card: Servidores em Superfície Pastel Verde */}
               <div className="bg-[#F0FCEE] rounded-3xl p-7 shadow-xs flex flex-col justify-between h-52">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { DBService, Aluno, Comprovante, Movimentacao, Profile, Produto } from "@/services/db";
+import { DBService, Aluno, Comprovante, Movimentacao, Profile, Produto, CategoriaCardapio } from "@/services/db";
 import Header from "../components/Header";
 import { StatCard } from "../components/ui/StatCard";
 import { Badge } from "../components/ui/Badge";
@@ -57,8 +57,9 @@ export default function AdminDashboard() {
   const [selectedProduto, setSelectedProduto] = useState<Produto | null>(null);
   const [produtoNome, setProdutoNome] = useState("");
   const [produtoPreco, setProdutoPreco] = useState("");
-  const [produtoCategoria, setProdutoCategoria] = useState<'salgado' | 'bebida' | 'doce' | 'outro'>('salgado');
+  const [produtoCategoriaId, setProdutoCategoriaId] = useState("");
   const [produtoAtivo, setProdutoAtivo] = useState(true);
+  const [categorias, setCategorias] = useState<CategoriaCardapio[]>([]);
 
   useEffect(() => {
     const user = DBService.getCurrentUser();
@@ -82,6 +83,8 @@ export default function AdminDashboard() {
       setProfiles(allProfiles.filter(p => p.role === 'familia'));
       const allProds = await DBService.getProdutos();
       setProdutos(allProds);
+      const allCats = await DBService.getCategorias(true);
+      setCategorias(allCats);
     } catch (err) {
       console.error("Erro ao carregar dados do admin:", err);
     }
@@ -91,7 +94,8 @@ export default function AdminDashboard() {
     setSelectedProduto(null);
     setProdutoNome("");
     setProdutoPreco("");
-    setProdutoCategoria("salgado");
+    const activeCats = categorias.filter(c => c.ativo);
+    setProdutoCategoriaId(activeCats.length > 0 ? activeCats[0].id : "");
     setProdutoAtivo(true);
     setErrorMessage("");
     setIsAddProdutoOpen(true);
@@ -101,7 +105,14 @@ export default function AdminDashboard() {
     setSelectedProduto(prod);
     setProdutoNome(prod.nome);
     setProdutoPreco(prod.preco.toString());
-    setProdutoCategoria(prod.categoria);
+    
+    // Encontrar por ID ou compatibilidade por slug/nome
+    const matchedCat = categorias.find(c => 
+      c.id === prod.categoria_id || 
+      c.slug.toLowerCase() === prod.categoria.toLowerCase() ||
+      c.nome.toLowerCase() === prod.categoria.toLowerCase()
+    );
+    setProdutoCategoriaId(matchedCat ? matchedCat.id : (categorias[0]?.id || ""));
     setProdutoAtivo(prod.ativo);
     setErrorMessage("");
     setIsAddProdutoOpen(true);
@@ -120,16 +131,28 @@ export default function AdminDashboard() {
       return;
     }
 
+    const selectedCat = categorias.find(c => c.id === produtoCategoriaId);
+    if (!selectedCat) {
+      setErrorMessage("Selecione uma categoria válida para o produto.");
+      return;
+    }
+
     try {
       if (selectedProduto) {
         await DBService.updateProduto(selectedProduto.id, {
-          nome: produtoNome,
+          nome: produtoNome.trim(),
           preco: price,
-          categoria: produtoCategoria,
+          categoria: selectedCat.slug,
+          categoria_id: selectedCat.id,
           ativo: produtoAtivo
         });
       } else {
-        const newProd = await DBService.addProduto(produtoNome, price, produtoCategoria);
+        const newProd = await DBService.addProduto(
+          produtoNome.trim(),
+          price,
+          selectedCat.slug,
+          selectedCat.id
+        );
         if (!produtoAtivo) {
           await DBService.updateProduto(newProd.id, { ativo: false });
         }
@@ -603,10 +626,8 @@ export default function AdminDashboard() {
                     produtos.map(prod => (
                       <tr key={prod.id} className="hover:bg-slate-50/70 transition-colors">
                         <td className="py-3.5 px-4 font-bold text-slate-900">{prod.nome}</td>
-                        <td className="py-3.5 px-4 capitalize text-slate-600">
-                          {prod.categoria === 'salgado' ? 'Salgado' :
-                           prod.categoria === 'bebida' ? 'Bebida' :
-                           prod.categoria === 'doce' ? 'Doce' : 'Outro'}
+                        <td className="py-3.5 px-4 text-slate-700 font-semibold">
+                          {categorias.find(c => c.id === prod.categoria_id || c.slug.toLowerCase() === prod.categoria.toLowerCase())?.nome || prod.categoria}
                         </td>
                         <td className="py-3.5 px-4 text-right font-black text-slate-900">
                           R$ {prod.preco.toFixed(2)}
@@ -893,16 +914,27 @@ export default function AdminDashboard() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-600 mb-1.5">Categoria</label>
-                  <select
-                    value={produtoCategoria}
-                    onChange={e => setProdutoCategoria(e.target.value as any)}
-                    className="select"
-                  >
-                    <option value="salgado">Salgado</option>
-                    <option value="bebida">Bebida</option>
-                    <option value="doce">Doce</option>
-                    <option value="outro">Outro</option>
-                  </select>
+                  {categorias.filter(c => c.ativo || c.id === produtoCategoriaId).length === 0 ? (
+                    <div className="text-xs text-amber-800 bg-amber-50 p-2.5 rounded-xl border border-amber-200">
+                      Nenhuma categoria disponível.
+                    </div>
+                  ) : (
+                    <select
+                      value={produtoCategoriaId}
+                      onChange={e => setProdutoCategoriaId(e.target.value)}
+                      className="select"
+                      required
+                    >
+                      {categorias
+                        .filter(c => c.ativo || c.id === produtoCategoriaId)
+                        .sort((a, b) => a.nome.localeCompare(b.nome))
+                        .map(cat => (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.nome} {!cat.ativo ? "(Inativa)" : ""}
+                          </option>
+                        ))}
+                    </select>
+                  )}
                 </div>
               </div>
 
