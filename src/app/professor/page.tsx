@@ -1,8 +1,21 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { DBService, Aluno, Movimentacao, Profile } from "@/services/db";
 import Header from "../components/Header";
+import { Badge } from "../components/ui/Badge";
+import { Button } from "../components/ui/Button";
+import { EmptyState } from "../components/ui/EmptyState";
+import {
+  Share2,
+  Printer,
+  Camera,
+  History,
+  CreditCard,
+  Briefcase,
+  Check,
+  X
+} from "lucide-react";
 
 export default function ProfessorDashboard() {
   const [currentUser, setCurrentUser] = useState<Profile | null>(null);
@@ -14,6 +27,21 @@ export default function ProfessorDashboard() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const loadData = useCallback(async (alunoId: string) => {
+    try {
+      const alunos = await DBService.getAlunos();
+      const info = alunos.find(a => a.id === alunoId);
+      if (info) {
+        setAlunoInfo(info);
+      }
+
+      const movimentacoes = await DBService.getMovimentacoes();
+      setCompras(movimentacoes.filter(m => m.aluno_id === alunoId && m.tipo === 'debito').reverse());
+    } catch (err) {
+      console.error("Erro ao carregar dados do professor:", err);
+    }
+  }, []);
+
   useEffect(() => {
     const user = DBService.getCurrentUser();
     if (!user || (user.role !== 'professor' && user.role !== 'gestao')) {
@@ -22,28 +50,12 @@ export default function ProfessorDashboard() {
     }
     setCurrentUser(user);
     loadData(user.aluno_id || 'prof-1');
-  }, []);
-
-  const loadData = async (alunoId: string) => {
-    try {
-      const alunos = await DBService.getAlunos();
-      const info = alunos.find(a => a.id === alunoId);
-      if (info) {
-        setAlunoInfo(info);
-      }
-      
-      // Filtra compras deste aluno/professor
-      const movimentacoes = await DBService.getMovimentacoes();
-      setCompras(movimentacoes.filter(m => m.aluno_id === alunoId && m.tipo === 'debito').reverse());
-    } catch (err) {
-      console.error("Erro ao carregar dados do professor:", err);
-    }
-  };
+  }, [loadData]);
 
   const handleShare = () => {
     if (!alunoInfo) return;
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${alunoInfo.id}`;
-    
+
     if (navigator.share) {
       navigator.share({
         title: `QR Code de ${alunoInfo.nome}`,
@@ -81,134 +93,153 @@ export default function ProfessorDashboard() {
     window.print();
   };
 
-  const handleLogout = () => {
-    DBService.logout();
-    window.location.href = "/";
-  };
-
   if (!alunoInfo || !currentUser) {
     return (
-      <div className="flex-1 bg-slate-50 flex items-center justify-center min-h-screen text-slate-500">
-        Carregando...
+      <div className="flex-1 bg-[--bg-base] min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 rounded-full border-3 border-red-600 border-t-transparent animate-spin" />
+          <span className="text-xs font-bold text-slate-400">Carregando carteirinha...</span>
+        </div>
       </div>
     );
   }
 
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${alunoInfo.id}`;
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${alunoInfo.id}`;
 
   return (
-    <div className="flex-1 bg-slate-50 text-slate-800 min-h-screen">
+    <div className="flex-1 bg-[--bg-base] text-slate-800 min-h-screen">
       <Header />
 
-      {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 py-8 space-y-6">
-        
         {/* Top Header Card */}
         <div className="bg-white border border-slate-200 rounded-3xl p-6 flex flex-col md:flex-row justify-between items-center gap-6 shadow-xs">
-          <div className="flex items-center gap-4 text-left w-full md:w-auto">
-            <div 
+          <div className="flex items-center gap-4 w-full md:w-auto">
+            <div
               onClick={() => fileInputRef.current?.click()}
-              className="group relative h-14 w-14 rounded-full bg-red-100 text-red-700 font-black flex items-center justify-center text-2xl cursor-pointer overflow-hidden border border-red-200/50 shadow-xs shrink-0"
-              title="Clique para alterar sua foto de perfil"
+              className="group relative h-16 w-16 rounded-full bg-slate-900 text-white font-black flex items-center justify-center text-xl cursor-pointer overflow-hidden border-2 border-slate-800 shrink-0 shadow-xs"
+              title="Clique para alterar foto"
             >
               {alunoInfo.foto ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img 
-                  src={alunoInfo.foto} 
-                  alt={alunoInfo.nome} 
-                  className="h-full w-full object-cover transition-transform group-hover:scale-110"
+                <img
+                  src={alunoInfo.foto}
+                  alt={alunoInfo.nome}
+                  className="h-full w-full object-cover transition-transform group-hover:scale-105"
                 />
               ) : (
                 alunoInfo.nome.charAt(0)
               )}
+
               {uploadingPhoto ? (
                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                  <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
                 </div>
               ) : (
-                <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="text-[8px] text-white font-bold leading-none text-center">Alterar<br/>Foto 📷</span>
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Camera className="h-5 w-5 text-white" />
                 </div>
               )}
             </div>
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              onChange={handlePhotoChange} 
-              accept="image/*" 
-              className="hidden" 
+
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handlePhotoChange}
+              accept="image/*"
+              className="hidden"
             />
+
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="font-extrabold text-lg text-slate-800 leading-none">{alunoInfo.nome}</h2>
-                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-100 uppercase">
-                  {currentUser.role === 'gestao' ? 'Gestão' : 'Servidor'}
-                </span>
+                <h2 className="font-extrabold text-lg text-slate-900 leading-tight">
+                  {alunoInfo.nome}
+                </h2>
+                <Badge variant="neutral">
+                  {currentUser.role === 'gestao' ? 'Gestão Escolar' : 'Professor(a) / Servidor'}
+                </Badge>
               </div>
-              <p className="text-xxs text-slate-400 mt-1.5">E-mail: {currentUser.email}</p>
-              <p className="text-xxs text-slate-400 mt-0.5">RA/Registro: {alunoInfo.ra}</p>
+              <p className="text-xs text-slate-400 font-mono mt-1">
+                E-mail: {currentUser.email} • Registro: {alunoInfo.ra}
+              </p>
             </div>
           </div>
 
           <div className="text-right w-full md:w-auto flex md:flex-col justify-between items-center md:items-end border-t md:border-0 border-slate-100 pt-4 md:pt-0">
-            <span className="text-[10px] text-slate-400 uppercase font-bold">Saldo de Consumo</span>
+            <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Saldo de Consumo</span>
             <span className="text-3xl font-black text-emerald-600">R$ {alunoInfo.saldo.toFixed(2)}</span>
           </div>
         </div>
 
+        {/* Two Column Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Coluna QR CODE */}
+
+          {/* QR Code */}
           <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs flex flex-col items-center justify-between text-center space-y-4 md:col-span-1">
             <div>
-              <h3 className="font-bold text-sm text-slate-800">QR Code do Servidor</h3>
-              <p className="text-[10px] text-slate-400 mt-1 leading-normal">Apresente este código na cantina para realizar suas compras.</p>
+              <h3 className="font-extrabold text-sm text-slate-900">QR Code de Consumo</h3>
+              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                Apresente este código no caixa da cantina para consumir.
+              </p>
             </div>
 
-            {/* QR Code Card */}
-            <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl flex items-center justify-center shadow-inner">
+            <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-2xl flex items-center justify-center shadow-inner">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={qrCodeUrl}
-                alt="QR Code de Consumo"
-                className="w-40 h-40 object-contain rounded-md"
+                alt="QR Code do Servidor"
+                className="w-40 h-40 object-contain rounded-xl"
               />
             </div>
 
-            {/* Share / Save */}
             <div className="w-full space-y-2">
-              <button
+              <Button
+                variant="brand"
+                size="md"
                 onClick={handleShare}
-                className="w-full bg-red-600 hover:bg-red-700 text-white font-bold text-xs py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                leftIcon={copiedLink ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
+                className="w-full"
               >
-                <span>🔗</span> {copiedLink ? "Link Copiado!" : "Compartilhar QR Code"}
-              </button>
-              <button
+                {copiedLink ? "Link Copiado!" : "Compartilhar QR"}
+              </Button>
+
+              <Button
+                variant="secondary"
+                size="md"
                 onClick={() => setIsCardModalOpen(true)}
-                className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-250 font-bold text-xs py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-95"
+                leftIcon={<CreditCard className="h-4 w-4" />}
+                className="w-full"
               >
-                <span>🪪</span> Carteirinha Digital
-              </button>
+                Carteirinha Digital
+              </Button>
             </div>
           </div>
 
-          {/* Coluna Extrato / Compras */}
+          {/* Histórico */}
           <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs md:col-span-2 space-y-4">
-            <h3 className="font-bold text-sm text-slate-800">Histórico de Compras</h3>
-            
-            <div className="space-y-3 max-h-[360px] overflow-y-auto pr-1 divide-y divide-slate-100">
+            <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+              <h3 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                <History className="h-4 w-4 text-slate-400" />
+                Histórico de Compras
+              </h3>
+              <Badge variant="neutral">{compras.length} compras</Badge>
+            </div>
+
+            <div className="space-y-2.5 max-h-[360px] overflow-y-auto pr-1">
               {compras.length === 0 ? (
-                <div className="text-center py-12 text-slate-400 text-xs italic">
-                  Nenhuma compra registrada recentemente.
-                </div>
+                <EmptyState
+                  icon={<History className="h-6 w-6 text-slate-300" />}
+                  title="Nenhuma compra registrada"
+                  description="Seus consumos no terminal da cantina aparecerão nesta lista."
+                />
               ) : (
                 compras.map(comp => (
                   <div
                     key={comp.id}
-                    className="flex justify-between items-center py-3 text-xs"
+                    className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/60 flex justify-between items-center text-xs hover:bg-slate-100/60 transition-colors"
                   >
-                    <div>
-                      <p className="font-bold text-slate-700">{comp.descricao}</p>
-                      <p className="text-[10px] text-slate-400 mt-1">
+                    <div className="space-y-0.5">
+                      <strong className="text-slate-900 block font-bold">{comp.descricao}</strong>
+                      <span className="text-[11px] text-slate-400 block font-medium">
                         {new Date(comp.criado_em).toLocaleDateString("pt-BR", {
                           day: "2-digit",
                           month: "2-digit",
@@ -216,11 +247,11 @@ export default function ProfessorDashboard() {
                           hour: "2-digit",
                           minute: "2-digit"
                         })}
-                      </p>
+                      </span>
                     </div>
-                    <div className="text-right">
-                      <span className="font-extrabold text-red-600">- R$ {comp.valor.toFixed(2)}</span>
-                    </div>
+                    <span className="font-black text-rose-600 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-200">
+                      - R$ {comp.valor.toFixed(2)}
+                    </span>
                   </div>
                 ))
               )}
@@ -229,61 +260,54 @@ export default function ProfessorDashboard() {
         </div>
       </main>
 
-      {/* MODAL CARTEIRINHA DIGITAL */}
+      {/* Modal Carteirinha Digital Servidor */}
       {isCardModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white border border-slate-250 rounded-3xl p-6 max-w-sm w-full shadow-2xl relative space-y-6">
-            <button
-              onClick={() => setIsCardModalOpen(false)}
-              className="absolute top-4 right-4 h-8 w-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors cursor-pointer"
-            >
-              ✕
-            </button>
-
-            <div className="text-center">
-              <h3 className="font-black text-sm text-slate-800">Carteirinha Digital de Servidor</h3>
-              <p className="text-[10px] text-slate-400 mt-1">Utilize para identificação e compras rápidas.</p>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-5">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+              <h3 className="font-extrabold text-sm text-slate-900">Carteirinha do Servidor</h3>
+              <button
+                onClick={() => setIsCardModalOpen(false)}
+                className="text-slate-400 hover:text-slate-700 cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
 
-            {/* Imagem Impressa da Carteirinha */}
-            <div id="carteirinha-impressao" className="border border-slate-200 rounded-2xl bg-white overflow-hidden shadow-xs">
-              {/* Header da Carteirinha */}
-              <div className="bg-red-600 p-4 text-white flex items-center gap-3 border-b border-red-700">
-                <div className="h-9 w-9 bg-white rounded-full flex items-center justify-center text-red-650 font-black text-[10px]">
+            {/* Cartão Preview */}
+            <div className="border border-slate-200 rounded-2xl bg-white overflow-hidden shadow-xs">
+              <div className="bg-slate-900 p-4 text-white flex items-center gap-3">
+                <div className="h-9 w-9 bg-white text-slate-900 rounded-full flex items-center justify-center font-black text-[10px]">
                   EEAC
                 </div>
                 <div>
                   <h4 className="font-black text-xs uppercase leading-none">E.E. Antônio Caio</h4>
-                  <span className="text-[8px] text-red-100 font-bold uppercase tracking-wider block mt-1 leading-none">
+                  <span className="text-[8px] text-slate-300 font-bold uppercase tracking-wider block mt-1">
                     {currentUser.role === 'gestao' ? 'Gestão Escolar' : 'Professor / Servidor'}
                   </span>
                 </div>
               </div>
 
-              {/* Corpo da Carteirinha */}
               <div className="p-4 flex gap-4 items-center">
-                {/* Foto */}
-                <div className="h-24 w-20 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 text-xs shrink-0 overflow-hidden font-bold">
+                <div className="h-24 w-20 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 text-xs shrink-0 overflow-hidden font-bold">
                   {alunoInfo.foto ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={alunoInfo.foto} alt={alunoInfo.nome} className="h-full w-full object-cover" />
                   ) : (
-                    alunoInfo.nome.charAt(0)
+                    <Briefcase className="h-8 w-8 text-slate-300" />
                   )}
                 </div>
 
-                {/* Dados & QR Code */}
                 <div className="flex-1 space-y-2 text-left min-w-0">
-                  <div className="leading-tight">
+                  <div>
                     <span className="text-[8px] text-slate-400 font-bold uppercase">Nome</span>
-                    <p className="font-extrabold text-xxs text-slate-700 truncate">{alunoInfo.nome}</p>
+                    <p className="font-extrabold text-xs text-slate-800 truncate">{alunoInfo.nome}</p>
                   </div>
-                  <div className="leading-tight">
-                    <span className="text-[8px] text-slate-400 font-bold uppercase">Registro (RA)</span>
-                    <p className="font-mono font-bold text-[10px] text-slate-600">{alunoInfo.ra}</p>
+                  <div>
+                    <span className="text-[8px] text-slate-400 font-bold uppercase">Registro Funcional</span>
+                    <p className="font-mono font-bold text-[11px] text-slate-600">{alunoInfo.ra}</p>
                   </div>
 
-                  {/* QR Code Mini */}
                   <div className="pt-1 flex items-center justify-end">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -296,20 +320,22 @@ export default function ProfessorDashboard() {
               </div>
             </div>
 
-            {/* Ações */}
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={handlePrint}
-                className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs py-2.5 rounded-xl transition-all cursor-pointer shadow-xs text-center"
-              >
-                🖨️ Imprimir
-              </button>
-              <button
+            <div className="grid grid-cols-2 gap-2.5">
+              <Button
+                variant="secondary"
+                size="md"
                 onClick={() => setIsCardModalOpen(false)}
-                className="bg-slate-100 hover:bg-slate-200 text-slate-650 font-bold text-xs py-2.5 rounded-xl transition-all cursor-pointer shadow-xs text-center border border-slate-200"
               >
                 Fechar
-              </button>
+              </Button>
+              <Button
+                variant="brand"
+                size="md"
+                onClick={handlePrint}
+                leftIcon={<Printer className="h-4 w-4" />}
+              >
+                Imprimir
+              </Button>
             </div>
           </div>
         </div>

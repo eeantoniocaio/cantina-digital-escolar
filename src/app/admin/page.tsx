@@ -3,11 +3,35 @@
 import { useState, useEffect } from "react";
 import { DBService, Aluno, Comprovante, Movimentacao, Profile, Produto } from "@/services/db";
 import Header from "../components/Header";
+import { StatCard } from "../components/ui/StatCard";
+import { Badge } from "../components/ui/Badge";
+import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
+import { EmptyState } from "../components/ui/EmptyState";
+import { PageHeader } from "../components/ui/PageHeader";
+import {
+  Clock,
+  Users,
+  Coins,
+  CheckCircle2,
+  AlertTriangle,
+  FileText,
+  Plus,
+  Trash2,
+  Edit2,
+  Search,
+  ShieldAlert,
+  ArrowDownLeft,
+  ArrowUpRight,
+  UtensilsCrossed,
+  History,
+  X
+} from "lucide-react";
 
 export default function AdminDashboard() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'fila' | 'alunos' | 'produtos' | 'movimentacoes'>('fila');
-  
+
   // Data States
   const [comprovantes, setComprovantes] = useState<Comprovante[]>([]);
   const [alunos, setAlunos] = useState<Aluno[]>([]);
@@ -182,12 +206,9 @@ export default function AdminDashboard() {
     }
   };
 
-  // Estatísticas Rápidas
   const totalCreditosCirculando = alunos.reduce((sum, a) => sum + a.saldo, 0);
   const pendentesCount = comprovantes.filter(c => c.status === 'pendente').length;
-  const aprovadosCount = comprovantes.filter(c => c.status === 'aprovado').length;
 
-  // Detecção de Duplicidades na Fila
   const isHashDuplicate = (comp: Comprovante) => {
     return comprovantes.filter(c => c.hash_comprovante === comp.hash_comprovante && c.id !== comp.id).length > 0;
   };
@@ -198,275 +219,336 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="flex-1 bg-slate-50 text-slate-800 min-h-screen">
+    <div className="flex-1 bg-[--bg-base] text-slate-800 min-h-screen">
       <Header />
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
-        
-        {/* KPI Cards (Clean White with borders) */}
-        <section className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white border border-slate-200 p-6 rounded-2xl flex flex-col justify-between shadow-xs">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Fila de Aprovação</span>
-            <div className="flex items-baseline justify-between mt-2">
-              <span className="text-3xl font-black text-amber-600">{pendentesCount}</span>
-              <span className="text-xxs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-100">Pendente</span>
-            </div>
-          </div>
+        <PageHeader
+          title="Secretaria & Gestão"
+          description="Controle operacional de recargas Pix, alunos, cardápio e auditoria."
+          badge={
+            <Badge variant="brand" dot>
+              {currentUser?.is_master ? "Modo Master" : "Administração"}
+            </Badge>
+          }
+        />
 
-          <div className="bg-white border border-slate-200 p-6 rounded-2xl flex flex-col justify-between shadow-xs">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total de Alunos</span>
-            <div className="flex items-baseline justify-between mt-2">
-              <span className="text-3xl font-black text-slate-800">{alunos.length}</span>
-              <span className="text-xxs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">Ativos</span>
-            </div>
-          </div>
+        {/* KPI Cards */}
+        <section className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
+          <StatCard
+            label="Fila de Aprovação Pix"
+            value={pendentesCount}
+            badgeText={pendentesCount > 0 ? "Requer Atenção" : "Em Dia"}
+            badgeVariant={pendentesCount > 0 ? "warning" : "success"}
+            icon={<Clock className="h-4 w-4" />}
+            subtitle={`${pendentesCount} comprovantes aguardando verificação`}
+            accentColor="yellow"
+          />
 
-          <div className="bg-white border border-slate-200 p-6 rounded-2xl flex flex-col justify-between shadow-xs">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Crédito Circulante</span>
-            <div className="flex items-baseline justify-between mt-2">
-              <span className="text-3xl font-black text-emerald-600">R$ {totalCreditosCirculando.toFixed(2)}</span>
-              <span className="text-[10px] text-slate-400 font-semibold">Total em Saldo</span>
-            </div>
-          </div>
+          <StatCard
+            label="Estudantes Matriculados"
+            value={alunos.length}
+            badgeText="Ativos"
+            badgeVariant="info"
+            icon={<Users className="h-4 w-4" />}
+            subtitle="Alunos com carteirinha digital habilitada"
+            accentColor="blue"
+          />
+
+          <StatCard
+            label="Crédito em Circulação"
+            value={`R$ ${totalCreditosCirculando.toFixed(2)}`}
+            badgeText="Total em Saldo"
+            badgeVariant="success"
+            icon={<Coins className="h-4 w-4" />}
+            subtitle="Saldo total disponível nas contas"
+            accentColor="green"
+          />
         </section>
 
-        {/* Tab Selector */}
-        <div className="border-b border-slate-200 mb-8 flex gap-4 text-xs font-bold uppercase tracking-wider">
+        {/* Tab Navigation Pills */}
+        <div className="bg-white border border-slate-200 p-1.5 rounded-2xl mb-8 flex flex-wrap gap-1 shadow-xs">
           <button
             onClick={() => setActiveTab('fila')}
-            className={`pb-3 relative transition-colors cursor-pointer ${activeTab === 'fila' ? 'text-red-600' : 'text-slate-400 hover:text-slate-600'}`}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeTab === 'fila'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+            }`}
           >
-            📋 Fila de Pix {pendentesCount > 0 && <span className="ml-1 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xxs font-black">{pendentesCount}</span>}
-            {activeTab === 'fila' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600" />}
+            <FileText className="h-3.5 w-3.5" />
+            <span>Fila de Pix</span>
+            {pendentesCount > 0 && (
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                activeTab === 'fila' ? 'bg-red-500 text-white' : 'bg-amber-100 text-amber-800'
+              }`}>
+                {pendentesCount}
+              </span>
+            )}
           </button>
 
           <button
             onClick={() => setActiveTab('alunos')}
-            className={`pb-3 relative transition-colors cursor-pointer ${activeTab === 'alunos' ? 'text-red-600' : 'text-slate-400 hover:text-slate-600'}`}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeTab === 'alunos'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+            }`}
           >
-            👥 Cadastro de Alunos
-            {activeTab === 'alunos' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600" />}
+            <Users className="h-3.5 w-3.5" />
+            <span>Cadastro de Alunos</span>
           </button>
 
           <button
             onClick={() => setActiveTab('produtos')}
-            className={`pb-3 relative transition-colors cursor-pointer ${activeTab === 'produtos' ? 'text-red-600' : 'text-slate-400 hover:text-slate-600'}`}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeTab === 'produtos'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+            }`}
           >
-            🍔 Gerenciar Cardápio
-            {activeTab === 'produtos' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600" />}
+            <UtensilsCrossed className="h-3.5 w-3.5" />
+            <span>Gerenciar Cardápio</span>
           </button>
 
           <button
             onClick={() => setActiveTab('movimentacoes')}
-            className={`pb-3 relative transition-colors cursor-pointer ${activeTab === 'movimentacoes' ? 'text-red-600' : 'text-slate-400 hover:text-slate-600'}`}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeTab === 'movimentacoes'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+            }`}
           >
-            📊 Trilha de Auditoria
-            {activeTab === 'movimentacoes' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600" />}
+            <History className="h-3.5 w-3.5" />
+            <span>Trilha de Auditoria</span>
           </button>
         </div>
 
-        {/* Tab: Fila de Pix */}
+        {/* TAB 1: FILA DE PIX */}
         {activeTab === 'fila' && (
           <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Lista de Comprovantes */}
             <div className="lg:col-span-2 space-y-4">
-              <h3 className="text-sm font-bold text-slate-500 uppercase mb-2">Comprovantes Recebidos</h3>
-              
-              {comprovantes.length === 0 ? (
-                <div className="p-8 text-center text-slate-500 bg-white border border-slate-200 rounded-2xl">
-                  Nenhum comprovante no banco de dados.
-                </div>
-              ) : comprovantes.filter(c => c.status === 'pendente').length === 0 ? (
-                <div className="p-12 text-center text-slate-600 bg-emerald-50 border border-emerald-100 rounded-2xl font-bold">
-                  🎉 Todos os PIX foram analisados e aprovados! Fila vazia.
-                </div>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  Comprovantes em Espera
+                </h3>
+                <span className="text-xs text-slate-400 font-medium">
+                  {comprovantes.filter(c => c.status === 'pendente').length} pendente(s)
+                </span>
+              </div>
+
+              {comprovantes.filter(c => c.status === 'pendente').length === 0 ? (
+                <EmptyState
+                  icon={<CheckCircle2 className="h-7 w-7 text-emerald-500" />}
+                  title="Fila de análise zerada!"
+                  description="Todos os comprovantes Pix enviados pelas famílias foram analisados e creditados."
+                />
               ) : (
                 comprovantes.filter(c => c.status === 'pendente').map(comp => {
                   const aluno = alunos.find(a => a.id === comp.aluno_id);
                   const isDuplicate = isHashDuplicate(comp) || isTxIdDuplicate(comp);
+                  const isSelected = selectedComp?.id === comp.id;
+
                   return (
-                    <button
+                    <div
                       key={comp.id}
                       onClick={() => { setSelectedComp(comp); setErrorMessage(""); }}
-                      className={`w-full text-left p-5 rounded-2xl border transition-all duration-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 cursor-pointer ${
-                        selectedComp?.id === comp.id
-                          ? 'bg-white border-red-500 shadow-md'
+                      className={`p-5 rounded-3xl border transition-all cursor-pointer flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${
+                        isSelected
+                          ? 'bg-white border-red-500 shadow-md ring-2 ring-red-500/10'
                           : isDuplicate
-                          ? 'bg-red-50/50 border-red-200 hover:bg-white hover:border-red-300'
-                          : 'bg-white border-slate-200 hover:bg-slate-50 hover:border-slate-300'
+                          ? 'bg-rose-50/40 border-rose-200 hover:bg-white hover:border-rose-300'
+                          : 'bg-white border-slate-200 hover:bg-slate-50/80 hover:border-slate-300 shadow-xs'
                       }`}
                     >
-                      <div>
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <span className="text-sm font-bold text-slate-800">{aluno?.nome || "Aluno Excluído"}</span>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">{aluno?.turma}</span>
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-slate-900">{aluno?.nome || "Aluno Excluído"}</span>
+                          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                            {aluno?.turma}
+                          </span>
                           {isDuplicate && (
-                            <span className="text-xxs px-2 py-0.5 rounded-full bg-red-100 text-red-600 border border-red-200 font-bold animate-pulse">
-                              ⚠️ ALERTA DUPLICADO
-                            </span>
+                            <Badge variant="danger" dot>
+                              Alerta Duplicidade
+                            </Badge>
                           )}
                         </div>
                         <div className="text-xs text-slate-500 space-y-0.5">
-                          <p>Pagador: <strong>{comp.pagador}</strong></p>
-                          <p className="font-mono text-[10px] text-slate-400">Transação: {comp.id_transacao || "Não informada"}</p>
+                          <p>Pagador: <strong className="text-slate-700">{comp.pagador}</strong></p>
+                          <p className="font-mono text-[11px] text-slate-400">ID Pix: {comp.id_transacao || "Não identificado"}</p>
                         </div>
                       </div>
 
                       <div className="text-right flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto border-t sm:border-0 border-slate-100 pt-3 sm:pt-0">
-                        <span className="text-base font-black text-emerald-600">R$ {comp.valor.toFixed(2)}</span>
-                        <span className="text-[10px] text-slate-400">
+                        <span className="text-lg font-black text-emerald-600">R$ {comp.valor.toFixed(2)}</span>
+                        <span className="text-[11px] text-slate-400 font-medium">
                           {new Date(comp.criado_em).toLocaleDateString('pt-BR')} às {new Date(comp.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
-                    </button>
+                    </div>
                   );
                 })
               )}
             </div>
 
-            {/* Visualizador de Detalhes / Lado a Lado */}
+            {/* Visualizador de Detalhes */}
             <div className="lg:col-span-1">
-              <div className="bg-white border border-slate-200 rounded-3xl p-6 sticky top-24 shadow-sm">
+              <div className="bg-white border border-slate-200 rounded-3xl p-6 sticky top-24 shadow-sm space-y-5">
                 {selectedComp ? (
-                  <div className="space-y-6">
-                    <div className="border-b border-slate-200 pb-4">
-                      <h4 className="font-bold text-base text-slate-800">Análise de Comprovante</h4>
-                      <p className="text-[10px] text-slate-400">ID interno: {selectedComp.id}</p>
+                  <>
+                    <div className="border-b border-slate-100 pb-3 flex justify-between items-start">
+                      <div>
+                        <h4 className="font-bold text-base text-slate-900">Análise do Documento</h4>
+                        <p className="text-[10px] text-slate-400 font-mono mt-0.5">ID: {selectedComp.id.substring(0, 12)}...</p>
+                      </div>
+                      <Badge variant={isHashDuplicate(selectedComp) || isTxIdDuplicate(selectedComp) ? "danger" : "info"}>
+                        {isHashDuplicate(selectedComp) || isTxIdDuplicate(selectedComp) ? "Suspeito" : "Regular"}
+                      </Badge>
                     </div>
 
                     {/* Imagem do Comprovante */}
-                    <div className="relative rounded-2xl border border-slate-200 bg-slate-50 h-52 overflow-hidden flex items-center justify-center">
+                    <div className="relative rounded-2xl border border-slate-200 bg-slate-50 h-56 overflow-hidden flex items-center justify-center">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={selectedComp.arquivo_url}
-                        alt="Comprovante Original"
+                        alt="Comprovante Pix"
                         className="object-contain h-full w-full p-2"
                       />
                     </div>
 
-                    {/* Alertas de Segurança */}
+                    {/* Alertas de Fraude */}
                     <div className="space-y-2">
-                      {isHashDuplicate(selectedComp) ? (
-                        <div className="text-xs bg-red-50 border border-red-200 text-red-700 p-3 rounded-xl flex items-start gap-2">
-                          <span className="text-base">🚨</span>
+                      {isHashDuplicate(selectedComp) && (
+                        <div className="text-xs bg-rose-50 border border-rose-200 text-rose-800 p-3 rounded-2xl flex items-start gap-2.5">
+                          <ShieldAlert className="h-4 w-4 text-rose-600 shrink-0 mt-0.5" />
                           <div>
-                            <strong>Arquivo Duplicado:</strong> Esta imagem já foi submetida em outro envio. Risco de fraude.
+                            <strong className="block font-bold">Arquivo Duplicado:</strong>
+                            Esta mesma imagem já foi enviada em outro comprovante.
                           </div>
-                        </div>
-                      ) : (
-                        <div className="text-[11px] bg-emerald-50 border border-emerald-100 text-emerald-700 p-2.5 rounded-xl flex items-center gap-2 font-medium">
-                          <span>✓</span> Arquivo de imagem inédito.
                         </div>
                       )}
 
-                      {isTxIdDuplicate(selectedComp) ? (
-                        <div className="text-xs bg-red-50 border border-red-200 text-red-700 p-3 rounded-xl flex items-start gap-2">
-                          <span className="text-base">🚨</span>
+                      {isTxIdDuplicate(selectedComp) && (
+                        <div className="text-xs bg-rose-50 border border-rose-200 text-rose-800 p-3 rounded-2xl flex items-start gap-2.5">
+                          <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0 mt-0.5" />
                           <div>
-                            <strong>PIX Duplicado:</strong> ID de transação PIX já foi aprovado anteriormente.
+                            <strong className="block font-bold">Transação já Aprovada:</strong>
+                            O identificador Pix informado já consta em outro lançamento.
                           </div>
                         </div>
-                      ) : selectedComp.id_transacao ? (
-                        <div className="text-[11px] bg-emerald-50 border border-emerald-100 text-emerald-700 p-2.5 rounded-xl flex items-center gap-2 font-medium">
-                          <span>✓</span> ID Pix livre e sem registros anteriores.
-                        </div>
-                      ) : null}
+                      )}
                     </div>
 
-                    {/* Dados Lidos */}
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2.5 text-xs">
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Aluno:</span>
-                        <strong className="text-slate-800">
+                    {/* Metadados Extraídos */}
+                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-2.5 text-xs">
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-400">Estudante:</span>
+                        <strong className="text-slate-900 font-bold">
                           {alunos.find(a => a.id === selectedComp.aluno_id)?.nome}
                         </strong>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Valor extraído:</span>
-                        <strong className="text-emerald-600 font-bold text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-400">Valor identificado:</span>
+                        <strong className="text-emerald-600 font-black text-sm">
                           R$ {selectedComp.valor.toFixed(2)}
                         </strong>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Pagador:</span>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-400">Nome Pagador:</span>
                         <strong className="text-slate-800">{selectedComp.pagador}</strong>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">ID Pix:</span>
-                        <strong className="text-slate-600 font-mono text-[10px] break-all">{selectedComp.id_transacao}</strong>
+                      <div className="flex flex-col gap-0.5 pt-1 border-t border-slate-200/60">
+                        <span className="text-slate-400 text-[10px]">ID Pix:</span>
+                        <strong className="text-slate-600 font-mono text-[11px] break-all">{selectedComp.id_transacao || "Não consta"}</strong>
                       </div>
                     </div>
 
                     {errorMessage && (
-                      <div className="text-xs text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
-                        ⚠️ {errorMessage}
+                      <div className="text-xs text-rose-700 bg-rose-50 p-3 rounded-2xl border border-rose-200 flex items-center gap-2">
+                        <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0" />
+                        <span>{errorMessage}</span>
                       </div>
                     )}
 
-                    {/* Botões de Ação */}
-                    <div className="flex gap-3 text-xs font-bold">
-                      <button
+                    {/* Botões de Decisão */}
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        variant="secondary"
+                        size="md"
                         onClick={() => { setIsRejectModalOpen(true); setErrorMessage(""); }}
-                        className="flex-1 bg-red-50 hover:bg-red-100 text-red-600 py-3 rounded-xl border border-red-200 transition-colors cursor-pointer"
+                        className="flex-1 text-rose-600 hover:bg-rose-50 hover:border-rose-200"
                       >
                         Rejeitar
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        variant="brand"
+                        size="md"
                         onClick={() => handleApprove(selectedComp)}
                         disabled={isTxIdDuplicate(selectedComp)}
-                        className="flex-2 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                        className="flex-2 shadow-xs"
                       >
                         Aprovar R$ {selectedComp.valor.toFixed(2)}
-                      </button>
+                      </Button>
                     </div>
-                  </div>
+                  </>
                 ) : (
-                  <div className="text-center py-16 text-slate-400">
-                    <span className="text-4xl block mb-3">🔍</span>
-                    Selecione um comprovante para analisar as assinaturas de segurança.
-                  </div>
+                  <EmptyState
+                    icon={<Search className="h-6 w-6 text-slate-400" />}
+                    title="Nenhum item selecionado"
+                    description="Clique em um comprovante da fila para analisar a imagem e as assinaturas de segurança."
+                  />
                 )}
               </div>
             </div>
           </section>
         )}
 
-        {/* Tab: Alunos */}
+        {/* TAB 2: ALUNOS */}
         {activeTab === 'alunos' && (
-          <section className="bg-white border border-slate-200 p-6 rounded-2xl shadow-xs">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-sm font-bold text-slate-500 uppercase">Alunos Cadastrados</h3>
-              <button
+          <section className="bg-white border border-slate-200 p-6 rounded-3xl shadow-xs">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900">Alunos Cadastrados</h3>
+                <p className="text-xs text-slate-400 font-medium mt-0.5">Gerenciamento de estudantes e turmas ativas</p>
+              </div>
+              <Button
+                variant="brand"
+                size="md"
                 onClick={() => setIsAddAlunoOpen(true)}
-                className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl transition-colors cursor-pointer"
+                leftIcon={<Plus className="h-4 w-4" />}
               >
-                + Novo Aluno
-              </button>
+                Novo Aluno
+              </Button>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-200 text-xs text-slate-500 uppercase tracking-wider bg-slate-50">
-                    <th className="py-3 px-4">Nome</th>
+                  <tr className="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <th className="py-3 px-4">Nome do Aluno</th>
                     <th className="py-3 px-4">Turma</th>
-                    <th className="py-3 px-4">RA</th>
+                    <th className="py-3 px-4">Registro (RA)</th>
                     <th className="py-3 px-4 text-right">Saldo Atual</th>
-                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4 text-center">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-xs text-slate-600">
+                <tbody className="divide-y divide-slate-100 text-xs">
                   {alunos.map(aluno => (
-                    <tr key={aluno.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="py-3.5 px-4 font-bold text-slate-800">{aluno.nome}</td>
-                      <td className="py-3.5 px-4">{aluno.turma}</td>
-                      <td className="py-3.5 px-4 font-mono text-slate-400">{aluno.ra}</td>
-                      <td className="py-3.5 px-4 text-right font-bold text-slate-800">R$ {aluno.saldo.toFixed(2)}</td>
+                    <tr key={aluno.id} className="hover:bg-slate-50/70 transition-colors">
+                      <td className="py-3.5 px-4 font-bold text-slate-900">{aluno.nome}</td>
                       <td className="py-3.5 px-4">
-                        <span className="px-2 py-0.5 rounded text-xxs font-bold bg-emerald-50 text-emerald-600 border border-emerald-100">
-                          Ativo
+                        <span className="bg-slate-100 text-slate-700 font-bold px-2.5 py-0.5 rounded-full text-[10px]">
+                          {aluno.turma}
                         </span>
+                      </td>
+                      <td className="py-3.5 px-4 font-mono text-slate-500">{aluno.ra}</td>
+                      <td className="py-3.5 px-4 text-right font-black text-slate-900">
+                        R$ {aluno.saldo.toFixed(2)}
+                      </td>
+                      <td className="py-3.5 px-4 text-center">
+                        <Badge variant="success" dot>
+                          Ativo
+                        </Badge>
                       </td>
                     </tr>
                   ))}
@@ -476,117 +558,75 @@ export default function AdminDashboard() {
           </section>
         )}
 
-        {/* Tab: Movimentacoes */}
-        {activeTab === 'movimentacoes' && (
-          <section className="bg-white border border-slate-200 p-6 rounded-2xl shadow-xs">
-            <h3 className="text-sm font-bold text-slate-500 uppercase mb-6">Trilha de Auditoria Geral</h3>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-200 text-xs text-slate-500 uppercase tracking-wider bg-slate-50">
-                    <th className="py-3 px-4">Aluno</th>
-                    <th className="py-3 px-4">Tipo</th>
-                    <th className="py-3 px-4">Valor</th>
-                    <th className="py-3 px-4">Descrição</th>
-                    <th className="py-3 px-4">Operador</th>
-                    <th className="py-3 px-4">Data/Hora</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-xs text-slate-600">
-                  {movimentacoes.map(mov => {
-                    const aluno = alunos.find(a => a.id === mov.aluno_id);
-                    return (
-                      <tr key={mov.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="py-3.5 px-4 font-bold text-slate-800">{aluno?.nome || "Excluído"}</td>
-                        <td className="py-3.5 px-4">
-                          {mov.tipo === 'credito' ? (
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100">ENTRADA (PIX)</span>
-                          ) : (
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-100">SAÍDA (CANTINA)</span>
-                          )}
-                        </td>
-                        <td className={`py-3.5 px-4 font-bold ${mov.tipo === 'credito' ? 'text-emerald-600' : 'text-slate-600'}`}>
-                          {mov.tipo === 'credito' ? '+' : '-'} R$ {mov.valor.toFixed(2)}
-                        </td>
-                        <td className="py-3.5 px-4 text-slate-500">{mov.descricao}</td>
-                        <td className="py-3.5 px-4 text-slate-400">{mov.criado_por === 'usr-admin' ? 'Secretaria' : 'Atendente Cantina'}</td>
-                        <td className="py-3.5 px-4 text-slate-400">
-                          {new Date(mov.criado_em).toLocaleDateString('pt-BR')} às {new Date(mov.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        )}
-
-        {/* Tab: Produtos */}
+        {/* TAB 3: PRODUTOS */}
         {activeTab === 'produtos' && (
-          <section className="bg-white border border-slate-200 p-6 rounded-2xl shadow-xs">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-sm font-bold text-slate-500 uppercase">Itens do Cardápio</h3>
-              <button
+          <section className="bg-white border border-slate-200 p-6 rounded-3xl shadow-xs">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900">Itens do Cardápio</h3>
+                <p className="text-xs text-slate-400 font-medium mt-0.5">Gerencie os produtos disponíveis no terminal da cantina</p>
+              </div>
+              <Button
+                variant="brand"
+                size="md"
                 onClick={handleOpenAddProduto}
-                className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl transition-colors cursor-pointer"
+                leftIcon={<Plus className="h-4 w-4" />}
               >
-                + Novo Item
-              </button>
+                Novo Item
+              </Button>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-200 text-xs text-slate-500 uppercase tracking-wider bg-slate-50">
-                    <th className="py-3 px-4">Nome do Produto</th>
+                  <tr className="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <th className="py-3 px-4">Produto</th>
                     <th className="py-3 px-4">Categoria</th>
                     <th className="py-3 px-4 text-right">Preço</th>
-                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4 text-center">Disponibilidade</th>
                     <th className="py-3 px-4 text-right">Ações</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-xs text-slate-600">
+                <tbody className="divide-y divide-slate-100 text-xs">
                   {produtos.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="py-8 text-center text-slate-400">
-                        Nenhum produto cadastrado.
+                      <td colSpan={5} className="py-12 text-center text-slate-400">
+                        Nenhum produto cadastrado no cardápio.
                       </td>
                     </tr>
                   ) : (
                     produtos.map(prod => (
-                      <tr key={prod.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="py-3.5 px-4 font-bold text-slate-800">{prod.nome}</td>
-                        <td className="py-3.5 px-4 capitalize">
-                          {prod.categoria === 'salgado' ? '🍔 Salgado' :
-                           prod.categoria === 'bebida' ? '🥤 Bebida' :
-                           prod.categoria === 'doce' ? '🍬 Doce' : '📦 Outro'}
+                      <tr key={prod.id} className="hover:bg-slate-50/70 transition-colors">
+                        <td className="py-3.5 px-4 font-bold text-slate-900">{prod.nome}</td>
+                        <td className="py-3.5 px-4 capitalize text-slate-600">
+                          {prod.categoria === 'salgado' ? 'Salgado' :
+                           prod.categoria === 'bebida' ? 'Bebida' :
+                           prod.categoria === 'doce' ? 'Doce' : 'Outro'}
                         </td>
-                        <td className="py-3.5 px-4 text-right font-bold text-slate-800">R$ {prod.preco.toFixed(2)}</td>
-                        <td className="py-3.5 px-4">
+                        <td className="py-3.5 px-4 text-right font-black text-slate-900">
+                          R$ {prod.preco.toFixed(2)}
+                        </td>
+                        <td className="py-3.5 px-4 text-center">
                           {prod.ativo ? (
-                            <span className="px-2 py-0.5 rounded text-xxs font-bold bg-emerald-50 text-emerald-600 border border-emerald-100">
-                              Ativo
-                            </span>
+                            <Badge variant="success" dot>Ativo</Badge>
                           ) : (
-                            <span className="px-2 py-0.5 rounded text-xxs font-bold bg-slate-200 text-slate-500 border border-slate-300">
-                              Inativo
-                            </span>
+                            <Badge variant="neutral">Inativo</Badge>
                           )}
                         </td>
-                        <td className="py-3.5 px-4 text-right space-x-2">
+                        <td className="py-3.5 px-4 text-right space-x-1.5">
                           <button
                             onClick={() => handleOpenEditProduto(prod)}
-                            className="text-slate-600 hover:text-slate-800 font-bold bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg border border-slate-200 transition-colors cursor-pointer text-xxs"
+                            className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                            title="Editar"
                           >
-                            Editar
+                            <Edit2 className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => handleDeleteProduto(prod.id)}
-                            className="text-red-600 hover:text-red-750 font-bold bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg border border-red-200 transition-colors cursor-pointer text-xxs"
+                            className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
+                            title="Excluir"
                           >
-                            Excluir
+                            <Trash2 className="h-4 w-4" />
                           </button>
                         </td>
                       </tr>
@@ -597,47 +637,117 @@ export default function AdminDashboard() {
             </div>
           </section>
         )}
+
+        {/* TAB 4: MOVIMENTACOES */}
+        {activeTab === 'movimentacoes' && (
+          <section className="bg-white border border-slate-200 p-6 rounded-3xl shadow-xs">
+            <div className="mb-6">
+              <h3 className="text-base font-extrabold text-slate-900">Trilha de Auditoria Geral</h3>
+              <p className="text-xs text-slate-400 font-medium mt-0.5">Histórico imutável de todas as recargas Pix e débitos da cantina</p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <th className="py-3 px-4">Estudante</th>
+                    <th className="py-3 px-4">Operação</th>
+                    <th className="py-3 px-4 text-right">Valor</th>
+                    <th className="py-3 px-4">Descrição / Itens</th>
+                    <th className="py-3 px-4">Operador</th>
+                    <th className="py-3 px-4 text-right">Data & Hora</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-xs">
+                  {movimentacoes.map(mov => {
+                    const aluno = alunos.find(a => a.id === mov.aluno_id);
+                    return (
+                      <tr key={mov.id} className="hover:bg-slate-50/70 transition-colors">
+                        <td className="py-3.5 px-4 font-bold text-slate-900">{aluno?.nome || "Excluído"}</td>
+                        <td className="py-3.5 px-4">
+                          {mov.tipo === 'credito' ? (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                              <ArrowDownLeft className="h-3 w-3 text-emerald-600" />
+                              RECARGA PIX
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200">
+                              <ArrowUpRight className="h-3 w-3 text-rose-600" />
+                              DÉBITO CANTINA
+                            </span>
+                          )}
+                        </td>
+                        <td className={`py-3.5 px-4 text-right font-black ${mov.tipo === 'credito' ? 'text-emerald-600' : 'text-slate-900'}`}>
+                          {mov.tipo === 'credito' ? '+' : '-'} R$ {mov.valor.toFixed(2)}
+                        </td>
+                        <td className="py-3.5 px-4 text-slate-600 max-w-xs truncate">{mov.descricao}</td>
+                        <td className="py-3.5 px-4 text-slate-400">
+                          {mov.criado_por === 'usr-admin' ? 'Secretaria' : 'Terminal Cantina'}
+                        </td>
+                        <td className="py-3.5 px-4 text-right text-slate-400 font-medium">
+                          {new Date(mov.criado_em).toLocaleDateString('pt-BR')} às {new Date(mov.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
       </main>
 
       {/* Modal: Rejeição de Comprovante */}
       {isRejectModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-30">
-          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-md overflow-hidden shadow-xl p-6">
-            <h3 className="text-base font-extrabold text-slate-850 mb-2">Rejeitar Recarga PIX</h3>
-            <p className="text-xs text-slate-400 mb-4 font-medium">Por favor, descreva o motivo da rejeição. A família visualizará este texto em seu painel.</p>
-            
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl p-6 space-y-4">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+              <h3 className="text-base font-extrabold text-slate-900">Rejeitar Recarga Pix</h3>
+              <button
+                onClick={() => { setIsRejectModalOpen(false); setRejectionReason(""); }}
+                className="text-slate-400 hover:text-slate-700 cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="text-xs text-slate-500 font-medium leading-relaxed">
+              Descreva o motivo da recusa. Essa justificativa será exibida diretamente no portal da família.
+            </p>
+
             <form onSubmit={handleRejectSubmit} className="space-y-4">
-              <div>
-                <textarea
-                  value={rejectionReason}
-                  onChange={e => setRejectionReason(e.target.value)}
-                  placeholder="Ex: Comprovante ilegível ou de outro favorecido..."
-                  rows={4}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-red-500"
-                  required
-                />
-              </div>
+              <textarea
+                value={rejectionReason}
+                onChange={e => setRejectionReason(e.target.value)}
+                placeholder="Exemplo: Comprovante de favorecido diferente ou valor divergente..."
+                rows={4}
+                className="textarea"
+                required
+              />
 
               {errorMessage && (
-                <div className="text-xs text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
-                  ⚠️ {errorMessage}
+                <div className="text-xs text-rose-700 bg-rose-50 p-3 rounded-xl border border-rose-200">
+                  {errorMessage}
                 </div>
               )}
 
-              <div className="flex gap-3 pt-2 text-xs font-bold">
-                <button
+              <div className="flex gap-2 pt-2">
+                <Button
                   type="button"
+                  variant="secondary"
+                  size="md"
                   onClick={() => { setIsRejectModalOpen(false); setRejectionReason(""); }}
-                  className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 py-2.5 rounded-xl border border-slate-200 cursor-pointer"
+                  className="flex-1"
                 >
                   Cancelar
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl transition-colors cursor-pointer"
+                  variant="danger"
+                  size="md"
+                  className="flex-1"
                 >
                   Confirmar Rejeição
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -646,42 +756,47 @@ export default function AdminDashboard() {
 
       {/* Modal: Adicionar Aluno */}
       {isAddAlunoOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-30">
-          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-md overflow-hidden shadow-xl p-6">
-            <h3 className="text-base font-extrabold text-slate-800 mb-4">Adicionar Novo Aluno</h3>
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl p-6 space-y-4">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+              <h3 className="text-base font-extrabold text-slate-900">Cadastrar Novo Aluno</h3>
+              <button
+                onClick={() => setIsAddAlunoOpen(false)}
+                className="text-slate-400 hover:text-slate-700 cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
 
             <form onSubmit={handleAddAlunoSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1">Nome Completo</label>
-                <input
+                <label className="block text-xs font-bold text-slate-600 mb-1.5">Nome Completo</label>
+                <Input
                   type="text"
                   value={alunoNome}
                   onChange={e => setAlunoNome(e.target.value)}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-red-500"
-                  placeholder="Nome do Aluno"
+                  placeholder="Nome do estudante"
                   required
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-1">Turma</label>
-                  <input
+                  <label className="block text-xs font-bold text-slate-600 mb-1.5">Turma</label>
+                  <Input
                     type="text"
                     value={alunoTurma}
                     onChange={e => setAlunoTurma(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-red-500"
                     placeholder="Ex: 6º Ano A"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-1">RA (Registro)</label>
-                  <input
+                  <label className="block text-xs font-bold text-slate-600 mb-1.5">Registro (RA)</label>
+                  <Input
                     type="text"
                     value={alunoRa}
                     onChange={e => setAlunoRa(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-red-500"
                     placeholder="123456-7"
                     required
                   />
@@ -689,13 +804,13 @@ export default function AdminDashboard() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1">Vincular Responsável</label>
+                <label className="block text-xs font-bold text-slate-600 mb-1.5">Vincular Responsável</label>
                 <select
                   value={alunoResponsavelId}
                   onChange={e => setAlunoResponsavelId(e.target.value)}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-red-500"
+                  className="select"
                 >
-                  <option value="">Nenhum / Cadastrar desvinculado</option>
+                  <option value="">Nenhum / Cadastrar sem vínculo</option>
                   {profiles.map(p => (
                     <option key={p.id} value={p.id}>{p.nome} ({p.email})</option>
                   ))}
@@ -703,25 +818,29 @@ export default function AdminDashboard() {
               </div>
 
               {errorMessage && (
-                <div className="text-xs text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
-                  ⚠️ {errorMessage}
+                <div className="text-xs text-rose-700 bg-rose-50 p-3 rounded-xl border border-rose-200">
+                  {errorMessage}
                 </div>
               )}
 
-              <div className="flex gap-3 pt-2 text-xs font-bold">
-                <button
+              <div className="flex gap-2 pt-2">
+                <Button
                   type="button"
+                  variant="secondary"
+                  size="md"
                   onClick={() => setIsAddAlunoOpen(false)}
-                  className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 py-2.5 rounded-xl border border-slate-200 cursor-pointer"
+                  className="flex-1"
                 >
                   Cancelar
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl transition-colors cursor-pointer"
+                  variant="brand"
+                  size="md"
+                  className="flex-1"
                 >
-                  Cadastrar
-                </button>
+                  Cadastrar Aluno
+                </Button>
               </div>
             </form>
           </div>
@@ -730,84 +849,94 @@ export default function AdminDashboard() {
 
       {/* Modal: Adicionar/Editar Produto */}
       {isAddProdutoOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-30">
-          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-md overflow-hidden shadow-xl p-6">
-            <h3 className="text-base font-extrabold text-slate-800 mb-4">
-              {selectedProduto ? "Editar Item" : "Adicionar Novo Item"}
-            </h3>
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl p-6 space-y-4">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+              <h3 className="text-base font-extrabold text-slate-900">
+                {selectedProduto ? "Editar Item do Cardápio" : "Adicionar Item ao Cardápio"}
+              </h3>
+              <button
+                onClick={() => setIsAddProdutoOpen(false)}
+                className="text-slate-400 hover:text-slate-700 cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
 
             <form onSubmit={handleSaveProduto} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1">Nome do Item</label>
-                <input
+                <label className="block text-xs font-bold text-slate-600 mb-1.5">Nome do Item</label>
+                <Input
                   type="text"
                   value={produtoNome}
                   onChange={e => setProdutoNome(e.target.value)}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-red-500"
-                  placeholder="Ex: Pastel de Forno"
+                  placeholder="Ex: Salgado Assado, Suco Natural..."
                   required
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-1">Preço (R$)</label>
-                  <input
+                  <label className="block text-xs font-bold text-slate-600 mb-1.5">Preço (R$)</label>
+                  <Input
                     type="text"
                     value={produtoPreco}
                     onChange={e => setProdutoPreco(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-red-500 font-bold"
-                    placeholder="Ex: 5,50"
+                    placeholder="Ex: 6,50"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-1">Categoria</label>
+                  <label className="block text-xs font-bold text-slate-600 mb-1.5">Categoria</label>
                   <select
                     value={produtoCategoria}
                     onChange={e => setProdutoCategoria(e.target.value as any)}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-red-500"
+                    className="select"
                   >
-                    <option value="salgado">🍔 Salgado</option>
-                    <option value="bebida">🥤 Bebida</option>
-                    <option value="doce">🍬 Doce</option>
-                    <option value="outro">📦 Outro</option>
+                    <option value="salgado">Salgado</option>
+                    <option value="bebida">Bebida</option>
+                    <option value="doce">Doce</option>
+                    <option value="outro">Outro</option>
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1">Status do Item</label>
+                <label className="block text-xs font-bold text-slate-600 mb-1.5">Disponibilidade</label>
                 <select
                   value={produtoAtivo ? "ativo" : "inativo"}
                   onChange={e => setProdutoAtivo(e.target.value === "ativo")}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-red-500 font-medium"
+                  className="select"
                 >
-                  <option value="ativo">🟢 Ativo (visível na cantina)</option>
-                  <option value="inativo">🔴 Inativo (oculto na cantina)</option>
+                  <option value="ativo">Ativo (visível no terminal da cantina)</option>
+                  <option value="inativo">Inativo (oculto)</option>
                 </select>
               </div>
 
               {errorMessage && (
-                <div className="text-xs text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
-                  ⚠️ {errorMessage}
+                <div className="text-xs text-rose-700 bg-rose-50 p-3 rounded-xl border border-rose-200">
+                  {errorMessage}
                 </div>
               )}
 
-              <div className="flex gap-3 pt-2 text-xs font-bold">
-                <button
+              <div className="flex gap-2 pt-2">
+                <Button
                   type="button"
+                  variant="secondary"
+                  size="md"
                   onClick={() => setIsAddProdutoOpen(false)}
-                  className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 py-2.5 rounded-xl border border-slate-200 cursor-pointer"
+                  className="flex-1"
                 >
                   Cancelar
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl transition-colors cursor-pointer"
+                  variant="brand"
+                  size="md"
+                  className="flex-1"
                 >
-                  Salvar
-                </button>
+                  Salvar Item
+                </Button>
               </div>
             </form>
           </div>

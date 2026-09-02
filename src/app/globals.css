@@ -1,26 +1,760 @@
 @import "tailwindcss";
 
+/* ================================================================
+   CANTINA DIGITAL — DESIGN SYSTEM
+   E.E. Antônio Caio — 2026
+   ================================================================ */
+
+/* ----------------------------------------------------------------
+   1. DESIGN TOKENS
+   ---------------------------------------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Brand */
+  --brand: #DC2626;
+  --brand-dark: #B91C1C;
+  --brand-light: #FEF2F2;
+  --brand-border: #FECACA;
+  --brand-muted: #FCA5A5;
+
+  /* Background layers */
+  --bg-base: #F7F6F3;
+  --bg-surface: #FFFFFF;
+  --bg-muted: #F1F0EC;
+  --bg-subtle: #FAFAF8;
+
+  /* Text */
+  --text-primary: #111827;
+  --text-secondary: #374151;
+  --text-muted: #6B7280;
+  --text-subtle: #9CA3AF;
+  --text-brand: #DC2626;
+
+  /* Semantic — Success */
+  --success: #16A34A;
+  --success-dark: #15803D;
+  --success-light: #F0FDF4;
+  --success-border: #BBF7D0;
+  --success-text: #166534;
+
+  /* Semantic — Warning */
+  --warning: #D97706;
+  --warning-dark: #B45309;
+  --warning-light: #FFFBEB;
+  --warning-border: #FDE68A;
+  --warning-text: #92400E;
+
+  /* Semantic — Danger */
+  --danger: #DC2626;
+  --danger-dark: #B91C1C;
+  --danger-light: #FEF2F2;
+  --danger-border: #FECACA;
+  --danger-text: #991B1B;
+
+  /* Semantic — Info */
+  --info: #0284C7;
+  --info-dark: #0369A1;
+  --info-light: #F0F9FF;
+  --info-border: #BAE6FD;
+  --info-text: #075985;
+
+  /* Accent Palette */
+  --accent-blue: #84E2FA;
+  --accent-blue-light: #F0FBFF;
+  --accent-pink: #FF88D3;
+  --accent-pink-light: #FFF0FA;
+  --accent-green: #A6F686;
+  --accent-green-light: #F4FFF0;
+  --accent-yellow: #FFCD20;
+  --accent-yellow-light: #FFFBE8;
+
+  /* Borders */
+  --border: #E5E7EB;
+  --border-light: #F3F4F6;
+  --border-strong: #D1D5DB;
+
+  /* Radius */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-3xl: 28px;
+  --radius-pill: 9999px;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.04);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.04);
+
+  /* Transitions */
+  --transition-fast: 120ms ease;
+  --transition-base: 180ms ease;
+  --transition-slow: 280ms ease;
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
 }
 
+/* ----------------------------------------------------------------
+   2. THEME INLINE (Tailwind v4)
+   ---------------------------------------------------------------- */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg-base: var(--bg-base);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-muted: var(--bg-muted);
+  --color-bg-subtle: var(--bg-subtle);
+
+  --color-brand: var(--brand);
+  --color-brand-dark: var(--brand-dark);
+  --color-brand-light: var(--brand-light);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-subtle: var(--text-subtle);
+
+  --color-success: var(--success);
+  --color-success-light: var(--success-light);
+  --color-warning: var(--warning);
+  --color-warning-light: var(--warning-light);
+  --color-danger: var(--danger);
+  --color-danger-light: var(--danger-light);
+  --color-info: var(--info);
+  --color-info-light: var(--info-light);
+
+  --color-border: var(--border);
+  --color-border-light: var(--border-light);
+
+  --color-accent-blue: var(--accent-blue);
+  --color-accent-blue-light: var(--accent-blue-light);
+  --color-accent-pink: var(--accent-pink);
+  --color-accent-pink-light: var(--accent-pink-light);
+  --color-accent-green: var(--accent-green);
+  --color-accent-green-light: var(--accent-green-light);
+  --color-accent-yellow: var(--accent-yellow);
+  --color-accent-yellow-light: var(--accent-yellow-light);
+
+  --font-sans: var(--font-lexend), system-ui, sans-serif;
+
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ----------------------------------------------------------------
+   3. GLOBAL RESET & BASE
+   ---------------------------------------------------------------- */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-lexend, system-ui), sans-serif;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  line-height: 1.5;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ----------------------------------------------------------------
+   4. TYPOGRAPHY HIERARCHY
+   ---------------------------------------------------------------- */
+.text-display {
+  font-size: 2.25rem;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.text-h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+.text-h2 {
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.text-h3 {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.text-body {
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.text-body-sm {
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.text-caption {
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.text-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ----------------------------------------------------------------
+   5. FOCUS RING (Accessibility)
+   ---------------------------------------------------------------- */
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ----------------------------------------------------------------
+   6. SCROLLBAR
+   ---------------------------------------------------------------- */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-muted);
+  border-radius: var(--radius-pill);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: var(--radius-pill);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* ----------------------------------------------------------------
+   7. SKELETON / SHIMMER
+   ---------------------------------------------------------------- */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--border-light) 25%,
+    var(--bg-muted) 50%,
+    var(--border-light) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+/* ----------------------------------------------------------------
+   8. CARD COMPONENT
+   ---------------------------------------------------------------- */
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-xs);
+}
+
+.card-sm {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+}
+
+/* ----------------------------------------------------------------
+   9. BUTTON BASE STYLES
+   ---------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-weight: 600;
+  font-family: var(--font-lexend, inherit);
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-sm {
+  height: 32px;
+  padding: 0 14px;
+  font-size: 0.75rem;
+}
+
+.btn-md {
+  height: 40px;
+  padding: 0 20px;
+  font-size: 0.8125rem;
+}
+
+.btn-lg {
+  height: 48px;
+  padding: 0 28px;
+  font-size: 0.875rem;
+}
+
+.btn-xl {
+  height: 56px;
+  padding: 0 36px;
+  font-size: 0.9375rem;
+}
+
+/* Button variants */
+.btn-primary {
+  background: var(--text-primary);
+  color: #FFFFFF;
+  border-color: var(--text-primary);
+}
+
+.btn-primary:hover {
+  background: #1F2937;
+  border-color: #1F2937;
+}
+
+.btn-brand {
+  background: var(--brand);
+  color: #FFFFFF;
+  border-color: var(--brand);
+}
+
+.btn-brand:hover {
+  background: var(--brand-dark);
+  border-color: var(--brand-dark);
+}
+
+.btn-success {
+  background: var(--success);
+  color: #FFFFFF;
+  border-color: var(--success);
+}
+
+.btn-success:hover {
+  background: var(--success-dark);
+  border-color: var(--success-dark);
+}
+
+.btn-secondary {
+  background: var(--bg-muted);
+  color: var(--text-secondary);
+  border-color: var(--border);
+}
+
+.btn-secondary:hover {
+  background: var(--border-light);
+  border-color: var(--border-strong);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: transparent;
+}
+
+.btn-ghost:hover {
+  background: var(--bg-muted);
+  color: var(--text-primary);
+}
+
+.btn-danger {
+  background: var(--danger-light);
+  color: var(--danger-text);
+  border-color: var(--danger-border);
+}
+
+.btn-danger:hover {
+  background: var(--danger);
+  color: #FFFFFF;
+  border-color: var(--danger);
+}
+
+.btn:disabled, .btn[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ----------------------------------------------------------------
+   10. BADGE / CHIP
+   ---------------------------------------------------------------- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.badge-success {
+  background: var(--success-light);
+  color: var(--success-text);
+  border-color: var(--success-border);
+}
+
+.badge-warning {
+  background: var(--warning-light);
+  color: var(--warning-text);
+  border-color: var(--warning-border);
+}
+
+.badge-danger {
+  background: var(--danger-light);
+  color: var(--danger-text);
+  border-color: var(--danger-border);
+}
+
+.badge-info {
+  background: var(--info-light);
+  color: var(--info-text);
+  border-color: var(--info-border);
+}
+
+.badge-neutral {
+  background: var(--bg-muted);
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+
+.badge-brand {
+  background: var(--brand-light);
+  color: var(--brand);
+  border-color: var(--brand-border);
+}
+
+/* ----------------------------------------------------------------
+   11. INPUT BASE
+   ---------------------------------------------------------------- */
+.input {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  background: var(--bg-muted);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  font-size: 0.875rem;
+  font-family: var(--font-lexend, inherit);
+  color: var(--text-primary);
+  transition: all var(--transition-fast);
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--text-subtle);
+}
+
+.input:hover {
+  border-color: var(--border-strong);
+}
+
+.input:focus {
+  border-color: var(--brand);
+  background: var(--bg-surface);
+  box-shadow: 0 0 0 3px rgb(220 38 38 / 0.08);
+}
+
+.input-error {
+  border-color: var(--danger);
+  background: var(--danger-light);
+}
+
+.input-error:focus {
+  box-shadow: 0 0 0 3px rgb(220 38 38 / 0.12);
+}
+
+.textarea {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--bg-muted);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  font-size: 0.875rem;
+  font-family: var(--font-lexend, inherit);
+  color: var(--text-primary);
+  transition: all var(--transition-fast);
+  outline: none;
+  resize: vertical;
+  min-height: 96px;
+}
+
+.textarea:focus {
+  border-color: var(--brand);
+  background: var(--bg-surface);
+  box-shadow: 0 0 0 3px rgb(220 38 38 / 0.08);
+}
+
+.select {
+  width: 100%;
+  height: 44px;
+  padding: 0 36px 0 14px;
+  background: var(--bg-muted);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  font-size: 0.875rem;
+  font-family: var(--font-lexend, inherit);
+  color: var(--text-primary);
+  transition: all var(--transition-fast);
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  cursor: pointer;
+}
+
+.select:focus {
+  border-color: var(--brand);
+  background-color: var(--bg-surface);
+  box-shadow: 0 0 0 3px rgb(220 38 38 / 0.08);
+}
+
+/* ----------------------------------------------------------------
+   12. NAVIGATION PILL (Header)
+   ---------------------------------------------------------------- */
+.nav-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: all var(--transition-fast);
+  text-decoration: none;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.nav-pill:hover {
+  background: var(--bg-muted);
+  color: var(--text-primary);
+}
+
+.nav-pill.active {
+  background: var(--bg-muted);
+  color: var(--text-primary);
+  border-color: var(--border);
+  font-weight: 600;
+}
+
+/* ----------------------------------------------------------------
+   13. MODAL OVERLAY
+   ---------------------------------------------------------------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 0.45);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 50;
+  overflow-y: auto;
+}
+
+.modal-box {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-3xl);
+  box-shadow: var(--shadow-xl);
+  width: 100%;
+  max-width: 480px;
+  padding: 28px;
+}
+
+/* ----------------------------------------------------------------
+   14. ALERT / FEEDBACK BANNERS
+   ---------------------------------------------------------------- */
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: var(--radius-lg);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border: 1px solid transparent;
+  line-height: 1.45;
+}
+
+.alert-success {
+  background: var(--success-light);
+  color: var(--success-text);
+  border-color: var(--success-border);
+}
+
+.alert-warning {
+  background: var(--warning-light);
+  color: var(--warning-text);
+  border-color: var(--warning-border);
+}
+
+.alert-danger {
+  background: var(--danger-light);
+  color: var(--danger-text);
+  border-color: var(--danger-border);
+}
+
+.alert-info {
+  background: var(--info-light);
+  color: var(--info-text);
+  border-color: var(--info-border);
+}
+
+/* ----------------------------------------------------------------
+   15. TABLE
+   ---------------------------------------------------------------- */
+.table-clean {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.table-clean thead tr {
+  border-bottom: 1px solid var(--border-light);
+}
+
+.table-clean thead th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.table-clean tbody tr {
+  border-bottom: 1px solid var(--border-light);
+  transition: background var(--transition-fast);
+}
+
+.table-clean tbody tr:last-child {
+  border-bottom: none;
+}
+
+.table-clean tbody tr:hover {
+  background: var(--bg-muted);
+}
+
+.table-clean tbody td {
+  padding: 12px 16px;
+  color: var(--text-secondary);
+}
+
+/* ----------------------------------------------------------------
+   16. PRINT
+   ---------------------------------------------------------------- */
+@media print {
+  .print-hidden {
+    display: none !important;
+  }
+}
+
+/* ----------------------------------------------------------------
+   17. ANIMATIONS
+   ---------------------------------------------------------------- */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in {
+  animation: fade-in var(--transition-slow) both;
+}
+
+.animate-slide-up {
+  animation: slide-up var(--transition-slow) both;
+}
+
+.animate-scale-in {
+  animation: scale-in var(--transition-base) both;
+}
+
+/* ----------------------------------------------------------------
+   18. UTILITIES
+   ---------------------------------------------------------------- */
+.text-balance {
+  text-wrap: balance;
+}
+
+.truncate-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }

@@ -4,19 +4,36 @@ import { useState, useEffect, useRef } from "react";
 import { DBService, Aluno, Comprovante, DADOS_PIX_ESCOLA } from "@/services/db";
 import { OCRService, OCRResult } from "@/services/ocr";
 import Header from "../components/Header";
+import { PageHeader } from "../components/ui/PageHeader";
+import { Badge } from "../components/ui/Badge";
+import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
+import { EmptyState } from "../components/ui/EmptyState";
+import {
+  Users,
+  CreditCard,
+  History,
+  UploadCloud,
+  Copy,
+  Check,
+  X,
+  FileText,
+  AlertCircle
+} from "lucide-react";
 
 export default function FamiliaDashboard() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [comprovantes, setComprovantes] = useState<Comprovante[]>([]);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
-  
+  const [copiedPix, setCopiedPix] = useState(false);
+
   // States do Formulário de Upload
   const [selectedAlunoId, setSelectedAlunoId] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [isProcessingOCR, setIsProcessingOCR] = useState(false);
-  
+
   // OCR result state para revisão
   const [ocrData, setOcrData] = useState<OCRResult | null>(null);
   const [manualValor, setManualValor] = useState("");
@@ -74,25 +91,28 @@ export default function FamiliaDashboard() {
     setIsUploadOpen(true);
   };
 
+  const handleCopyPix = () => {
+    navigator.clipboard.writeText(DADOS_PIX_ESCOLA.chave);
+    setCopiedPix(true);
+    setTimeout(() => setCopiedPix(false), 2500);
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setSelectedFile(file);
       setErrorMessage("");
 
-      // Gerar preview do arquivo
       const reader = new FileReader();
       reader.onloadend = () => {
         setFilePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
 
-      // Rodar simulador de OCR
       setIsProcessingOCR(true);
       setOcrData(null);
       try {
         const result = await OCRService.analisarComprovante(file);
-        
         setOcrData(result);
         setManualValor(result.valor.toFixed(2));
         setManualPagador(result.pagador);
@@ -136,15 +156,13 @@ export default function FamiliaDashboard() {
         hashComprovante: hash
       });
 
-      // Reset
       setIsUploadOpen(false);
       setSelectedFile(null);
       setFilePreview(null);
       setOcrData(null);
       setSelectedAlunoId("");
       setErrorMessage("");
-      
-      // Recarregar dados
+
       await loadData(currentUser.id);
     } catch (err: any) {
       setErrorMessage(err.message || "Erro ao salvar o comprovante.");
@@ -161,224 +179,286 @@ export default function FamiliaDashboard() {
   };
 
   return (
-    <div className="flex-1 bg-slate-50 text-slate-800 min-h-screen">
+    <div className="flex-1 bg-[--bg-base] text-slate-800 min-h-screen">
       <Header />
 
-      {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        
-        {/* Filhos e Saldos */}
-        <section className="mb-10">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-extrabold text-slate-800 flex items-center gap-2">
-              <span>👤</span> Seus Alunos / Dependentes
-            </h2>
-            <button
+      <main className="max-w-6xl mx-auto px-4 py-8 space-y-10">
+        <PageHeader
+          title="Portal da Família"
+          description="Acompanhe o saldo dos estudantes, envie recargas Pix e monitore o consumo."
+          action={
+            <Button
+              variant="brand"
+              size="md"
               onClick={() => setIsUploadOpen(true)}
-              className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl transition-all duration-200 flex items-center gap-2 shadow-xs active:scale-95 cursor-pointer"
+              leftIcon={<CreditCard className="h-4 w-4" />}
+              className="shadow-xs"
             >
-              <span>💳</span> Enviar Pix / Recarga
-            </button>
+              Recarregar via Pix
+            </Button>
+          }
+        />
+
+        {/* 1. SEÇÃO DE DEPENDENTES */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+              <Users className="h-4 w-4 text-slate-400" />
+              Estudantes Vinculados
+            </h2>
+            <span className="text-xs text-slate-400 font-medium">
+              {alunos.length} dependente(s)
+            </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {alunos.map(aluno => (
-              <button 
+              <div
                 key={aluno.id}
                 onClick={() => handleOpenProfile(aluno)}
-                className="group text-left bg-white border border-slate-200 hover:border-red-500/50 hover:shadow-md rounded-2xl p-6 relative overflow-hidden shadow-xs transition-all duration-300 cursor-pointer active:scale-[0.98] w-full"
+                className="group text-left bg-white border border-slate-200 hover:border-slate-300 hover:shadow-md rounded-3xl p-6 relative overflow-hidden shadow-xs transition-all cursor-pointer"
               >
-                <div className="absolute top-0 right-0 p-6">
-                  <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2.5 py-1 rounded-full border border-red-100 uppercase">
-                    {aluno.turma}
-                  </span>
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3.5">
+                    <div className="h-12 w-12 rounded-2xl bg-red-100 text-red-700 font-black flex items-center justify-center text-lg border border-red-200/80 shrink-0">
+                      {aluno.foto ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={aluno.foto} alt={aluno.nome} className="h-full w-full object-cover rounded-2xl" />
+                      ) : (
+                        aluno.nome.charAt(0)
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-base text-slate-900 group-hover:text-red-600 transition-colors leading-tight">
+                        {aluno.nome}
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-0.5 font-mono">RA: {aluno.ra}</p>
+                    </div>
+                  </div>
+                  <Badge variant="brand">{aluno.turma}</Badge>
                 </div>
 
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-10 w-10 rounded-full bg-red-100 text-red-700 font-black flex items-center justify-center text-lg group-hover:scale-105 transition-transform">
-                    {aluno.nome.charAt(0)}
-                  </div>
+                <div className="mt-5 border-t border-slate-100 pt-4 flex items-center justify-between">
                   <div>
-                    <h3 className="font-extrabold text-base text-slate-800">{aluno.nome}</h3>
-                    <p className="text-[10px] text-slate-400">RA: {aluno.ra}</p>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Saldo Disponível</span>
+                    <span className="text-2xl font-black text-emerald-600">
+                      R$ {aluno.saldo.toFixed(2)}
+                    </span>
                   </div>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRecarregarFromProfile(aluno.id);
+                    }}
+                    leftIcon={<CreditCard className="h-3.5 w-3.5 text-red-600" />}
+                  >
+                    Recarregar
+                  </Button>
                 </div>
-
-                <div className="mt-6 border-t border-slate-100 pt-4 flex items-center justify-between">
-                  <span className="text-xs text-slate-500 font-semibold">Saldo da Cantina</span>
-                  <span className="text-xl font-black text-emerald-600">
-                    R$ {aluno.saldo.toFixed(2)}
-                  </span>
-                </div>
-              </button>
+              </div>
             ))}
           </div>
         </section>
 
-        {/* Histórico de Comprovantes */}
-        <section>
-          <h2 className="text-lg font-extrabold text-slate-800 mb-6 flex items-center gap-2">
-            <span>🕒</span> Histórico de Envios
-          </h2>
-
-          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
-            {comprovantes.length === 0 ? (
-              <div className="p-8 text-center text-slate-500">
-                Nenhum comprovante enviado ainda. Faça um Pix para começar!
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-slate-200 text-xs text-slate-500 uppercase tracking-wider bg-slate-50">
-                      <th className="py-4 px-6">Aluno</th>
-                      <th className="py-4 px-6">Valor</th>
-                      <th className="py-4 px-6">Identificação / Pix</th>
-                      <th className="py-4 px-6">Enviado em</th>
-                      <th className="py-4 px-6">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-xs text-slate-600">
-                    {comprovantes.map(comp => {
-                      const aluno = alunos.find(a => a.id === comp.aluno_id);
-                      return (
-                        <tr key={comp.id} className="hover:bg-slate-50/50 transition-colors">
-                          <td className="py-4 px-6 font-bold text-slate-800">
-                            {aluno ? aluno.nome : "Desconhecido"}
-                          </td>
-                          <td className="py-4 px-6 font-extrabold text-emerald-600">
-                            R$ {comp.valor.toFixed(2)}
-                          </td>
-                          <td className="py-4 px-6">
-                            <div className="text-[10px] text-slate-500 font-mono">
-                              ID: {comp.id_transacao ? comp.id_transacao.substring(0, 16) + '...' : 'Pendente'}
-                            </div>
-                            <div className="text-[10px] text-slate-400">
-                              Pagador: {comp.pagador}
-                            </div>
-                          </td>
-                          <td className="py-4 px-6 text-slate-500">
-                            {new Date(comp.criado_em).toLocaleDateString('pt-BR')} às {new Date(comp.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                          </td>
-                          <td className="py-4 px-6 text-xxs">
-                            {comp.status === 'pendente' && (
-                              <span className="px-2.5 py-1 font-bold rounded-full bg-amber-50 text-amber-600 border border-amber-200">
-                                🟡 Pendente
-                              </span>
-                            )}
-                            {comp.status === 'aprovado' && (
-                              <span className="px-2.5 py-1 font-bold rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200">
-                                🟢 Aprovado
-                              </span>
-                            )}
-                            {comp.status === 'rejeitado' && (
-                              <div className="flex flex-col items-start gap-1">
-                                <span className="px-2.5 py-1 font-bold rounded-full bg-red-50 text-red-600 border border-red-200">
-                                  🔴 Rejeitado
-                                </span>
-                                {comp.observacao && (
-                                  <span className="text-[10px] text-red-500 italic max-w-xs block">
-                                    Motivo: {comp.observacao}
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
+        {/* 2. HISTÓRICO DE COMPROVANTES ENVIADOS */}
+        <section className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+            <div>
+              <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                <History className="h-4 w-4 text-slate-400" />
+                Histórico de Recargas Pix
+              </h2>
+              <p className="text-xs text-slate-400 font-medium mt-0.5">Status de conferência dos comprovantes enviados</p>
+            </div>
+            <Badge variant="neutral">{comprovantes.length} comprovantes</Badge>
           </div>
+
+          {comprovantes.length === 0 ? (
+            <EmptyState
+              icon={<CreditCard className="h-7 w-7 text-slate-300" />}
+              title="Nenhuma recarga enviada"
+              description="Quando você fizer um Pix e enviar o comprovante, poderá acompanhar a aprovação aqui."
+              action={
+                <Button variant="brand" size="md" onClick={() => setIsUploadOpen(true)}>
+                  Fazer Primeira Recarga
+                </Button>
+              }
+            />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <th className="py-3 px-4">Estudante</th>
+                    <th className="py-3 px-4 text-right">Valor</th>
+                    <th className="py-3 px-4">Identificação / Transação</th>
+                    <th className="py-3 px-4">Data do Envio</th>
+                    <th className="py-3 px-4 text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-xs">
+                  {comprovantes.map(comp => {
+                    const aluno = alunos.find(a => a.id === comp.aluno_id);
+                    return (
+                      <tr key={comp.id} className="hover:bg-slate-50/70 transition-colors">
+                        <td className="py-3.5 px-4 font-bold text-slate-900">
+                          {aluno ? aluno.nome : "Aluno"}
+                        </td>
+                        <td className="py-3.5 px-4 text-right font-black text-emerald-600">
+                          R$ {comp.valor.toFixed(2)}
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <div className="text-[11px] text-slate-600 font-mono">
+                            ID: {comp.id_transacao ? comp.id_transacao.substring(0, 16) + '...' : 'Pendente'}
+                          </div>
+                          <div className="text-[10px] text-slate-400">
+                            Pagador: {comp.pagador}
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4 text-slate-500 font-medium">
+                          {new Date(comp.criado_em).toLocaleDateString('pt-BR')} às {new Date(comp.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        </td>
+                        <td className="py-3.5 px-4 text-right">
+                          {comp.status === 'pendente' && (
+                            <Badge variant="warning" dot>
+                              Aguardando Secretaria
+                            </Badge>
+                          )}
+                          {comp.status === 'aprovado' && (
+                            <Badge variant="success" dot>
+                              Creditado no Saldo
+                            </Badge>
+                          )}
+                          {comp.status === 'rejeitado' && (
+                            <div className="flex flex-col items-end gap-1">
+                              <Badge variant="danger" dot>
+                                Recusado
+                              </Badge>
+                              {comp.observacao && (
+                                <span className="text-[10px] text-rose-600 italic max-w-xs block text-right">
+                                  Motivo: {comp.observacao}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
       </main>
 
-      {/* Modal / Overlay de Envio de Recarga */}
+      {/* MODAL DE RECARGA PIX + OCR */}
       {isUploadOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-30 overflow-y-auto">
-          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-3xl overflow-hidden shadow-xl my-8">
-            <div className="p-6 border-b border-slate-200 flex justify-between items-center bg-slate-50">
-              <h3 className="text-base font-extrabold text-slate-800 flex items-center gap-2">
-                <span>⚡</span> Nova Recarga PIX
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto animate-fade-in">
+          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-3xl overflow-hidden shadow-2xl my-8">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/80">
+              <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                <CreditCard className="h-4 w-4 text-red-600" />
+                Nova Recarga Pix
               </h3>
               <button
                 onClick={resetForm}
-                className="text-slate-400 hover:text-slate-600 text-lg cursor-pointer"
+                className="text-slate-400 hover:text-slate-700 cursor-pointer"
               >
-                ✕
+                <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-200">
-              {/* Coluna 1: Dados Bancários */}
-              <div className="p-6">
-                <h4 className="text-xxs font-bold uppercase tracking-wider text-slate-400 mb-4">
-                  1. Realize o PIX para a escola
+            <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-100">
+              {/* Coluna 1: Dados do Pix Escolar */}
+              <div className="p-6 space-y-4">
+                <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  1. Realize o Pix para a Escola
                 </h4>
-                
-                <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200 mb-4">
-                  <div className="text-[10px] text-slate-400 mb-0.5">Chave Pix ({DADOS_PIX_ESCOLA.tipoChave})</div>
-                  <div className="text-sm font-mono font-bold text-red-600 mb-3 select-all">
-                    {DADOS_PIX_ESCOLA.chave}
+
+                <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200/80 space-y-3">
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
+                      Chave Pix ({DADOS_PIX_ESCOLA.tipoChave})
+                    </span>
+                    <div className="flex items-center justify-between mt-1 bg-white p-2.5 rounded-xl border border-slate-200">
+                      <span className="text-xs font-mono font-bold text-red-600 truncate mr-2 select-all">
+                        {DADOS_PIX_ESCOLA.chave}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleCopyPix}
+                        className="text-slate-500 hover:text-slate-900 p-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
+                        title="Copiar Chave Pix"
+                      >
+                        {copiedPix ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+                      </button>
+                    </div>
                   </div>
-                  
-                  <div className="space-y-2 text-xs text-slate-600">
+
+                  <div className="space-y-1.5 text-xs text-slate-600 border-t border-slate-200/60 pt-3">
                     <div className="flex justify-between">
-                      <span>Beneficiário:</span>
+                      <span className="text-slate-400">Beneficiário:</span>
                       <strong className="text-slate-800">{DADOS_PIX_ESCOLA.beneficiario}</strong>
                     </div>
                     <div className="flex justify-between">
-                      <span>Banco:</span>
+                      <span className="text-slate-400">Banco:</span>
                       <strong className="text-slate-800">{DADOS_PIX_ESCOLA.banco}</strong>
                     </div>
                     <div className="flex justify-between">
-                      <span>Cidade:</span>
+                      <span className="text-slate-400">Cidade:</span>
                       <strong className="text-slate-800">{DADOS_PIX_ESCOLA.cidade}</strong>
                     </div>
                   </div>
                 </div>
 
-                <div className="text-xs text-slate-500 leading-relaxed bg-red-50 p-3.5 rounded-xl border border-red-100">
-                  💡 <strong>Instruções:</strong> Copie a chave acima e faça o pagamento em seu banco de preferência. Em seguida, tire print do comprovante e faça o upload ao lado.
+                <div className="text-xs text-slate-600 bg-red-50/70 p-3.5 rounded-2xl border border-red-100 leading-relaxed space-y-1">
+                  <p className="font-bold text-red-900 flex items-center gap-1.5">
+                    <AlertCircle className="h-3.5 w-3.5 text-red-600 shrink-0" />
+                    Como funciona:
+                  </p>
+                  <p className="text-[11px] text-red-800">
+                    Copie a chave Pix acima, efetue o pagamento no app do seu banco, tire print do comprovante e faça o upload ao lado.
+                  </p>
                 </div>
               </div>
 
-              {/* Coluna 2: Upload e OCR */}
+              {/* Coluna 2: Upload do Comprovante e Leitor OCR */}
               <div className="p-6 flex flex-col justify-between">
                 <form onSubmit={handleUploadSubmit} className="space-y-4 flex-1">
-                  <h4 className="text-xxs font-bold uppercase tracking-wider text-slate-400 mb-1">
-                    2. Envie o Comprovante
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    2. Enviar Comprovante
                   </h4>
 
-                  {/* Seleção do Aluno */}
                   <div>
-                    <label className="block text-xs font-semibold text-slate-500 mb-1">
-                      Para qual aluno é a recarga?
+                    <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                      Para qual estudante é o crédito?
                     </label>
                     <select
                       value={selectedAlunoId}
                       onChange={e => setSelectedAlunoId(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:border-red-500 text-slate-800"
+                      className="select"
                       required
                     >
-                      <option value="">Selecione o aluno...</option>
+                      <option value="">Selecione o estudante...</option>
                       {alunos.map(a => (
                         <option key={a.id} value={a.id}>{a.nome} ({a.turma})</option>
                       ))}
                     </select>
                   </div>
 
-                  {/* Upload do Arquivo */}
                   {!selectedFile ? (
                     <div
                       onClick={() => fileInputRef.current?.click()}
-                      className="border-2 border-dashed border-slate-200 hover:border-red-500/50 rounded-2xl p-8 text-center cursor-pointer hover:bg-red-50/20 transition-all duration-300 flex flex-col items-center justify-center"
+                      className="border-2 border-dashed border-slate-200 hover:border-red-400 rounded-2xl p-8 text-center cursor-pointer hover:bg-red-50/30 transition-all flex flex-col items-center justify-center space-y-2"
                     >
-                      <span className="text-3xl mb-2">📸</span>
-                      <span className="text-xs font-bold text-slate-600">Carregar Imagem do Comprovante</span>
-                      <span className="text-[10px] text-slate-400 mt-1">Aceita PNG, JPG e PDF</span>
+                      <div className="h-12 w-12 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center">
+                        <UploadCloud className="h-6 w-6" />
+                      </div>
+                      <span className="text-xs font-bold text-slate-700">Carregar Foto ou PDF do Comprovante</span>
+                      <span className="text-[10px] text-slate-400">Formatos aceitos: JPG, PNG e PDF</span>
                       <input
                         type="file"
                         ref={fileInputRef}
@@ -388,20 +468,19 @@ export default function FamiliaDashboard() {
                       />
                     </div>
                   ) : (
-                    <div className="space-y-4">
-                      {/* Preview do Comprovante */}
-                      <div className="relative rounded-xl border border-slate-200 bg-slate-50 h-32 overflow-hidden flex items-center justify-center">
+                    <div className="space-y-3">
+                      <div className="relative rounded-2xl border border-slate-200 bg-slate-50 h-32 overflow-hidden flex items-center justify-center">
                         {selectedFile.type.includes("pdf") ? (
-                          <div className="text-slate-400 text-xs flex flex-col items-center gap-1">
-                            <span className="text-2xl">📄</span>
-                            <span>{selectedFile.name}</span>
+                          <div className="text-slate-500 text-xs flex flex-col items-center gap-1">
+                            <FileText className="h-8 w-8 text-slate-400" />
+                            <span className="font-mono text-[11px]">{selectedFile.name}</span>
                           </div>
                         ) : (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={filePreview || ""}
                             alt="Preview do Comprovante"
-                            className="object-contain h-full w-full"
+                            className="object-contain h-full w-full p-2"
                           />
                         )}
                         <button
@@ -411,56 +490,57 @@ export default function FamiliaDashboard() {
                             setFilePreview(null);
                             setOcrData(null);
                           }}
-                          className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1 text-xs hover:bg-red-700 transition-colors"
+                          className="absolute top-2 right-2 bg-slate-900 text-white rounded-full p-1 text-xs hover:bg-red-600 transition-colors cursor-pointer shadow-xs"
                         >
-                          ✕
+                          <X className="h-3.5 w-3.5" />
                         </button>
                       </div>
 
-                      {/* Loading de OCR */}
                       {isProcessingOCR && (
-                        <div className="flex items-center justify-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-red-600 border-t-transparent"></div>
-                          <span className="text-xs text-slate-500 animate-pulse">IA lendo dados do comprovante...</span>
+                        <div className="flex items-center justify-center gap-2.5 p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
+                          <div className="h-4 w-4 rounded-full border-2 border-red-600 border-t-transparent animate-spin" />
+                          <span className="text-xs text-slate-600 font-medium animate-pulse">
+                            Identificando dados do Pix...
+                          </span>
                         </div>
                       )}
 
-                      {/* Revisão de Dados */}
                       {ocrData && !isProcessingOCR && (
-                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-                          <div className="text-xxs font-bold text-red-600 uppercase tracking-wider flex justify-between items-center">
-                            <span>📝 Revisar Informações Lidas</span>
-                            <span className="text-xxs text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">OCR Sucesso</span>
+                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3 animate-fade-in">
+                          <div className="flex justify-between items-center">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                              Dados Confirmados pelo Leitor
+                            </span>
+                            <Badge variant="success" dot>Leitura Concluída</Badge>
                           </div>
-                          
-                          <div className="grid grid-cols-2 gap-3">
+
+                          <div className="grid grid-cols-2 gap-2.5">
                             <div>
-                              <label className="block text-xxs font-bold text-slate-400 mb-0.5">Valor (R$)</label>
-                              <input
+                              <label className="block text-[10px] font-bold text-slate-500 mb-1">Valor (R$)</label>
+                              <Input
                                 type="text"
                                 value={manualValor}
                                 onChange={e => setManualValor(e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded px-2.5 py-1 text-xs text-slate-800 font-bold focus:outline-none focus:border-red-500"
+                                className="font-black"
                                 required
                               />
                             </div>
                             <div>
-                              <label className="block text-xxs font-bold text-slate-400 mb-0.5">ID da Transação</label>
-                              <input
+                              <label className="block text-[10px] font-bold text-slate-500 mb-1">ID da Transação</label>
+                              <Input
                                 type="text"
                                 value={manualTransacao}
                                 onChange={e => setManualTransacao(e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded px-2.5 py-1 text-xs text-slate-800 font-mono focus:outline-none focus:border-red-500"
+                                className="font-mono text-xs"
                                 required
                               />
                             </div>
                             <div className="col-span-2">
-                              <label className="block text-xxs font-bold text-slate-400 mb-0.5">Nome do Pagador (PIX)</label>
-                              <input
+                              <label className="block text-[10px] font-bold text-slate-500 mb-1">Nome do Pagador</label>
+                              <Input
                                 type="text"
                                 value={manualPagador}
                                 onChange={e => setManualPagador(e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded px-2.5 py-1 text-xs text-slate-800 focus:outline-none focus:border-red-500"
                                 required
                               />
                             </div>
@@ -471,26 +551,30 @@ export default function FamiliaDashboard() {
                   )}
 
                   {errorMessage && (
-                    <div className="text-xs text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
-                      ⚠️ {errorMessage}
+                    <div className="text-xs text-rose-700 bg-rose-50 p-3 rounded-2xl border border-rose-200">
+                      {errorMessage}
                     </div>
                   )}
 
-                  <div className="border-t border-slate-200 pt-4 flex gap-3">
-                    <button
+                  <div className="border-t border-slate-100 pt-4 flex gap-2.5">
+                    <Button
                       type="button"
+                      variant="secondary"
+                      size="md"
                       onClick={resetForm}
-                      className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold py-2.5 rounded-xl border border-slate-200 transition-colors cursor-pointer"
+                      className="flex-1"
                     >
                       Cancelar
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="submit"
+                      variant="brand"
+                      size="md"
                       disabled={isProcessingOCR || !selectedFile}
-                      className="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2.5 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                      className="flex-1 shadow-xs"
                     >
-                      Confirmar e Enviar
-                    </button>
+                      Enviar Comprovante
+                    </Button>
                   </div>
                 </form>
               </div>
@@ -499,106 +583,95 @@ export default function FamiliaDashboard() {
         </div>
       )}
 
+      {/* MODAL DETALHES DO ESTUDANTE */}
       {selectedAlunoProfile && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-30 overflow-y-auto">
-          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-3xl overflow-hidden shadow-xl my-8">
-            <div className="p-6 border-b border-slate-200 flex justify-between items-center bg-slate-50">
-              <h3 className="text-base font-extrabold text-slate-800 flex items-center gap-2">
-                <span>🎓</span> Perfil do Aluno
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto animate-fade-in">
+          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl my-8 space-y-6 p-6">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+              <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                <Users className="h-4 w-4 text-slate-400" />
+                Perfil do Estudante
               </h3>
               <button
                 onClick={handleCloseProfile}
-                className="text-slate-400 hover:text-slate-650 text-lg cursor-pointer"
+                className="text-slate-400 hover:text-slate-700 cursor-pointer"
               >
-                ✕
+                <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-200">
-              {/* Coluna 1: Informações e QR Code */}
-              <div className="p-6 flex flex-col justify-between items-center text-center space-y-4">
-                <div className="w-full flex flex-col items-center">
-                  <div className="h-16 w-16 rounded-full bg-red-100 text-red-700 font-black flex items-center justify-center text-2xl mb-3">
-                    {selectedAlunoProfile.nome.charAt(0)}
-                  </div>
-                  <h4 className="font-extrabold text-lg text-slate-800 leading-tight">
-                    {selectedAlunoProfile.nome}
-                  </h4>
-                  <span className="mt-1.5 text-xxs font-bold text-red-650 bg-red-50 px-2.5 py-0.5 rounded-full border border-red-150 uppercase">
-                    {selectedAlunoProfile.turma}
-                  </span>
-                  <p className="text-[10px] text-slate-450 mt-2">RA (Registro): {selectedAlunoProfile.ra}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Coluna 1: Dados e QR */}
+              <div className="flex flex-col items-center text-center space-y-4">
+                <div className="h-20 w-20 rounded-full bg-red-100 text-red-700 font-black flex items-center justify-center text-2xl border-2 border-red-200 shadow-xs">
+                  {selectedAlunoProfile.foto ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={selectedAlunoProfile.foto} alt={selectedAlunoProfile.nome} className="h-full w-full object-cover rounded-full" />
+                  ) : (
+                    selectedAlunoProfile.nome.charAt(0)
+                  )}
                 </div>
 
-                {/* Saldo Disponível */}
-                <div className="w-full bg-slate-50 border border-slate-200/60 rounded-2xl p-4 flex flex-col items-center">
-                  <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-0.5">Saldo Disponível</span>
+                <div>
+                  <h4 className="font-extrabold text-base text-slate-900 leading-tight">
+                    {selectedAlunoProfile.nome}
+                  </h4>
+                  <Badge variant="brand" className="mt-1.5">{selectedAlunoProfile.turma}</Badge>
+                  <p className="text-xs text-slate-400 font-mono mt-1">RA: {selectedAlunoProfile.ra}</p>
+                </div>
+
+                <div className="w-full bg-slate-50 border border-slate-200/80 rounded-2xl p-4">
+                  <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Saldo Atual</span>
                   <span className="text-2xl font-black text-emerald-600">R$ {selectedAlunoProfile.saldo.toFixed(2)}</span>
                 </div>
 
-                {/* QR Code de Consumo */}
-                <div className="flex flex-col items-center space-y-2">
-                  <div className="bg-slate-50 border border-slate-200 p-3.5 rounded-2xl flex items-center justify-center shadow-inner">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${selectedAlunoProfile.id}`}
-                      alt="QR Code do Aluno"
-                      className="w-32 h-32 object-contain rounded-md"
-                    />
-                  </div>
-                  <span className="text-[9px] text-slate-400 max-w-[200px] leading-normal">
-                    Mostre este QR Code no caixa da cantina para pagar.
-                  </span>
-                </div>
-
-                {/* Botões de Ação */}
-                <div className="w-full flex gap-3 text-xs font-bold pt-2">
-                  <button
-                    onClick={handleCloseProfile}
-                    className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-xl border border-slate-200 transition-colors cursor-pointer"
-                  >
-                    Voltar
-                  </button>
-                  <button
+                <div className="w-full pt-2">
+                  <Button
+                    variant="brand"
+                    size="md"
                     onClick={() => handleRecarregarFromProfile(selectedAlunoProfile.id)}
-                    className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl transition-all flex items-center justify-center gap-1 cursor-pointer"
+                    leftIcon={<CreditCard className="h-4 w-4" />}
+                    className="w-full"
                   >
-                    <span>💳</span> Recarregar Pix
-                  </button>
+                    Fazer Recarga Pix
+                  </Button>
                 </div>
               </div>
 
-              {/* Coluna 2: Histórico de Consumo */}
-              <div className="p-6 flex flex-col justify-between">
-                <div>
-                  <h4 className="text-xxs font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-1.5">
-                    <span>🍔</span> Histórico de Consumo
+              {/* Coluna 2: Consumo */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+                  <h4 className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">
+                    Últimos Consumos
                   </h4>
+                  <Badge variant="neutral">{alunoConsumo.length}</Badge>
+                </div>
 
-                  <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1 divide-y divide-slate-100">
-                    {alunoConsumo.length === 0 ? (
-                      <div className="text-center py-16 text-slate-400 text-xs italic">
-                        Nenhum consumo registrado recentemente.
-                      </div>
-                    ) : (
-                      alunoConsumo.map(comp => (
-                        <div
-                          key={comp.id}
-                          className="pt-3 first:pt-0 flex justify-between items-center text-xs"
-                        >
-                          <div className="space-y-0.5">
-                            <strong className="text-slate-800 block font-semibold">{comp.descricao}</strong>
-                            <span className="text-[10px] text-slate-400 block">
-                              {new Date(comp.criado_em).toLocaleDateString('pt-BR')} às {new Date(comp.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                          </div>
-                          <span className="font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-150">
-                            - R$ {comp.valor.toFixed(2)}
+                <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                  {alunoConsumo.length === 0 ? (
+                    <EmptyState
+                      icon={<History className="h-6 w-6 text-slate-300" />}
+                      title="Nenhum consumo registrado"
+                      description="As compras realizadas no caixa da cantina aparecerão aqui."
+                    />
+                  ) : (
+                    alunoConsumo.map(comp => (
+                      <div
+                        key={comp.id}
+                        className="p-3 bg-slate-50 rounded-2xl border border-slate-200/60 flex justify-between items-center text-xs"
+                      >
+                        <div className="space-y-0.5">
+                          <strong className="text-slate-900 block font-bold">{comp.descricao}</strong>
+                          <span className="text-[10px] text-slate-400 block font-medium">
+                            {new Date(comp.criado_em).toLocaleDateString('pt-BR')} às {new Date(comp.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
-                      ))
-                    )}
-                  </div>
+                        <span className="font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
+                          - R$ {comp.valor.toFixed(2)}
+                        </span>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>

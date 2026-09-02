@@ -2,6 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { DBService, Profile } from "@/services/db";
+import { Button } from "./components/ui/Button";
+import { Input } from "./components/ui/Input";
+import {
+  Mail,
+  Lock,
+  User,
+  AlertCircle,
+  CheckCircle2,
+  Phone,
+  FileText
+} from "lucide-react";
 
 export default function Home() {
   const [currentUser, setCurrentUser] = useState<Profile | null>(null);
@@ -39,15 +50,12 @@ export default function Home() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   useEffect(() => {
-    // Check if user is already logged in locally
     const user = DBService.getCurrentUser();
     if (user) {
       setCurrentUser(user);
     }
-    
-    // Check if returning from Google OAuth redirect or handling errors
+
     const checkOAuth = async () => {
-      // Check for error parameters in URL hash or query params
       if (typeof window !== 'undefined') {
         const hash = window.location.hash;
         const search = window.location.search;
@@ -60,7 +68,6 @@ export default function Home() {
           } else {
             setErrorMsg(`Erro na autenticação Google: ${errorDesc.replace(/\+/g, ' ')}`);
           }
-          // Limpa o hash de erro da URL para evitar replays
           window.history.replaceState(null, '', window.location.pathname);
           return;
         }
@@ -167,7 +174,6 @@ export default function Home() {
         setSuccessMsg("Cadastro de responsável realizado com sucesso! Verifique seu e-mail para confirmação.");
       }
 
-      // Reset fields
       clearFormFields();
       setActiveTab('login');
     } catch (err: any) {
@@ -189,9 +195,6 @@ export default function Home() {
     }
   };
 
-  // DEV-ONLY: função de simulação de login sem autenticação real.
-  // Completamente excluída do bundle de produção pelo tree-shaking do Next.js
-  // (process.env.NODE_ENV é substituído por 'production' em build e eliminado).
   const handleSimularLogin = process.env.NODE_ENV === 'development'
     ? async (role: 'familia' | 'admin' | 'cantina' | 'aluno' | 'professor' | 'gestao') => {
         let email = '';
@@ -234,28 +237,28 @@ export default function Home() {
   };
 
   return (
-    <main className="flex-1 bg-slate-50 text-slate-800 flex flex-col justify-between min-h-screen">
+    <main className="flex-1 bg-[--bg-base] text-slate-800 flex flex-col justify-between min-h-screen">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200/80 sticky top-0 z-20 shadow-xs">
+      <header className="bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-20 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 bg-red-600 rounded-full flex items-center justify-center text-white font-black text-xs border border-red-700 shadow-sm">
+            <div className="h-10 w-10 bg-red-600 rounded-2xl flex items-center justify-center text-white font-black text-xs shadow-xs">
               EEAC
             </div>
             <div>
-              <h1 className="font-extrabold text-sm tracking-tight text-slate-800 leading-none">
+              <h1 className="font-extrabold text-sm tracking-tight text-slate-900 leading-none">
                 Cantina Digital
               </h1>
-              <span className="text-[10px] text-slate-500 font-semibold uppercase">E.E. Antônio Caio</span>
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">E.E. Antônio Caio</span>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-4 text-xs font-semibold text-slate-600">
             {currentUser && (
               <div className="flex items-center gap-2 bg-slate-100 py-1.5 px-3 rounded-full border border-slate-200">
                 <span>Logado como: <strong className="text-slate-800">{currentUser.nome}</strong> ({currentUser.role})</span>
-                <button 
-                  onClick={handleLogout} 
+                <button
+                  onClick={handleLogout}
                   className="text-red-600 hover:text-red-700 transition-colors underline font-bold cursor-pointer"
                 >
                   Sair
@@ -268,27 +271,31 @@ export default function Home() {
 
       {/* Main Login / Register Area */}
       <div className="flex-1 flex flex-col items-center justify-center max-w-md mx-auto px-4 py-12 w-full">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-extrabold tracking-tight text-slate-850">
+        <div className="text-center mb-8 space-y-1">
+          <h2 className="text-2xl font-extrabold tracking-tight text-slate-900">
             {activeTab === 'login' ? 'Acesse sua conta' : 'Crie sua conta'}
           </h2>
-          <p className="mt-1.5 text-xs text-slate-400">
-            {activeTab === 'login' ? 'Insira suas credenciais ou utilize redes sociais' : 'Preencha os dados de acordo com seu perfil'}
+          <p className="text-xs text-slate-500 font-medium">
+            {activeTab === 'login' ? 'Entre com seu e-mail institucional ou conta Google' : 'Preencha os dados de acordo com seu perfil'}
           </p>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 w-full shadow-sm space-y-6">
+        <div className="bg-white border border-slate-200 rounded-3xl p-6 w-full shadow-xs space-y-6">
           {/* Custom Tab Selector */}
-          <div className="flex bg-slate-100 p-1 rounded-xl gap-1 text-xs font-bold text-slate-550">
+          <div className="flex bg-slate-100 p-1 rounded-2xl gap-1 text-xs font-bold text-slate-600">
             <button
               onClick={() => { setActiveTab('login'); setErrorMsg(""); setSuccessMsg(""); }}
-              className={`flex-1 py-2 rounded-lg transition-all cursor-pointer text-center ${activeTab === 'login' ? 'bg-white text-slate-800 shadow-xs' : 'hover:text-slate-700'}`}
+              className={`flex-1 py-2 rounded-xl transition-all cursor-pointer text-center ${
+                activeTab === 'login' ? 'bg-white text-slate-900 shadow-xs' : 'hover:text-slate-900'
+              }`}
             >
               Entrar
             </button>
             <button
               onClick={() => { setActiveTab('register'); setErrorMsg(""); setSuccessMsg(""); }}
-              className={`flex-1 py-2 rounded-lg transition-all cursor-pointer text-center ${activeTab === 'register' ? 'bg-white text-slate-800 shadow-xs' : 'hover:text-slate-700'}`}
+              className={`flex-1 py-2 rounded-xl transition-all cursor-pointer text-center ${
+                activeTab === 'register' ? 'bg-white text-slate-900 shadow-xs' : 'hover:text-slate-900'
+              }`}
             >
               Cadastrar-se
             </button>
@@ -299,7 +306,9 @@ export default function Home() {
             <button
               onClick={handleGoogleLogin}
               disabled={isGoogleLoading}
-              className={`w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-650 font-bold text-xs py-3 rounded-xl border border-slate-200 shadow-2xs transition-all active:scale-98 ${isGoogleLoading ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+              className={`w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs py-3 rounded-2xl border border-slate-200 shadow-2xs transition-all active:scale-98 ${
+                isGoogleLoading ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:border-slate-300'
+              }`}
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24">
                 <path fill="#EA4335" d="M12 5.04c1.66 0 3.2.57 4.38 1.69l3.27-3.27C17.67 1.53 14.97 1 12 1 7.24 1 3.21 3.73 1.29 7.71l3.88 3C6.11 7.73 8.78 5.04 12 5.04z" />
@@ -309,9 +318,10 @@ export default function Home() {
               </svg>
               <span>{isGoogleLoading ? 'Redirecionando...' : (activeTab === 'login' ? 'Entrar com Google' : 'Cadastrar com Google')}</span>
             </button>
+
             <div className="flex items-center justify-center gap-3">
               <div className="h-[1px] bg-slate-200 flex-1"></div>
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Ou</span>
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Ou com e-mail</span>
               <div className="h-[1px] bg-slate-200 flex-1"></div>
             </div>
           </div>
@@ -319,72 +329,82 @@ export default function Home() {
           {/* Form Area */}
           {activeTab === 'login' ? (
             <form onSubmit={handleLoginSubmit} className="space-y-4">
-              <div className="space-y-1">
-                <label className="block text-xxs font-bold text-slate-500 uppercase">E-mail</label>
-                <input
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1">E-mail</label>
+                <Input
                   type="email"
                   value={loginEmail}
                   onChange={e => setLoginEmail(e.target.value)}
                   placeholder="exemplo@email.com"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-red-500 placeholder-slate-400"
+                  leftIcon={<Mail className="h-4 w-4" />}
                   required
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="block text-xxs font-bold text-slate-500 uppercase">Senha</label>
-                <input
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1">Senha</label>
+                <Input
                   type="password"
                   value={loginPassword}
                   onChange={e => setLoginPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-red-500 placeholder-slate-400"
+                  leftIcon={<Lock className="h-4 w-4" />}
                   required
                 />
               </div>
 
               {errorMsg && (
-                <div className="text-xxs text-red-650 bg-red-50 p-3 rounded-lg border border-red-100 font-medium">
-                  ⚠️ {errorMsg}
+                <div className="text-xs text-rose-700 bg-rose-50 p-3 rounded-2xl border border-rose-200 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
+                  <span>{errorMsg}</span>
                 </div>
               )}
 
               {successMsg && (
-                <div className="text-xxs text-emerald-650 bg-emerald-50 p-3 rounded-lg border border-emerald-100 font-medium">
-                  🎉 {successMsg}
+                <div className="text-xs text-emerald-700 bg-emerald-50 p-3 rounded-2xl border border-emerald-200 flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <span>{successMsg}</span>
                 </div>
               )}
 
-              <button
+              <Button
                 type="submit"
-                disabled={isLoading}
-                className="w-full bg-red-655 hover:bg-red-755 text-white font-bold text-xs py-3 rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                variant="brand"
+                size="lg"
+                loading={isLoading}
+                className="w-full shadow-xs"
               >
-                {isLoading ? "Entrando..." : "Entrar na Conta"}
-              </button>
+                Entrar na Conta
+              </Button>
             </form>
           ) : (
             <form onSubmit={handleRegisterSubmit} className="space-y-4">
               {/* Role Selector */}
-              <div className="flex border border-slate-200 p-0.5 rounded-lg text-xxs font-bold text-slate-500 bg-slate-50">
+              <div className="flex border border-slate-200 p-1 rounded-2xl text-xs font-bold text-slate-600 bg-slate-50 gap-1">
                 <button
                   type="button"
                   onClick={() => setRegisterRole('aluno')}
-                  className={`flex-1 py-1.5 rounded transition-all cursor-pointer ${registerRole === 'aluno' ? 'bg-white text-slate-850 shadow-2xs border border-slate-200/50' : ''}`}
+                  className={`flex-1 py-1.5 rounded-xl transition-all cursor-pointer ${
+                    registerRole === 'aluno' ? 'bg-white text-slate-900 shadow-xs' : 'hover:text-slate-900'
+                  }`}
                 >
                   Estudante
                 </button>
                 <button
                   type="button"
                   onClick={() => setRegisterRole('professor')}
-                  className={`flex-1 py-1.5 rounded transition-all cursor-pointer ${registerRole === 'professor' ? 'bg-white text-slate-850 shadow-2xs border border-slate-200/50' : ''}`}
+                  className={`flex-1 py-1.5 rounded-xl transition-all cursor-pointer ${
+                    registerRole === 'professor' ? 'bg-white text-slate-900 shadow-xs' : 'hover:text-slate-900'
+                  }`}
                 >
-                  Servidor/Prof.
+                  Professor
                 </button>
                 <button
                   type="button"
                   onClick={() => setRegisterRole('familia')}
-                  className={`flex-1 py-1.5 rounded transition-all cursor-pointer ${registerRole === 'familia' ? 'bg-white text-slate-850 shadow-2xs border border-slate-200/50' : ''}`}
+                  className={`flex-1 py-1.5 rounded-xl transition-all cursor-pointer ${
+                    registerRole === 'familia' ? 'bg-white text-slate-900 shadow-xs' : 'hover:text-slate-900'
+                  }`}
                 >
                   Responsável
                 </button>
@@ -392,78 +412,77 @@ export default function Home() {
 
               {registerRole === 'aluno' && (
                 <>
-                  <div className="space-y-1">
-                    <label className="block text-xxs font-bold text-slate-500 uppercase">Nome Completo</label>
-                    <input
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1">Nome Completo</label>
+                    <Input
                       type="text"
                       value={studentNome}
                       onChange={e => setStudentNome(e.target.value)}
                       placeholder="Nome do Estudante"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-red-500 placeholder-slate-400"
+                      leftIcon={<User className="h-4 w-4" />}
                       required
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="block text-xxs font-bold text-slate-500 uppercase">Série / Turma</label>
-                      <input
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 mb-1">Série / Turma</label>
+                      <Input
                         type="text"
                         value={studentSerie}
                         onChange={e => setStudentSerie(e.target.value)}
                         placeholder="Ex: 6º Ano A"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-red-500 placeholder-slate-400"
                         required
                       />
                     </div>
 
                     <div className="grid grid-cols-3 gap-1.5">
-                      <div className="col-span-2 space-y-1">
-                        <label className="block text-xxs font-bold text-slate-500 uppercase">RA</label>
-                        <input
+                      <div className="col-span-2">
+                        <label className="block text-xs font-bold text-slate-600 mb-1">RA</label>
+                        <Input
                           type="text"
                           value={studentRA}
                           onChange={e => setStudentRA(e.target.value)}
                           placeholder="123456"
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-red-500 placeholder-slate-400 font-mono"
+                          className="font-mono text-xs"
                           required
                         />
                       </div>
-                      <div className="col-span-1 space-y-1">
-                        <label className="block text-xxs font-bold text-slate-500 uppercase">Dígito</label>
-                        <input
+                      <div>
+                        <label className="block text-xs font-bold text-slate-600 mb-1">Díg.</label>
+                        <Input
                           type="text"
                           value={studentDigit}
                           onChange={e => setStudentDigit(e.target.value)}
                           placeholder="X"
                           maxLength={1}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-red-500 placeholder-slate-400 text-center font-bold font-mono"
+                          className="text-center font-mono font-bold text-xs"
                           required
                         />
                       </div>
                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="block text-xxs font-bold text-slate-500 uppercase">E-mail Institucional</label>
-                    <input
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1">E-mail Institucional</label>
+                    <Input
                       type="email"
                       value={studentEmail}
                       onChange={e => setStudentEmail(e.target.value)}
                       placeholder="seu-ra@al.educacao.sp.gov.br"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-red-500 placeholder-slate-400"
+                      leftIcon={<Mail className="h-4 w-4" />}
                       required
                     />
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="block text-xxs font-bold text-slate-500 uppercase">Senha</label>
-                    <input
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1">Senha</label>
+                    <Input
                       type="password"
                       value={studentPassword}
                       onChange={e => setStudentPassword(e.target.value)}
                       placeholder="Mínimo 6 caracteres"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-red-500 placeholder-slate-400"
+                      leftIcon={<Lock className="h-4 w-4" />}
                       required
                     />
                   </div>
@@ -472,38 +491,38 @@ export default function Home() {
 
               {registerRole === 'professor' && (
                 <>
-                  <div className="space-y-1">
-                    <label className="block text-xxs font-bold text-slate-500 uppercase">Nome Completo</label>
-                    <input
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1">Nome Completo</label>
+                    <Input
                       type="text"
                       value={profNome}
                       onChange={e => setProfNome(e.target.value)}
-                      placeholder="Nome do Professor/Servidor"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-red-500 placeholder-slate-400"
+                      placeholder="Nome do Professor / Servidor"
+                      leftIcon={<User className="h-4 w-4" />}
                       required
                     />
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="block text-xxs font-bold text-slate-500 uppercase">E-mail Institucional</label>
-                    <input
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1">E-mail Institucional</label>
+                    <Input
                       type="email"
                       value={profEmail}
                       onChange={e => setProfEmail(e.target.value)}
                       placeholder="seu-nome@prof.educacao.sp.gov.br"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-red-500 placeholder-slate-400"
+                      leftIcon={<Mail className="h-4 w-4" />}
                       required
                     />
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="block text-xxs font-bold text-slate-500 uppercase">Senha</label>
-                    <input
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1">Senha</label>
+                    <Input
                       type="password"
                       value={profPassword}
                       onChange={e => setProfPassword(e.target.value)}
                       placeholder="Mínimo 6 caracteres"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-red-500 placeholder-slate-400"
+                      leftIcon={<Lock className="h-4 w-4" />}
                       required
                     />
                   </div>
@@ -512,64 +531,64 @@ export default function Home() {
 
               {registerRole === 'familia' && (
                 <>
-                  <div className="space-y-1">
-                    <label className="block text-xxs font-bold text-slate-500 uppercase">Nome Completo</label>
-                    <input
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1">Nome Completo</label>
+                    <Input
                       type="text"
                       value={parentNome}
                       onChange={e => setParentNome(e.target.value)}
                       placeholder="Nome do Responsável"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-red-500 placeholder-slate-400"
+                      leftIcon={<User className="h-4 w-4" />}
                       required
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="block text-xxs font-bold text-slate-500 uppercase">RG</label>
-                      <input
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 mb-1">RG</label>
+                      <Input
                         type="text"
                         value={parentRG}
                         onChange={e => setParentRG(e.target.value)}
                         placeholder="Ex: 12.345.678-9"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-red-500 placeholder-slate-400 font-mono"
+                        leftIcon={<FileText className="h-4 w-4" />}
                         required
                       />
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-xxs font-bold text-slate-500 uppercase">Whatsapp</label>
-                      <input
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 mb-1">WhatsApp</label>
+                      <Input
                         type="text"
                         value={parentWhatsapp}
                         onChange={e => setParentWhatsapp(e.target.value)}
                         placeholder="(11) 99999-9999"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-red-500 placeholder-slate-400"
+                        leftIcon={<Phone className="h-4 w-4" />}
                         required
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="block text-xxs font-bold text-slate-500 uppercase">E-mail</label>
-                    <input
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1">E-mail</label>
+                    <Input
                       type="email"
                       value={parentEmail}
                       onChange={e => setParentEmail(e.target.value)}
                       placeholder="exemplo@email.com"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-red-500 placeholder-slate-400"
+                      leftIcon={<Mail className="h-4 w-4" />}
                       required
                     />
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="block text-xxs font-bold text-slate-500 uppercase">Senha</label>
-                    <input
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1">Senha</label>
+                    <Input
                       type="password"
                       value={parentPassword}
                       onChange={e => setParentPassword(e.target.value)}
                       placeholder="Mínimo 6 caracteres"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-red-500 placeholder-slate-400"
+                      leftIcon={<Lock className="h-4 w-4" />}
                       required
                     />
                   </div>
@@ -577,68 +596,74 @@ export default function Home() {
               )}
 
               {errorMsg && (
-                <div className="text-xxs text-red-655 bg-red-50 p-3 rounded-lg border border-red-100 font-medium">
-                  ⚠️ {errorMsg}
+                <div className="text-xs text-rose-700 bg-rose-50 p-3 rounded-2xl border border-rose-200 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
+                  <span>{errorMsg}</span>
                 </div>
               )}
 
               {successMsg && (
-                <div className="text-xxs text-emerald-655 bg-emerald-50 p-3 rounded-lg border border-emerald-100 font-medium">
-                  🎉 {successMsg}
+                <div className="text-xs text-emerald-700 bg-emerald-50 p-3 rounded-2xl border border-emerald-200 flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <span>{successMsg}</span>
                 </div>
               )}
 
-              <button
+              <Button
                 type="submit"
-                disabled={isLoading}
-                className="w-full bg-red-600 hover:bg-red-700 text-white font-bold text-xs py-3 rounded-xl transition-all cursor-pointer disabled:opacity-50 shadow-2xs active:scale-98"
+                variant="brand"
+                size="lg"
+                loading={isLoading}
+                className="w-full shadow-xs"
               >
-                {isLoading ? "Criando Conta..." : "Cadastrar Conta"}
-              </button>
+                Criar Conta
+              </Button>
             </form>
           )}
         </div>
 
-        {/* Simulador Dev — renderizado APENAS em NODE_ENV=development */}
+        {/* Simulador Dev */}
         {process.env.NODE_ENV === 'development' && handleSimularLogin && (
-          <div className="mt-8 bg-amber-50 border border-amber-200 rounded-2xl p-4 w-full text-center space-y-2.5">
-            <span className="text-[10px] text-amber-600 uppercase font-extrabold tracking-wider block">⚠️ Atalhos Dev (Bypass Login) — Não aparece em produção</span>
+          <div className="mt-8 bg-amber-50/90 border border-amber-200 rounded-3xl p-4 w-full text-center space-y-2.5">
+            <span className="text-[10px] text-amber-700 uppercase font-extrabold tracking-wider block">
+              Atalhos de Simulação (Ambiente Local)
+            </span>
             <div className="flex flex-wrap gap-2 justify-center">
               <button
                 onClick={() => handleSimularLogin('aluno')}
-                className="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-lg text-[10px] font-bold transition-colors cursor-pointer"
+                className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-xl text-[11px] font-bold shadow-2xs transition-colors cursor-pointer"
               >
-                🎓 Aluno Teste
+                Estudante
               </button>
               <button
                 onClick={() => handleSimularLogin('professor')}
-                className="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-lg text-[10px] font-bold transition-colors cursor-pointer"
+                className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-xl text-[11px] font-bold shadow-2xs transition-colors cursor-pointer"
               >
-                💼 Professor Teste
+                Professor
               </button>
               <button
                 onClick={() => handleSimularLogin('familia')}
-                className="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-lg text-[10px] font-bold transition-colors cursor-pointer"
+                className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-xl text-[11px] font-bold shadow-2xs transition-colors cursor-pointer"
               >
-                👨‍👩‍👦 Família Teste
+                Família
               </button>
               <button
                 onClick={() => handleSimularLogin('cantina')}
-                className="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-lg text-[10px] font-bold transition-colors cursor-pointer"
+                className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-xl text-[11px] font-bold shadow-2xs transition-colors cursor-pointer"
               >
-                🍔 Cantina Teste
+                Cantina
               </button>
               <button
                 onClick={() => handleSimularLogin('admin')}
-                className="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-lg text-[10px] font-bold transition-colors cursor-pointer"
+                className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-xl text-[11px] font-bold shadow-2xs transition-colors cursor-pointer"
               >
-                🏫 Secretaria Teste
+                Secretaria
               </button>
               <button
                 onClick={() => handleSimularLogin('gestao')}
-                className="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-lg text-[10px] font-bold transition-colors cursor-pointer"
+                className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 py-1.5 px-3 rounded-xl text-[11px] font-bold shadow-2xs transition-colors cursor-pointer"
               >
-                🔑 Gestão Teste
+                Gestão
               </button>
             </div>
           </div>
@@ -646,8 +671,8 @@ export default function Home() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-500">
-        <p>© 2026 E.E. Antônio Caio - Cantina Digital Escolar. Todos os direitos reservados.</p>
+      <footer className="border-t border-slate-200/80 bg-white/80 backdrop-blur-sm py-6 text-center text-xs text-slate-400 font-medium">
+        <p>© 2026 E.E. Antônio Caio — Cantina Digital Escolar. Todos os direitos reservados.</p>
       </footer>
     </main>
   );

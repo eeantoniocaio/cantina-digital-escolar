@@ -3,20 +3,40 @@
 import { useEffect, useState } from "react";
 import { DBService, Profile, Aluno } from "@/services/db";
 import Header from "../components/Header";
+import { PageHeader } from "../components/ui/PageHeader";
+import { Badge } from "../components/ui/Badge";
+import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
+import { EmptyState } from "../components/ui/EmptyState";
+import {
+  School,
+  Users,
+  FileSpreadsheet,
+  UploadCloud,
+  Trash2,
+  Edit2,
+  Link2,
+  Plus,
+  ArrowLeft,
+  Check,
+  AlertCircle,
+  X,
+  Layers
+} from "lucide-react";
 
 export default function ConfigissoesPage() {
   const [currentUser, setCurrentUser] = useState<Profile | null>(null);
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [view, setView] = useState<'grid' | 'turmas'>('grid');
-  
+
   // Turmas list management
   const [turmasList, setTurmasList] = useState<string[]>([]);
-  const [extraTurmas, setExtraTurmas] = useState<string[]>([]); // Turmas criadas sem alunos ainda
+  const [extraTurmas, setExtraTurmas] = useState<string[]>([]);
   const [classLinks, setClassLinks] = useState<Record<string, string>>({});
 
   // Input states
   const [newTurmaName, setNewTurmaName] = useState("");
-  const [studentInputs, setStudentInputs] = useState<Record<string, string>>({}); // Inputs de adicionar aluno por turma
+  const [studentInputs, setStudentInputs] = useState<Record<string, string>>({});
 
   // Modais
   const [importingTurma, setImportingTurma] = useState<string | null>(null);
@@ -45,7 +65,6 @@ export default function ConfigissoesPage() {
     setCurrentUser(user);
     loadAllData();
 
-    // Carregar links de turmas salvos
     if (typeof window !== "undefined") {
       const savedLinks = localStorage.getItem("cantina_class_links");
       if (savedLinks) {
@@ -62,8 +81,6 @@ export default function ConfigissoesPage() {
     try {
       const allAlunos = await DBService.getAlunos();
       setAlunos(allAlunos);
-
-      // Agrupar turmas existentes
       const activeTurmas = Array.from(new Set(allAlunos.map(a => a.turma).filter(Boolean)));
       setTurmasList(activeTurmas);
     } catch (err) {
@@ -107,12 +124,10 @@ export default function ConfigissoesPage() {
           await DBService.deleteAluno(student.id);
         }
 
-        // Remover da lista de extras
         const updatedExtra = extraTurmas.filter(t => t !== turma);
         setExtraTurmas(updatedExtra);
         localStorage.setItem("cantina_extra_turmas", JSON.stringify(updatedExtra));
 
-        // Limpar links
         const updatedLinks = { ...classLinks };
         delete updatedLinks[turma];
         setClassLinks(updatedLinks);
@@ -135,16 +150,12 @@ export default function ConfigissoesPage() {
 
     setIsLoading(true);
     try {
-      // Gerar RA e dígito aleatórios
       const ra = Math.floor(100000 + Math.random() * 900000).toString();
-      const digito = Math.floor(0 + Math.random() * 10).toString(); // dígito entre 0 e 9
+      const digito = Math.floor(0 + Math.random() * 10).toString();
 
       await DBService.addAluno(nome, ra, turma);
-      
-      // Limpar input
       setStudentInputs(prev => ({ ...prev, [turma]: "" }));
-      
-      // Remover do extra se agora tem alunos
+
       if (extraTurmas.includes(turma)) {
         const updatedExtra = extraTurmas.filter(t => t !== turma);
         setExtraTurmas(updatedExtra);
@@ -182,7 +193,6 @@ export default function ConfigissoesPage() {
           await DBService.deleteAluno(student.id);
         }
 
-        // Adiciona à lista de extras para que o card continue sendo exibido mesmo vazio
         if (!extraTurmas.includes(turma)) {
           const updatedExtra = [...extraTurmas, turma];
           setExtraTurmas(updatedExtra);
@@ -215,7 +225,6 @@ export default function ConfigissoesPage() {
       throw new Error("O arquivo CSV está vazio.");
     }
 
-    // Identificar a linha de cabeçalho
     let headerIndex = -1;
     let delimiter = ';';
     for (let i = 0; i < lines.length; i++) {
@@ -228,7 +237,7 @@ export default function ConfigissoesPage() {
         delimiter = ';';
         break;
       }
-      
+
       cols = line.split(',').map(c => c.trim().replace(/^["']|["']$/g, ''));
       const hasNomeComma = cols.some(c => c.toLowerCase().includes('nome do aluno') || c.toLowerCase() === 'nome');
       const hasRaComma = cols.some(c => c.toLowerCase() === 'ra');
@@ -240,11 +249,10 @@ export default function ConfigissoesPage() {
     }
 
     if (headerIndex === -1) {
-      throw new Error("Não foi possível encontrar o cabeçalho no arquivo CSV. Certifique-se de que a tabela possui as colunas 'Nome do Aluno' e 'RA'.");
+      throw new Error("Cabeçalho não identificado no CSV. Certifique-se de que a tabela possui as colunas 'Nome do Aluno' e 'RA'.");
     }
 
     const headers = lines[headerIndex].split(delimiter).map(c => c.trim().replace(/^["']|["']$/g, ''));
-    
     const findColumnIndex = (keyword: string) => {
       return headers.findIndex(h => h.toLowerCase() === keyword.toLowerCase() || h.toLowerCase().includes(keyword.toLowerCase()));
     };
@@ -256,7 +264,7 @@ export default function ConfigissoesPage() {
     const sitIdx = findColumnIndex('situação') !== -1 ? findColumnIndex('situação') : findColumnIndex('situacao');
 
     if (nomeIdx === -1 || raIdx === -1) {
-      throw new Error("Colunas obrigatórias ('Nome do Aluno' e 'RA') não foram encontradas na linha do cabeçalho.");
+      throw new Error("Colunas obrigatórias ('Nome do Aluno' e 'RA') não encontradas.");
     }
 
     const ignoredSituations = ["REMA", "TRAN", "BXTR", "NCOM", "RECL"];
@@ -279,15 +287,13 @@ export default function ConfigissoesPage() {
       const nome = cols[nomeIdx]?.trim();
       if (!nome) continue;
 
-      // Filtrar por situação inativa
       if (sitIdx !== -1 && cols[sitIdx]) {
         const situacao = cols[sitIdx].trim().toUpperCase();
         if (ignoredSituations.includes(situacao)) {
-          continue; // Pula aluno
+          continue;
         }
       }
 
-      // Tratamento de RA científico (Ex: "1,15E+08" -> 115000000)
       let raRaw = cols[raIdx]?.trim() || "";
       let raClean = raRaw.replace(',', '.');
       let raNum = Number(raClean);
@@ -300,13 +306,11 @@ export default function ConfigissoesPage() {
 
       let dataNascimento = nascCIdx !== -1 ? cols[nascCIdx]?.trim() || "" : "";
 
-      // Deduplicação na própria lista do CSV
       const localKey = `${ra}-${digito}`.toUpperCase();
       if (seenLocalKeys.has(localKey)) continue;
 
-      // Deduplicação contra alunos já existentes no banco
-      const existsInDb = alunos.some(existing => 
-        existing.ra === ra && 
+      const existsInDb = alunos.some(existing =>
+        existing.ra === ra &&
         (existing.digito || "") === (digito || "")
       );
       if (existsInDb) continue;
@@ -368,12 +372,11 @@ export default function ConfigissoesPage() {
       }
 
       if (newAlunos.length === 0) {
-        throw new Error("Nenhum aluno novo para importar (todos já existem, foram ignorados ou são duplicados).");
+        throw new Error("Nenhum estudante novo para importar (todos já existem ou foram ignorados).");
       }
 
       await DBService.addAlunosBulk(newAlunos);
 
-      // Remover do extra se agora tem alunos
       if (extraTurmas.includes(importingTurma)) {
         const updatedExtra = extraTurmas.filter(t => t !== importingTurma);
         setExtraTurmas(updatedExtra);
@@ -418,10 +421,10 @@ export default function ConfigissoesPage() {
 
       setEditingAluno(null);
       await loadAllData();
-      setSuccessMsg("Dados do aluno atualizados!");
+      setSuccessMsg("Dados do aluno atualizados com sucesso!");
       setTimeout(() => setSuccessMsg(""), 3000);
     } catch (err: any) {
-      alert(err.message || "Erro ao salvar alterações do aluno.");
+      alert(err.message || "Erro ao salvar alterações.");
     } finally {
       setIsLoading(false);
     }
@@ -429,135 +432,155 @@ export default function ConfigissoesPage() {
 
   if (!currentUser) return null;
 
-  // Juntar turmas de alunos existentes e turmas criadas vazias
   const allTurmas = Array.from(new Set([...turmasList, ...extraTurmas])).sort();
 
   return (
-    <div className="flex-1 bg-slate-50 text-slate-800 min-h-screen">
+    <div className="flex-1 bg-[--bg-base] text-slate-800 min-h-screen">
       <Header />
 
       <main className="max-w-7xl mx-auto px-4 py-8">
-        
-        {/* VIEW: GRID (PAINEL PRINCIPAL) */}
+        {/* VIEW 1: GRID PRINCIPAL */}
         {view === 'grid' && (
           <div className="space-y-8">
-            <div className="flex items-center gap-3 border-b border-slate-200 pb-4">
-              <a href="/admin" className="text-slate-400 hover:text-slate-650 transition-colors text-lg font-bold">
-                ←
-              </a>
-              <div>
-                <h2 className="text-xl font-extrabold text-slate-800 leading-tight">Configurações do Sistema</h2>
-                <p className="text-xs text-slate-400 mt-0.5">Gerencie os recursos e as tabelas principais da escola.</p>
-              </div>
-            </div>
+            <PageHeader
+              title="Configurações Escolares"
+              description="Gerenciamento de turmas, enturmação de estudantes e parâmetros gerais."
+              action={
+                <Button
+                  variant="secondary"
+                  size="md"
+                  onClick={() => window.location.href = "/admin"}
+                  leftIcon={<ArrowLeft className="h-4 w-4" />}
+                >
+                  Voltar ao Painel
+                </Button>
+              }
+            />
 
-            {/* Grid de Cartões estilo do outro app */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              
-              {/* Card: TURMAS (ATIVO - CLICÁVEL) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {/* Card: TURMAS (ATIVO) */}
               <button
                 onClick={() => setView('turmas')}
-                className="bg-red-500 hover:bg-red-600 hover:scale-[1.02] active:scale-[0.99] text-white rounded-3xl p-6 shadow-md border border-red-600/10 flex flex-col justify-between h-44 transition-all cursor-pointer relative overflow-hidden text-left"
+                className="bg-white hover:border-slate-300 hover:shadow-md border border-slate-200 rounded-3xl p-6 shadow-xs flex flex-col justify-between h-48 transition-all cursor-pointer text-left group"
               >
-                <div className="space-y-1">
-                  <span className="text-2xl block">🏫</span>
-                  <h3 className="font-extrabold text-base">Turmas</h3>
-                  <p className="text-[10px] text-red-100 font-semibold">Configuração e enturmação de alunos</p>
+                <div className="space-y-2">
+                  <div className="h-10 w-10 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center border border-red-100 group-hover:scale-105 transition-transform">
+                    <School className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-base text-slate-900 group-hover:text-red-600 transition-colors">
+                      Turmas & Estudantes
+                    </h3>
+                    <p className="text-xs text-slate-400 font-medium mt-0.5">
+                      Configuração de turmas e enturmação via planilha
+                    </p>
+                  </div>
                 </div>
-                <div className="flex justify-between items-center mt-4">
-                  <span className="bg-white/20 text-[10px] font-black uppercase px-2.5 py-1 rounded-full border border-white/10">
-                    {allTurmas.length} {allTurmas.length === 1 ? "turma" : "turmas"}
+
+                <div className="flex justify-between items-center pt-4 border-t border-slate-100">
+                  <Badge variant="brand">{allTurmas.length} turmas</Badge>
+                  <span className="text-xs font-bold text-slate-700 group-hover:text-red-600 transition-colors">
+                    Gerenciar →
                   </span>
-                  <span className="text-[10px] font-bold underline text-white/95">Gerenciar →</span>
                 </div>
               </button>
 
-              {/* Card: Corpo Docente (Mock) */}
-              <div className="bg-green-500 text-white rounded-3xl p-6 shadow-sm border border-green-600/10 flex flex-col justify-between h-44 opacity-50 relative overflow-hidden select-none">
-                <div className="space-y-1">
-                  <span className="text-2xl block">👥</span>
-                  <h3 className="font-extrabold text-base">Corpo Docente</h3>
+              {/* Card: Servidores (Leitura) */}
+              <div className="bg-white/60 border border-slate-200 rounded-3xl p-6 shadow-2xs flex flex-col justify-between h-48 opacity-60">
+                <div className="space-y-2">
+                  <div className="h-10 w-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
+                    <Users className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-base text-slate-700">Corpo Docente</h3>
+                    <p className="text-xs text-slate-400 font-medium mt-0.5">Professores e servidores habilitados</p>
+                  </div>
                 </div>
-                <div className="flex justify-between items-center mt-4">
-                  <span className="bg-black/15 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border border-white/10">36 itens</span>
-                  <span className="text-[10px] text-white/60 font-semibold uppercase">Apenas leitura</span>
-                </div>
-              </div>
-
-              {/* Card: Secretaria (Mock) */}
-              <div className="bg-pink-500 text-white rounded-3xl p-6 shadow-sm border border-pink-600/10 flex flex-col justify-between h-44 opacity-50 relative overflow-hidden select-none">
-                <div className="space-y-1">
-                  <span className="text-2xl block">🏫</span>
-                  <h3 className="font-extrabold text-base">Secretaria</h3>
-                </div>
-                <div className="flex justify-between items-center mt-4">
-                  <span className="bg-black/15 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border border-white/10">0 itens</span>
-                  <span className="text-[10px] text-white/60 font-semibold uppercase">Apenas leitura</span>
+                <div className="flex justify-between items-center pt-4 border-t border-slate-100">
+                  <Badge variant="neutral">Apenas Leitura</Badge>
                 </div>
               </div>
 
+              {/* Card: Secretaria Geral */}
+              <div className="bg-white/60 border border-slate-200 rounded-3xl p-6 shadow-2xs flex flex-col justify-between h-48 opacity-60">
+                <div className="space-y-2">
+                  <div className="h-10 w-10 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center border border-sky-100">
+                    <Layers className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-base text-slate-700">Secretaria & Permissões</h3>
+                    <p className="text-xs text-slate-400 font-medium mt-0.5">Controle de perfis de acesso</p>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center pt-4 border-t border-slate-100">
+                  <Badge variant="neutral">Apenas Leitura</Badge>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
-        {/* VIEW: TURMAS (GERENCIAMENTO DETALHADO) */}
+        {/* VIEW 2: GERENCIAMENTO DE TURMAS */}
         {view === 'turmas' && (
           <div className="space-y-8">
-            
-            {/* Header Detalhes */}
-            <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setView('grid')}
-                  className="text-slate-400 hover:text-slate-650 transition-colors text-lg font-black cursor-pointer"
+                  className="h-9 w-9 rounded-2xl bg-white border border-slate-200 text-slate-600 hover:text-slate-900 flex items-center justify-center transition-colors cursor-pointer shadow-xs"
                 >
-                  ←
+                  <ArrowLeft className="h-4 w-4" />
                 </button>
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">🏫</span>
-                  <h2 className="text-xl font-extrabold text-slate-800 leading-tight">Turmas</h2>
+                <div>
+                  <h2 className="text-xl font-extrabold text-slate-900 leading-tight">Gestão de Turmas</h2>
+                  <p className="text-xs text-slate-400 font-medium mt-0.5">Adicione turmas, importe estudantes e gerencie cadastros.</p>
                 </div>
               </div>
 
               {/* Formulário Nova Turma */}
               <form onSubmit={handleAddTurma} className="flex gap-2">
-                <input
+                <Input
                   type="text"
                   value={newTurmaName}
                   onChange={e => setNewTurmaName(e.target.value)}
                   placeholder="Ex: 6ºB"
-                  className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold uppercase focus:outline-none focus:border-red-500 w-24 text-center placeholder-slate-400"
+                  className="w-28 uppercase font-bold text-center"
                   required
                 />
-                <button
+                <Button
                   type="submit"
-                  className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition-colors cursor-pointer shadow-2xs active:scale-95"
+                  variant="brand"
+                  size="md"
+                  leftIcon={<Plus className="h-4 w-4" />}
                 >
-                  + Nova Turma
-                </button>
+                  Criar Turma
+                </Button>
               </form>
             </div>
 
-            {/* Feedbacks de Ação */}
+            {/* Alertas */}
             {successMsg && (
-              <div className="text-xxs text-emerald-650 bg-emerald-50 p-3 rounded-lg border border-emerald-100 font-bold transition-all animate-bounce">
-                🎉 {successMsg}
+              <div className="text-xs text-emerald-700 bg-emerald-50 p-3.5 rounded-2xl border border-emerald-200 font-medium flex items-center gap-2 animate-fade-in">
+                <Check className="h-4 w-4 text-emerald-600" />
+                <span>{successMsg}</span>
               </div>
             )}
             {errorMsg && (
-              <div className="text-xxs text-red-650 bg-red-50 p-3 rounded-lg border border-red-100 font-bold transition-all">
-                ⚠️ {errorMsg}
+              <div className="text-xs text-rose-700 bg-rose-50 p-3.5 rounded-2xl border border-rose-200 font-medium flex items-center gap-2 animate-fade-in">
+                <AlertCircle className="h-4 w-4 text-rose-600" />
+                <span>{errorMsg}</span>
               </div>
             )}
 
             {/* Lista de Turmas */}
             {allTurmas.length === 0 ? (
-              <div className="bg-white border border-slate-200 rounded-3xl p-16 text-center text-slate-400 shadow-xs">
-                <span className="text-5xl block mb-4">🏫</span>
-                Nenhuma turma cadastrada. Crie uma turma preenchendo o formulário acima.
-              </div>
+              <EmptyState
+                icon={<School className="h-8 w-8 text-slate-400" />}
+                title="Nenhuma turma cadastrada"
+                description="Crie uma turma usando o campo acima para começar a cadastrar estudantes."
+              />
             ) : (
-              <div className="space-y-6">
+              <div className="grid grid-cols-1 gap-6">
                 {allTurmas.map(turma => {
                   const turmaStudents = alunos.filter(a => a.turma === turma);
                   const count = turmaStudents.length;
@@ -567,237 +590,252 @@ export default function ConfigissoesPage() {
                       key={turma}
                       className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4"
                     >
-                      {/* Cabeçalho da Caixa de Turma */}
+                      {/* Top Bar da Turma */}
                       <div className="flex justify-between items-center pb-3 border-b border-slate-100">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-extrabold text-base text-slate-800">{turma}</h3>
+                        <div className="flex items-center gap-2.5">
+                          <div className="h-8 w-8 rounded-xl bg-red-50 text-red-600 flex items-center justify-center font-black text-xs border border-red-100">
+                            {turma.substring(0, 3)}
+                          </div>
+                          <h3 className="font-extrabold text-base text-slate-900">{turma}</h3>
+                          <Badge variant="neutral">{count} estudantes</Badge>
                         </div>
                         <button
                           onClick={() => handleDeleteTurma(turma)}
-                          className="h-8 w-8 text-red-550 hover:text-red-700 hover:bg-red-50 rounded-full flex items-center justify-center transition-colors cursor-pointer border border-transparent hover:border-red-100/50"
+                          className="h-8 w-8 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl flex items-center justify-center transition-colors cursor-pointer"
                           title="Excluir Turma"
                         >
-                          🗑️
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
 
-                      {/* URL / Link da Turma */}
+                      {/* Link da Turma */}
                       <div className="flex gap-2">
                         <div className="relative flex-1">
-                          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]">🔗</span>
-                          <input
+                          <Input
                             type="text"
                             defaultValue={classLinks[turma] || ""}
                             onBlur={(e) => saveClassLink(turma, e.target.value)}
-                            placeholder="Link da turma (Ex: Canva ou drive link)..."
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3.5 py-2 text-xs focus:outline-none focus:border-red-500 text-slate-700 placeholder-slate-400"
+                            placeholder="Link do drive ou material da turma..."
+                            leftIcon={<Link2 className="h-4 w-4" />}
                           />
                         </div>
-                        <button
+                        <Button
                           type="button"
-                          className="bg-slate-100 hover:bg-slate-200 border border-slate-250 text-slate-750 font-bold text-xs px-4 rounded-xl cursor-pointer"
+                          variant="secondary"
+                          size="md"
                           onClick={(e) => {
                             const input = e.currentTarget.parentElement?.querySelector('input') as HTMLInputElement | null;
                             if (input) saveClassLink(turma, input.value);
                           }}
                         >
-                          Salvar
-                        </button>
+                          Salvar Link
+                        </Button>
                       </div>
 
-                      {/* Ações e Contagem de Alunos */}
-                      <div className="flex flex-wrap items-center justify-between gap-4 py-1.5 bg-slate-50/50 rounded-2xl border border-slate-100/80 px-4">
-                        <div className="flex items-center gap-2 text-xxs font-bold text-slate-600">
-                          <span>Alunos:</span>
-                          <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 font-extrabold">
-                            {count} {count === 1 ? "aluno" : "alunos"}
-                          </span>
-                        </div>
-
-                        <div className="flex gap-3 text-xxs font-black">
-                          <button
+                      {/* Barra de Ações Rápidas */}
+                      <div className="flex flex-wrap items-center justify-between gap-3 py-2 bg-slate-50 rounded-2xl border border-slate-200/80 px-4">
+                        <span className="text-xs text-slate-600 font-semibold">
+                          Ações da Turma:
+                        </span>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="secondary"
+                            size="sm"
                             onClick={() => setImportingTurma(turma)}
-                            className="text-red-600 hover:text-red-750 flex items-center gap-1 cursor-pointer"
+                            leftIcon={<FileSpreadsheet className="h-3.5 w-3.5 text-red-600" />}
                           >
-                            📥 Importar Lista / CSV
-                          </button>
-                          <button
+                            Importar CSV
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleClearList(turma)}
-                            className="text-red-650 hover:text-red-800 flex items-center gap-1 cursor-pointer"
+                            className="text-slate-500 hover:text-rose-600"
                           >
-                            ✕ Limpar lista
-                          </button>
+                            Limpar Turma
+                          </Button>
                         </div>
                       </div>
 
-                      {/* Adicionar Aluno na Turma */}
+                      {/* Inserir Aluno Rápido */}
                       <div className="flex gap-2">
-                        <input
+                        <Input
                           type="text"
                           value={studentInputs[turma] || ""}
                           onChange={(e) => setStudentInputs(prev => ({ ...prev, [turma]: e.target.value }))}
-                          placeholder="Nome do aluno..."
-                          className="flex-1 bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:border-red-500 text-slate-800"
+                          placeholder="Nome completo do novo estudante..."
+                          className="flex-1"
                         />
-                        <button
+                        <Button
+                          variant="brand"
+                          size="md"
                           onClick={() => handleAddStudent(turma)}
                           disabled={isLoading}
-                          className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-5 rounded-xl cursor-pointer disabled:opacity-50"
                         >
                           Adicionar
-                        </button>
+                        </Button>
                       </div>
 
-                      {/* Lista de Alunos (Rolável) */}
+                      {/* Lista de Estudantes da Turma */}
                       {count === 0 ? (
-                        <div className="text-center py-6 text-slate-400 text-[10px] italic bg-slate-50/30 rounded-2xl border border-dashed border-slate-200">
-                          Nenhum estudante matriculado nesta turma.
+                        <div className="text-center py-6 text-slate-400 text-xs italic bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                          Nenhum estudante cadastrado nesta turma ainda.
                         </div>
                       ) : (
-                        <div className="max-h-60 overflow-y-auto border border-slate-100 rounded-2xl divide-y divide-slate-100 pr-1">
+                        <div className="max-h-64 overflow-y-auto border border-slate-100 rounded-2xl divide-y divide-slate-100 pr-1">
                           {turmaStudents.sort((a, b) => a.nome.localeCompare(b.nome)).map(student => (
                             <div
                               key={student.id}
-                              className="p-3 hover:bg-slate-50/50 transition-colors flex items-center justify-between text-xs"
+                              className="p-3 hover:bg-slate-50/70 transition-colors flex items-center justify-between text-xs"
                             >
                               <div className="flex items-center gap-3 min-w-0">
-                                <input
-                                  type="checkbox"
-                                  className="h-3.5 w-3.5 rounded border-slate-200 text-red-600 focus:ring-red-500 cursor-pointer"
-                                />
-                                <div className="leading-tight truncate">
-                                  <span className="font-extrabold text-slate-850 block uppercase truncate">{student.nome}</span>
-                                  <span className="text-[10px] text-slate-400 font-mono">RA: {student.ra}-{student.digito || "0"}</span>
+                                <div>
+                                  <span className="font-bold text-slate-900 block truncate">{student.nome}</span>
+                                  <span className="text-[11px] text-slate-400 font-mono">
+                                    RA: {student.ra}-{student.digito || "0"}
+                                    {student.data_nascimento && ` • Nasc: ${student.data_nascimento}`}
+                                  </span>
                                 </div>
                               </div>
 
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1">
                                 <button
                                   onClick={() => handleOpenEdit(student)}
-                                  className="h-7 w-7 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-full flex items-center justify-center transition-colors cursor-pointer border border-transparent hover:border-slate-200"
+                                  className="h-8 w-8 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl flex items-center justify-center transition-colors cursor-pointer"
                                   title="Editar Aluno"
                                 >
-                                  ✏️
+                                  <Edit2 className="h-3.5 w-3.5" />
                                 </button>
                                 <button
                                   onClick={() => handleDeleteStudent(student.id)}
-                                  className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50/50 rounded-full flex items-center justify-center transition-colors cursor-pointer border border-transparent hover:border-red-100/40"
-                                  title="Remover Aluno"
+                                  className="h-8 w-8 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-xl flex items-center justify-center transition-colors cursor-pointer"
+                                  title="Excluir Aluno"
                                 >
-                                  🗑️
+                                  <Trash2 className="h-3.5 w-3.5" />
                                 </button>
                               </div>
                             </div>
                           ))}
                         </div>
                       )}
-
                     </div>
                   );
                 })}
               </div>
             )}
-
           </div>
         )}
-
       </main>
 
-      {/* MODAL: IMPORTAÇÃO CSV / LISTA */}
+      {/* MODAL: IMPORTAÇÃO CSV */}
       {importingTurma && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
           <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl p-6 space-y-4">
-            <div>
-              <h3 className="text-base font-extrabold text-slate-800">Importar Alunos para {importingTurma}</h3>
-              <p className="text-xs text-slate-400 mt-1">Selecione o método de importação de estudantes.</p>
+            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900">Importar Alunos</h3>
+                <p className="text-xs text-slate-400 mt-0.5">Destino: Turma <strong className="text-slate-700">{importingTurma}</strong></p>
+              </div>
+              <button
+                onClick={() => { setImportingTurma(null); setCsvFile(null); setCsvText(""); }}
+                className="text-slate-400 hover:text-slate-700 cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
 
-            {/* Alternador de abas */}
-            <div className="flex bg-slate-100 p-1 rounded-xl">
+            {/* Abas */}
+            <div className="flex bg-slate-100 p-1 rounded-2xl">
               <button
                 type="button"
                 onClick={() => setImportMethod('file')}
-                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
-                  importMethod === 'file'
-                    ? "bg-white text-slate-800 shadow-xxs"
-                    : "text-slate-450 hover:text-slate-650"
+                className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                  importMethod === 'file' ? "bg-white text-slate-900 shadow-xs" : "text-slate-500 hover:text-slate-900"
                 }`}
               >
-                📁 Planilha CSV
+                Planilha CSV
               </button>
               <button
                 type="button"
                 onClick={() => setImportMethod('text')}
-                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
-                  importMethod === 'text'
-                    ? "bg-white text-slate-800 shadow-xxs"
-                    : "text-slate-450 hover:text-slate-650"
+                className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                  importMethod === 'text' ? "bg-white text-slate-900 shadow-xs" : "text-slate-500 hover:text-slate-900"
                 }`}
               >
-                📝 Lista Manual
+                Lista Manual
               </button>
             </div>
 
             <form onSubmit={handleImportCsv} className="space-y-4">
               {importMethod === 'file' ? (
                 <div className="space-y-3">
-                  <div className="border-2 border-dashed border-slate-200 hover:border-red-400 rounded-2xl p-6 transition-colors flex flex-col items-center justify-center text-center relative bg-slate-50/50">
-                    <span className="text-3xl mb-2">📊</span>
-                    <span className="text-xs font-extrabold text-slate-700">
-                      {csvFile ? csvFile.name : "Clique para selecionar o arquivo CSV"}
+                  <div className="border-2 border-dashed border-slate-200 hover:border-red-400 rounded-2xl p-6 transition-colors flex flex-col items-center justify-center text-center relative bg-slate-50/50 space-y-2">
+                    <UploadCloud className="h-8 w-8 text-red-600" />
+                    <span className="text-xs font-bold text-slate-800">
+                      {csvFile ? csvFile.name : "Clique para selecionar o arquivo .CSV"}
                     </span>
-                    <span className="text-[10px] text-slate-400 mt-1">
-                      {csvFile ? `${(csvFile.size / 1024).toFixed(1)} KB` : "Mapeia Nome do Aluno, RA, Dig. RA, Data de Nascimento e Situação"}
+                    <span className="text-[10px] text-slate-400">
+                      {csvFile ? `${(csvFile.size / 1024).toFixed(1)} KB` : "Mapeia Nome do Aluno, RA, Dig. RA e Nascimento"}
                     </span>
                     <input
                       type="file"
                       accept=".csv"
                       onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
-                      className="absolute inset-0 opacity-0 cursor-pointer animate-pulse"
+                      className="absolute inset-0 opacity-0 cursor-pointer"
                       required={importMethod === 'file'}
                     />
                   </div>
-                  <div className="text-[10px] text-slate-455 bg-amber-50 border border-amber-100 rounded-xl p-3 leading-normal">
-                    📌 <strong>Regras da Importação:</strong><br/>
-                    • O cabeçalho deve conter as colunas <strong>"Nome do Aluno"</strong> e <strong>"RA"</strong>.<br/>
-                    • Serão lidos os campos opcionais <strong>"Dig. RA"</strong> e <strong>"Data de Nascimento"</strong>.<br/>
-                    • Serão ignorados alunos com situação <strong>REMA, TRAN, BXTR, NCOM ou RECL</strong>.<br/>
-                    • Alunos já matriculados com o mesmo RA serão ignorados automaticamente.
+
+                  <div className="text-[11px] text-slate-600 bg-amber-50/80 border border-amber-200/60 rounded-2xl p-3.5 space-y-1">
+                    <p className="font-bold text-amber-900">Regras de Leitura:</p>
+                    <ul className="list-disc pl-4 space-y-0.5 text-[10px] text-amber-800">
+                      <li>Colunas necessárias: <strong>Nome do Aluno</strong> e <strong>RA</strong>.</li>
+                      <li>Colunas opcionais: <strong>Dig. RA</strong> e <strong>Data de Nascimento</strong>.</li>
+                      <li>Alunos com situação inativa (REMA, TRAN, etc.) são ignorados.</li>
+                      <li>Registros duplicados no mesmo RA são desconsiderados.</li>
+                    </ul>
                   </div>
                 </div>
               ) : (
-                <div>
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-600">Cole os nomes (um por linha):</label>
                   <textarea
                     value={csvText}
                     onChange={e => setCsvText(e.target.value)}
-                    placeholder="ANA BEATRIZ BUENO OLIVEIRA&#10;ANA BEATRIZ DE LIMA SOUZA&#10;ARTHUR HENRIQUE PEREIRA SALES"
+                    placeholder="JOÃO VICTOR SILVA&#10;MARIA EDUARDA SANTOS&#10;PEDRO HENRIQUE LIMA"
                     rows={6}
-                    className="w-full bg-slate-50 border border-slate-250 rounded-2xl px-4 py-3.5 text-xs text-slate-800 focus:outline-none focus:border-red-500 font-mono"
+                    className="textarea font-mono text-xs"
                     required={importMethod === 'text'}
                   />
-                  <p className="text-[9px] text-slate-400 mt-1">Cole um nome de aluno por linha. RAs e dígitos serão gerados aleatoriamente.</p>
+                  <span className="text-[10px] text-slate-400 block">
+                    RAs e dígitos serão gerados de forma automática para cada estudante.
+                  </span>
                 </div>
               )}
 
-              <div className="flex gap-3 text-xs font-bold">
-                <button
+              <div className="flex gap-2.5 pt-2">
+                <Button
                   type="button"
+                  variant="secondary"
+                  size="md"
                   onClick={() => {
                     setImportingTurma(null);
                     setCsvText("");
                     setCsvFile(null);
                   }}
-                  className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-655 py-2.5 rounded-xl border border-slate-200 cursor-pointer"
+                  className="flex-1"
                 >
                   Cancelar
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
+                  variant="brand"
+                  size="md"
                   disabled={isLoading}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
+                  className="flex-1 shadow-xs"
                 >
                   {isLoading ? "Processando..." : "Importar Alunos"}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -806,89 +844,99 @@ export default function ConfigissoesPage() {
 
       {/* MODAL: EDIÇÃO DE ALUNO */}
       {editingAluno && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
           <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl p-6 space-y-4">
-            <h3 className="text-base font-extrabold text-slate-800">Editar Cadastro de Aluno</h3>
+            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+              <h3 className="text-base font-extrabold text-slate-900">Editar Cadastro</h3>
+              <button
+                onClick={() => setEditingAluno(null)}
+                className="text-slate-400 hover:text-slate-700 cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
 
-            <form onSubmit={handleSaveEdit} className="space-y-4">
-              <div className="space-y-1">
-                <label className="block text-[10px] font-bold text-slate-400 uppercase">Nome Completo</label>
-                <input
+            <form onSubmit={handleSaveEdit} className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1">Nome Completo</label>
+                <Input
                   type="text"
                   value={editNome}
                   onChange={e => setEditNome(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-red-500 font-bold"
+                  className="font-bold uppercase"
                   required
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-2">
-                <div className="col-span-2 space-y-1">
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase">RA (Registro)</label>
-                  <input
+              <div className="grid grid-cols-3 gap-2.5">
+                <div className="col-span-2">
+                  <label className="block text-xs font-bold text-slate-600 mb-1">RA (Registro)</label>
+                  <Input
                     type="text"
                     value={editRa}
                     onChange={e => setEditRa(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-red-500 font-mono font-bold"
+                    className="font-mono font-bold"
                     required
                   />
                 </div>
-                <div className="col-span-1 space-y-1">
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase">Dígito</label>
-                  <input
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1">Dígito</label>
+                  <Input
                     type="text"
                     value={editDigito}
                     onChange={e => setEditDigito(e.target.value)}
                     maxLength={1}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-red-500 text-center font-mono font-bold"
+                    className="text-center font-mono font-bold"
                     required
                   />
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="block text-[10px] font-bold text-slate-400 uppercase">Turma / Classe</label>
-                <input
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1">Turma / Classe</label>
+                <Input
                   type="text"
                   value={editTurma}
                   onChange={e => setEditTurma(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-red-500 uppercase font-bold"
+                  className="uppercase font-bold"
                   required
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="block text-[10px] font-bold text-slate-400 uppercase">Data de Nascimento</label>
-                <input
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1">Data de Nascimento</label>
+                <Input
                   type="text"
                   value={editNascimento}
                   onChange={e => setEditNascimento(e.target.value)}
-                  placeholder="Ex: 10/07/2014"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-red-500 font-bold"
+                  placeholder="Ex: 15/05/2012"
                 />
               </div>
 
-              <div className="flex gap-3 text-xs font-bold pt-2">
-                <button
+              <div className="flex gap-2.5 pt-3">
+                <Button
                   type="button"
+                  variant="secondary"
+                  size="md"
                   onClick={() => setEditingAluno(null)}
-                  className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-655 py-2.5 rounded-xl border border-slate-200 cursor-pointer"
+                  className="flex-1"
                 >
                   Cancelar
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
+                  variant="brand"
+                  size="md"
                   disabled={isLoading}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
+                  className="flex-1 shadow-xs"
                 >
                   {isLoading ? "Salvando..." : "Salvar Alterações"}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
         </div>
       )}
-
     </div>
   );
 }
