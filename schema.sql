@@ -1,7 +1,7 @@
 -- ================================================================
 -- Cantina Digital Escolar — Schema de Banco de Dados
--- Versão: 2.0 — Arquitetura Definitiva Segura
--- Última atualização: 2026-08-25
+-- Versão: 2.1 — Cardápio Dinâmico com Categorias
+-- Última atualização: 2026-09-02
 -- ================================================================
 -- INSTRUÇÕES DE APLICAÇÃO:
 -- Execute este arquivo UMA VEZ em um banco vazio.
@@ -186,14 +186,30 @@ CREATE TABLE public.movimentacoes (
     criado_em   timestamptz   NOT NULL DEFAULT now()
 );
 
--- 3.6 produtos — cardápio da cantina
+-- 3.6 cardapio_categorias — categorias dinâmicas do cardápio
+-- Substitui o enum hardcoded de categoria em produtos.
+-- Gerenciado via /configuracoes/categorias com RLS exclusivo para admin/gestão.
+CREATE TABLE public.cardapio_categorias (
+    id         uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+    nome       text        NOT NULL UNIQUE,
+    slug       text        NOT NULL UNIQUE,
+    ativo      boolean     NOT NULL DEFAULT true,
+    ordem      integer     NOT NULL DEFAULT 0,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- 3.7 produtos — cardápio da cantina
+-- categoria (text): mantido para compatibilidade com registros antigos.
+-- categoria_id (uuid): FK opcional para cardapio_categorias; preferencial para novos produtos.
 CREATE TABLE public.produtos (
-    id        uuid          PRIMARY KEY DEFAULT gen_random_uuid(),
-    nome      text          NOT NULL,
-    preco     numeric(10,2) NOT NULL CHECK (preco >= 0),
-    categoria text          NOT NULL CHECK (categoria IN ('salgado','bebida','doce','outro')),
-    ativo     boolean       NOT NULL DEFAULT true,
-    criado_em timestamptz   NOT NULL DEFAULT now()
+    id           uuid          PRIMARY KEY DEFAULT gen_random_uuid(),
+    nome         text          NOT NULL,
+    preco        numeric(10,2) NOT NULL CHECK (preco >= 0),
+    categoria    text          NOT NULL CHECK (categoria IN ('salgado','bebida','doce','outro')),
+    categoria_id uuid          REFERENCES public.cardapio_categorias(id),
+    ativo        boolean       NOT NULL DEFAULT true,
+    criado_em    timestamptz   NOT NULL DEFAULT now()
 );
 
 
@@ -508,12 +524,13 @@ CREATE TRIGGER prevent_aluno_saldo_change
 -- ----------------------------------------------------------------
 -- 7. HABILITAR RLS EM TODAS AS TABELAS
 -- ----------------------------------------------------------------
-ALTER TABLE public.alunos        ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.profiles      ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.responsaveis  ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.comprovantes  ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.movimentacoes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.produtos      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.alunos               ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profiles             ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.responsaveis         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.comprovantes         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.movimentacoes        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.produtos             ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.cardapio_categorias  ENABLE ROW LEVEL SECURITY;
 
 
 -- ----------------------------------------------------------------
@@ -760,6 +777,43 @@ CREATE POLICY "produtos_delete_admin"
     );
 
 
+-- 8.7 cardapio_categorias
+
+-- Qualquer usuário autenticado pode ler categorias
+CREATE POLICY "categorias_select_auth"
+    ON public.cardapio_categorias FOR SELECT
+    USING (auth.role() = 'authenticated');
+
+-- Apenas admin/gestão insere categorias
+CREATE POLICY "categorias_insert_admin"
+    ON public.cardapio_categorias FOR INSERT
+    WITH CHECK (public.is_admin_or_gestao());
+
+-- Apenas admin/gestão atualiza categorias (inclui soft-disable via ativo=false)
+CREATE POLICY "categorias_update_admin"
+    ON public.cardapio_categorias FOR UPDATE
+    USING (public.is_admin_or_gestao())
+    WITH CHECK (public.is_admin_or_gestao());
+
+-- Apenas admin/gestão pode deletar categorias
+-- (preferir soft-disable via ativo=false para categorias em uso)
+CREATE POLICY "categorias_delete_admin"
+    ON public.cardapio_categorias FOR DELETE
+    USING (public.is_admin_or_gestao());
+
+
+-- ----------------------------------------------------------------
+-- 9. SEED — Categorias iniciais do cardápio
+-- ON CONFLICT DO NOTHING garante idempotência em re-execuções.
+-- ----------------------------------------------------------------
+INSERT INTO public.cardapio_categorias (nome, slug, ativo, ordem) VALUES
+    ('Salgados', 'salgado', true, 1),
+    ('Bebidas',  'bebida',  true, 2),
+    ('Doces',    'doce',    true, 3),
+    ('Outros',   'outro',   true, 4)
+ON CONFLICT (slug) DO NOTHING;
+
+
 -- ================================================================
 -- FIM DO SCHEMA
 -- ================================================================
@@ -775,4 +829,6 @@ CREATE POLICY "produtos_delete_admin"
 -- ✅ search_path seguro em todas as funções SECURITY DEFINER
 -- ✅ ON DELETE RESTRICT em comprovantes/movimentacoes (preserva auditoria)
 -- ✅ is_admin_or_gestao(): SECURITY DEFINER evita recursão em policies de profiles
+-- ✅ cardapio_categorias: RLS com SELECT para authenticated, escrita restrita a admin/gestão
+-- ✅ produtos.categoria_id: FK nullable para cardapio_categorias (retrocompatível)
 -- ================================================================
